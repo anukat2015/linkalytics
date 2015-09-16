@@ -14,7 +14,7 @@ auth = tweepy.OAuthHandler(cfg.TWITTER_CONSUMER.KEY, cfg.TWITTER_CONSUMER.SECRET
 auth.set_access_token(cfg.TWITTER_ACCESS.KEY, cfg.TWITTER_ACCESS.SECRET)
 api = tweepy.API(auth)
 
-twitter_regex = re.compile('twitter\s*-?@?:?(\.com\/)?_?\.?\s*([^\s]*)',re.IGNORECASE)
+twitter_regex = re.compile('twitter\s*-*@*:*(\.com\/)?_*\.*\s*([^\s]*)',re.IGNORECASE)
 
 @retry(on=tweepy.error.TweepError)
 def get_user(twitter_id):
@@ -38,8 +38,8 @@ def get_followers(user):
 
 def run(node):
 	results = []
-	for identity in re.finditer(twitter_regex, node['text']):
-		twitter_id = identity.group(2)	# it's always the second group in the tuple
+	for identity in re.findall(twitter_regex, node['text']):
+		twitter_id = re.sub("twitter\s*-*@*:*(\.com\/)?_*\.*\s*", "", identity.group(0)) #Use a regular expression to reduce the string to the username
 		user = get_user(twitter_id)
 		if user is not None:
 			output_node = {

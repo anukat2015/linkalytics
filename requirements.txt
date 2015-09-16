@@ -2,3 +2,6 @@ rq
 tweepy
 python-instagram
 google-api-python-client
+elasticsearch
+pymysql
+flask
