@@ -14,4 +14,6 @@ def run(node):
             "carrier"   : carrier.name_for_number(match.number, "en"),
             "time_zone" : timezone.time_zones_for_number(match.number)
         })
-    return {"phonenumbers": results}
+    # http://stackoverflow.com/questions/11092511/python-list-of-unique-dictionaries
+    uniq_results = list({v['number']:v for v in results}.values())
+    return {"phonenumbers": uniq_results}
