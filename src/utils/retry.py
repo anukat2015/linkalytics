@@ -8,12 +8,14 @@ def retry(attempts=3, on=Exception):
 def _func_to_retry(f, exception_cls, max_attempts):
     def g(*args, **kwargs):
         result = None
-    	for attempt in range(max_attempts):
+        for attempt in range(max_attempts):
             print("Attempting {}. Attempt {}/{}".format(f.__name__, attempt+1, max_attempts))
             time.sleep((2**attempt - 1)*60)
-    		try:
-    			result = f(*args, **kwargs)
-    		except exception_cls as e:
-    			continue # try again
-    	return result
+            try:
+                result = f(*args, **kwargs)
+                break
+            except exception_cls as e:
+                print("Caught exception:", e)
+                continue # try again
+        return result
     return g
