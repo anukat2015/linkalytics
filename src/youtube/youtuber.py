@@ -29,9 +29,11 @@ def get_username_from_video(identity):
 	return user
 
 def run(node):
-	return {
-		'youtube': list({
-			'video_id': next(filter(None,identity)),
-			'username': get_username_from_video(identity)
-		} for identity in re.finditer(youtube_regex, node['text']))
-	}
+	results = []
+	for identity in re.finditer(youtube_regex, node['text']):
+		video_id = next(filter(None,identity.groups()))
+		results.append({
+			'video_id': video_id,
+			'username': get_username_from_video(video_id)
+		})
+	return {'youtube': results}
