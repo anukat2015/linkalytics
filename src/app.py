@@ -1,24 +1,57 @@
 import rq
 import redis
 import time
+import concurrent.futures
+import itertools
+import json
+import elasticsearch as es
+import elasticsearch.helpers as eshelp
+import warnings
+
+from . environment import cfg
 from . import twitter
 from . import youtube
 from . import phonenumber
 
+q1 = rq.Queue('twitter', connection=redis.Redis())
+q2 = rq.Queue('youtube', connection=redis.Redis())
+q3 = rq.Queue('phone', connection=redis.Redis())
+
+def process_record(record):
+    print('got job {}'.format(record['_source']['id']))
+    record = record['_source']
+    j1 = q1.enqueue(twitter.run, record)
+    j2 = q2.enqueue(youtube.run, record)
+    j3 = q3.enqueue(phonenumber.run, record)
+
+    results = [get_result(j1.id), get_result(j2.id), get_result(j3.id)]
+    return json.dumps(results, indent=2, separators=(',', ':'))
+
+def get_result(job_id):
+    job = q1.fetch_job(job_id)  # apparently this works...
+    while job.is_started or job.is_queued:
+        time.sleep(1)
+
+    if job.result:
+        return (job.id, job.status, job.result)
+    else:
+        return (job.id, job.status, None)
 
 def main():
-    q1 = rq.Queue('twitter', connection=redis.Redis())
-    q2 = rq.Queue('youtube', connection=redis.Redis())
-    q3 = rq.Queue('phone', connection=redis.Redis())
+    es_instance = "https://{user}:{passwd}@{host}:{port}".format(user=cfg.ELS.USER, passwd=cfg.ELS.PASS, host=cfg.ELS.HOST, port=cfg.ELS.PORT)
+    client = es.Elasticsearch([es_instance], timeout=60, retry_on_timeout=True)
 
-    job1 = q1.enqueue(twitter.run, {"text": "twitter.com/realDonaldTrump"})
-    job2 = q1.enqueue(twitter.run, {"text": "Here's Nassim Taleb's twitter.....@nntaleb"})
-    job3 = q2.enqueue(youtube.run, {"text": "Have you seen this https://www.youtube.com/watch?t=3&v=ToyoBTiwZ6c youtube video with Super Marioll"})
-    job4 = q3.enqueue(phonenumber.run, {"text": "1800295 408-291-2521"})
+    # j1 = q1.enqueue(twitter.run, {"text": "twitter.com/realDonaldTrump"})
+    # j2 = q1.enqueue(twitter.run, {"text": "Here's Nassim Taleb's twitter.....@nntaleb"})
+    # j3 = q2.enqueue(youtube.run, {"text": "Have you seen this https://www.youtube.com/watch?t=3&v=ToyoBTiwZ6c youtube video with Super Marioll"})
+    # j4 = q3.enqueue(phonenumber.run, {"text": "1800295 408-291-2521"})
+    #
+    # jobs = [j1.id, j2.id, j3.id, j4.id]
+    all_ads = eshelp.scan(client, index="memex_ht", doc_type="ad", scroll='30m') #, query=date_filter)
+    limited_ads = itertools.islice(all_ads, 1000)
 
-    while True:
-        time.sleep(1)
-        print("Test Twitter Link", job1.result)
-        print("Test Twitter Blob", job2.result)
-        print("Test Youtube Blob", job3.result)
-        print("phone", job4.result)
+    executor = concurrent.futures.ProcessPoolExecutor(max_workers=8)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        for i, result in enumerate(executor.map(process_record, limited_ads)):
+            print(i, result)
