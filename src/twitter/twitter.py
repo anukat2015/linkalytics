@@ -38,8 +38,8 @@ def get_followers(user):
 
 def run(node):
 	results = []
-	for identity in re.findall(twitter_regex, node['text']):
-		twitter_id = re.sub("twitter\s*-*@*:*(\.com\/)?_*\.*\s*", "", identity.group(0)) #Use a regular expression to reduce the string to the username
+	for identity in re.finditer(twitter_regex, node['text']):
+		twitter_id = identity.group(2)  # username is always the second group in the regex match
 		user = get_user(twitter_id)
 		if user is not None:
 			output_node = {

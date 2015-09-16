@@ -31,7 +31,7 @@ def get_username_from_video(identity):
 def run(node):
 	results = []
 	for identity in re.finditer(youtube_regex, node['text']):
-		video_id = re.sub("youtube\.com\/embed|youtu\.be|youtube\.com\/watch\?[^\s]*v=", "", i.group(0))
+		video_id = next(filter(None,identity.groups()))	# this filters out any empty matches
 		results.append({
 			'video_id': video_id,
 			'username': get_username_from_video(video_id)
