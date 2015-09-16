@@ -3,7 +3,7 @@ Source code for various analytics
 
 ##Getting Started with Linkalytics
 
-Step 1 -- Get dependencies
+####Step 1 -- Get dependencies
 
 ```git clone git@github.com:qadium-memex/linkalytics.git```
 
@@ -12,7 +12,7 @@ Step 1 -- Get dependencies
 ```brew install redis```
 
 
-Step 2 -- Get going
+####Step 2 -- Get going
 
 Open two terminal windows, in the first type
 
@@ -20,5 +20,5 @@ Open two terminal windows, in the first type
 
 In the second, type
 
-```python main.py```
+```python3 main.py```
 
