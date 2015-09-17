@@ -1,0 +1,1 @@
+from . instagrammer import run
