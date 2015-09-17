@@ -3,6 +3,7 @@ import re
 import logging
 
 from .. environment import cfg
+from .. utils import uniq_lod, sanitize
 
 logging.basicConfig()
 log = logging.getLogger("linkalytics.youtube")
@@ -30,10 +31,12 @@ def get_username_from_video(identity):
 
 def run(node):
 	results = []
-	for identity in re.finditer(youtube_regex, node['text']):
+	text = sanitize(node['text'])
+	for identity in re.finditer(youtube_regex, text):
 		video_id = next(filter(None,identity.groups()))	# this filters out any empty matches
 		results.append({
 			'video_id': video_id,
 			'username': get_username_from_video(video_id)
 		})
+	uniq_results = list({v['video_id']:v for v in results}.values())
 	return {'youtube': results}
