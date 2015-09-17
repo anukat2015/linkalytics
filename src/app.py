@@ -12,19 +12,27 @@ from . environment import cfg
 from . import twitter
 from . import youtube
 from . import phonenumber
+from . import instagrammer
 
-q1 = rq.Queue('twitter', connection=redis.Redis())
-q2 = rq.Queue('youtube', connection=redis.Redis())
-q3 = rq.Queue('phone', connection=redis.Redis())
+queues = {
+    'twitter'   : rq.Queue('twitter', connection=redis.Redis()),
+    'youtube'   : rq.Queue('youtube', connection=redis.Redis()),
+    'phone'     : rq.Queue('phone', connection=redis.Redis()),
+    'instagram' :rq.Queue('instagram', connection=redis.Redis())
+}
+q1 = queues['twitter']
 
 def process_record(record):
     print('got job {}'.format(record['_source']['id']))
     record = record['_source']
-    j1 = q1.enqueue(twitter.run, record)
-    j2 = q2.enqueue(youtube.run, record)
-    j3 = q3.enqueue(phonenumber.run, record)
-
-    results = [get_result(j1.id), get_result(j2.id), get_result(j3.id)]
+    runners = [
+        (queues['twitter'], twitter.run),
+        (queues['youtube'], youtube.run),
+        (queues['phone'], phonenumber.run),
+        (queues['instagram'], instagrammer.run)
+    ]
+    jobs = (q.enqueue(f, record).id for q,f in runners)
+    results = list(map(get_result, jobs))
     return json.dumps(results, indent=2, separators=(',', ':'))
 
 def get_result(job_id):
@@ -47,7 +55,14 @@ def main():
     # j4 = q3.enqueue(phonenumber.run, {"text": "1800295 408-291-2521"})
     #
     # jobs = [j1.id, j2.id, j3.id, j4.id]
-    all_ads = eshelp.scan(client, index="memex_ht", doc_type="ad", scroll='30m') #, query=date_filter)
+    query = {
+        "query": {
+            "match": {
+                "_all": "instagram"
+            }
+        }
+    }
+    all_ads = eshelp.scan(client, index="memex_ht", doc_type="ad", scroll='30m', query=query)
     limited_ads = itertools.islice(all_ads, 1000)
 
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=8)
