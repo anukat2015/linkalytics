@@ -1,11 +1,8 @@
 import tweepy
 import logging
-import time
-import urllib
-import html.parser
 import re
 from .. environment import cfg
-from .. utils import retry
+from .. utils import retry, sanitize, uniq_lod
 
 logging.basicConfig()
 log = logging.getLogger("linkalytics.twitter")
@@ -14,7 +11,7 @@ auth = tweepy.OAuthHandler(cfg.TWITTER_CONSUMER.KEY, cfg.TWITTER_CONSUMER.SECRET
 auth.set_access_token(cfg.TWITTER_ACCESS.KEY, cfg.TWITTER_ACCESS.SECRET)
 api = tweepy.API(auth)
 
-twitter_regex = re.compile('twitter\s*-*@*:*(\.com\/)?_*\.*\s*([^\s]*)',re.IGNORECASE)
+twitter_regex = re.compile('twitter\s*-*@*:*;*(\.com\/)?_*\.*\s*([^\s^\/]*)',re.IGNORECASE)
 
 @retry(on=tweepy.error.TweepError)
 def get_user(twitter_id):
@@ -38,8 +35,9 @@ def get_followers(user):
 
 def run(node):
 	results = []
-	for identity in re.finditer(twitter_regex, node['text']):
-		twitter_id = identity.group(2)  # username is always the second group in the regex match
+	text = sanitize(node['text'])
+	for identity in re.finditer(twitter_regex, text):
+		twitter_id = identity.group(2).lower()  # username is always the second group in the regex match
 		user = get_user(twitter_id)
 		if user is not None:
 			output_node = {
@@ -66,4 +64,4 @@ def run(node):
 				'tweets'		: get_tweets(twitter_id)
 			}
 		results.append(output_node)
-	return {'twitter': results}
+	return {'twitter': uniq_lod(results, 'id')}
