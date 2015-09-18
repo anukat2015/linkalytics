@@ -6,7 +6,7 @@ import json
 from elasticsearch import Elasticsearch
 import pymysql
 import time
-from .. environment import cfg
+from environment import cfg
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -20,8 +20,9 @@ Step 5 -- Query newly updated Link
 """
 
 
-def QueryDocIds(searchTerm, hostIndex, es):
+def query_doc_ids(searchTerm, hostIndex, es):
     payload = {
+        "size": 50,
         "fields": ["*incoming_id*"],
         "query": {
             "match": {
@@ -30,13 +31,13 @@ def QueryDocIds(searchTerm, hostIndex, es):
             }
         }
     res = es.search(index=hostIndex, body=payload)
-    docIds = []
+    docIds = {}
     for i in res['hits']['hits']:
-        docIds.append(str(i["_source"]["incoming_id"]))
+        docIds.add(str(i["_source"]["incoming_id"]))
     return list(set(docIds))
 
 
-def LookUp(docIds, externalDocIds):
+def look_up(docIds, externalDocIds):
     newIds = list(set(externalDocIds) - set(docIds))
     conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
     cur = conn.cursor()
@@ -51,7 +52,7 @@ def LookUp(docIds, externalDocIds):
     return group
 
 
-def PostNew(groups, internalHost, internalEs, externalHost, externalEs):
+def post_new(groups, internalHost, internalEs, externalHost, externalEs):
     for i in groups.keys():
         docIds = groups[i]
         payload = {
@@ -72,7 +73,7 @@ def PostNew(groups, internalHost, internalEs, externalHost, externalEs):
         res = internalEs.index(index=internalHost, doc_type="group", body=json.dumps(newGroup))
 
 
-def QueryFinal(searchTerm, hostIndex, es):
+def query_final(searchTerm, hostIndex, es):
     payload = {
         "query": {
             "match": {
@@ -86,25 +87,33 @@ def QueryFinal(searchTerm, hostIndex, es):
         groups.append(i)
     return groups
 
+@app.route('/')
+def api_root():
+    return 'Welcome'
+
 
 @app.route("/search", methods=['POST'])
-def Doc2Group():
+def doc_2_group():
+    print("BONJOUR")
     data = request.get_json(force=True)
-    docIds = QueryDocIds(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
-    externalDocIds = QueryDocIds(data['search'], cfg.EXT_ELASTIC.INDEX, esExternal)
-    newGroups = LookUp(docIds, externalDocIds)
-    PostNew(newGroups, cfg.INT_ELASTIC.INDEX, esInternal, cfg.EXT_ELASTIC.INDEX, esExternal)
-    results = QueryFinal(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
-    if len(results) > 0:
-        return json.dumps(results)
+    print(data)
+    docIds = query_doc_ids(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
+    externalDocIds = query_doc_ids(data['search'], cfg.EXT_ELASTIC.INDEX, esExternal)
+    newGroups = look_up(docIds, externalDocIds)
+    post_new(newGroups, cfg.INT_ELASTIC.INDEX, esInternal, cfg.EXT_ELASTIC.INDEX, esExternal)
+    results = query_final(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
+    if results:
+        return "Hello"  #json.dumps(results)
     else:
         return "No results"
 
+
 if __name__ == '__main__':
+    print("Getting Started")
     esInternal = Elasticsearch(cfg.INT_ELASTIC.URL, verify_certs=False)
     esExternal = Elasticsearch(cfg.EXT_ELASTIC.URL, verify_certs=False)
     try:
-        es.indices.create(index=cfg.INT_ELASTIC.INDEX)
+        esInternal.indices.create(index=cfg.INT_ELASTIC.INDEX)
         time.sleep(1)
         print("You've created a new index")
     except:
