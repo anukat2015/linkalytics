@@ -87,23 +87,17 @@ def query_final(searchTerm, hostIndex, es):
         groups.append(i)
     return groups
 
-@app.route('/')
-def api_root():
-    return 'Welcome'
-
 
 @app.route("/search", methods=['POST'])
 def doc_2_group():
-    print("BONJOUR")
-    data = request.get_json(force=True)
-    print(data)
-    docIds = query_doc_ids(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
-    externalDocIds = query_doc_ids(data['search'], cfg.EXT_ELASTIC.INDEX, esExternal)
+    data = request.get_json(force=True)["search"]
+    docIds = query_doc_ids(data, cfg.INT_ELASTIC.INDEX, esInternal)
+    externalDocIds = query_doc_ids(data, cfg.EXT_ELASTIC.INDEX, esExternal)
     newGroups = look_up(docIds, externalDocIds)
     post_new(newGroups, cfg.INT_ELASTIC.INDEX, esInternal, cfg.EXT_ELASTIC.INDEX, esExternal)
-    results = query_final(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
+    results = query_final(data, cfg.INT_ELASTIC.INDEX, esInternal)
     if results:
-        return "Hello"  #json.dumps(results)
+        return jsonify(results)
     else:
         return "No results"
 
