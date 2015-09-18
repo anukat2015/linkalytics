@@ -5,7 +5,6 @@
 import json
 from elasticsearch import Elasticsearch
 import pymysql
-import sys
 import time
 from .. environment import cfg
 from flask import Flask, request, jsonify
@@ -21,8 +20,9 @@ Step 5 -- Query newly updated Link
 """
 
 
-def queryDocIds(searchTerm, hostIndex, es):
+def QueryDocIds(searchTerm, hostIndex, es):
     payload = {
+        "fields": ["*incoming_id*"],
         "query": {
             "match": {
                 "_all": searchTerm
@@ -36,29 +36,22 @@ def queryDocIds(searchTerm, hostIndex, es):
     return list(set(docIds))
 
 
-def lookUp(docIds, externalDocIds):
+def LookUp(docIds, externalDocIds):
     newIds = list(set(externalDocIds) - set(docIds))
-    groups = {}
     conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
     cur = conn.cursor()
-    sqlStatement = ("SELECT phone_id FROM phone_link where {docIdName} in {docId} limit 10").format(docIdName="ad_id", docId="(" + ",".join(newIds) + ")")
+    sqlStatement = ("SELECT {docIdName} from {tableName} where {groupIdName} in (SELECT {groupIdName} FROM {tableName} where {docIdName} in {docId})").format(docIdName="ad_id", groupIdName="phone_id", tableName="phone_link", docId="(" + ", ".join(newIds) + ")")
     cur.execute(sqlStatement)
-    ###WORK IN PROGRESS...    groupId = []
-        for row in cur:
-            groupId.append(row[0])
-        if groupId:
-            sqlStatement2 = ("SELECT ad_id FROM phone_link where {groupIdName} = {groupId} limit 10").format(groupIdName="phone_id", groupId=groupId[0])
-            cur.execute(sqlStatement2)
-            for row in cur:
-                temp.append(row[0])
-            groups[i] = temp
+    group = {}
+    for row in cur:
+        if row[1] in group:
+            group[row[1]].append(str(row[0]))
         else:
-            print(str(i) + " was not found... Is your look up table comprehensive?")
-    return groups
+            group[row[1]] = str([row[0]])
+    return group
 
 
-def postNew(groups, hostIndex, es):
-    externalEs = Elasticsearch(cfg.EXT_ELASTIC.URL, verify_certs=False)
+def PostNew(groups, internalHost, internalEs, externalHost, externalEs):
     for i in groups.keys():
         docIds = groups[i]
         payload = {
@@ -68,12 +61,18 @@ def postNew(groups, hostIndex, es):
                     }
                 }
             }
-        res = externalEs.search(index=cfg.EXT_ELASTIC.INDEX, body=payload)
-        newGroup = res['hits']['hits']
-        res = es.index(index=hostIndex, doc_type="group", body=json.dumps(newGroup))
+        res = externalEs.search(index=externalHost, body=payload)
+        newGroup = {}
+        newGroup["_id"] = i
+        newGroup["docs"] = []
+        for result in res['hits']['hits']:
+            del result[u"_score"]
+            del result[u"_type"]
+            newGroup["docs"].append(result)
+        res = internalEs.index(index=internalHost, doc_type="group", body=json.dumps(newGroup))
 
 
-def queryFinal(searchTerm, hostIndex, es):
+def QueryFinal(searchTerm, hostIndex, es):
     payload = {
         "query": {
             "match": {
@@ -85,19 +84,17 @@ def queryFinal(searchTerm, hostIndex, es):
     groups = []
     for i in res['hits']['hits']:
         groups.append(i)
-    print("There are " + str(len(groups)) + " results")
-    print(groups[0])
     return groups
 
 
 @app.route("/search", methods=['POST'])
-def upDog():
+def Doc2Group():
     data = request.get_json(force=True)
-    docIds = queryDocIds(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
-    externalDocIds = queryDocIds(data['search'], cfg.EXT_ELASTIC.INDEX, esExternal)
-    newGroups = lookUp(docIds, externalDocIds)
-    postNew(newGroups, cfg.INT_ELASTIC.INDEX, esInternal)
-    results = queryFinal(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
+    docIds = QueryDocIds(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
+    externalDocIds = QueryDocIds(data['search'], cfg.EXT_ELASTIC.INDEX, esExternal)
+    newGroups = LookUp(docIds, externalDocIds)
+    PostNew(newGroups, cfg.INT_ELASTIC.INDEX, esInternal, cfg.EXT_ELASTIC.INDEX, esExternal)
+    results = QueryFinal(data['search'], cfg.INT_ELASTIC.INDEX, esInternal)
     if len(results) > 0:
         return json.dumps(results)
     else:
@@ -111,5 +108,5 @@ if __name__ == '__main__':
         time.sleep(1)
         print("You've created a new index")
     except:
-        print("You're working on a pre-existing index")
+        print("You're currently working on a pre-existing index")
     app.run()
