@@ -11,19 +11,13 @@ from flask import Flask, request  # jsonify
 
 app = Flask(__name__)
 
-"""
-Step 1 -- Query Internal Elastic
-Step 2 -- Query External Elastic
-Step 3 -- Check Lookup Table
-Step 4 -- Post to Link Elastic if not contained in initial query
-Step 5 -- Query newly updated Link
-"""
 
-
-def query_doc_ids(searchTerm, hostIndex, es):
+def query_docs(searchTerm, hostIndex, es, size, final):
+    """
+    Here's a function to query Elastic Search and return either all the documents or a list of ids
+    """
     payload = {
-        "size": 50,
-        # "fields": ["*incoming_id*"],
+        "size": size,
         "query": {
             "match": {
                 "_all": searchTerm
@@ -31,22 +25,27 @@ def query_doc_ids(searchTerm, hostIndex, es):
             }
         }
     res = es.search(index=hostIndex, body=payload)
-    docIds = set()
+    groups = set()
     for i in res['hits']['hits']:
-        try:
-            docIds.add(str(i["_source"]["incoming_id"]))
-        except KeyError:
-            pass
-    return list(set(docIds))
+        if final is True:
+            groups.add(i)
+        else:
+            groups.add(str(i["_id"]))
+    return set(groups)
 
 
-def look_up(docIds, externalDocIds):
-    newIds = list(set(externalDocIds) - set(docIds))
-    if len(newIds) > 0:
+def look_up(docIds, CDRDocIds):
+    """
+    Here's a function to use initially queried document ids to identify other related document ids
+    """
+    newIds = list(set(CDRDocIds) - set(docIds))
+    if newIds:
         conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
-        cur = conn.cursor()
-        sqlStatement = ("SELECT {docIdName}, {groupIdName} from {tableName} where {groupIdName} in (SELECT {groupIdName} FROM {tableName} where {docIdName} in {docId})").format(docIdName="ad_id", groupIdName="phone_id", tableName="phone_link", docId="(" + ", ".join(newIds) + ")")
-        cur.execute(sqlStatement)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
+
+        sqlStatement = ("SELECT %(docIdName)s, %(groupName)s from %(tableName)s where %(groupIdName)s in (SELECT %(groupIdName)s FROM %(tableName)s where %(docIdName)s in %(docId)s)")
+
+        cur.execute(sqlStatement, {'docIdName': "ad_id", 'groupIdName': "phone_id", 'tableName': "phone_link", 'docId': "(" + ", ".join(newIds) + ")"})
         group = {}
         for row in cur:
             if row[1] in group:
@@ -54,12 +53,16 @@ def look_up(docIds, externalDocIds):
             else:
                 group[str(row[1])] = []
                 group[str(row[1])].append(str(row[0]))
+        conn.close()
         return group
     else:
         return None
 
 
-def post_new(groups, internalHost, internalEs, externalHost, externalEs):
+def post_new(groups, MirrorHost, MirrorEs, CDRHost, CDREs):
+    """
+    Here's a function to post grouped documents to Elastic Search
+    """
     for i in groups.keys():
         docIds = groups[i]
         payload = {
@@ -69,40 +72,33 @@ def post_new(groups, internalHost, internalEs, externalHost, externalEs):
                     }
                 }
             }
-        res = externalEs.search(index=externalHost, body=payload)
+        res = CDREs.search(index=CDRHost, body=payload)
         newGroup = {}
         newGroup["docs"] = []
         for result in res['hits']['hits']:
             del result[u"_score"]
             del result[u"_type"]
             newGroup["docs"].append(result)
-        res = internalEs.index(index=internalHost, doc_type="group", id=i, body=json.dumps(newGroup))
-
-
-def query_final(searchTerm, hostIndex, es):
-    payload = {
-        "query": {
-            "match": {
-                "_all": searchTerm
-                }
-            }
-        }
-    res = es.search(index=hostIndex, body=payload)
-    groups = []
-    for i in res['hits']['hits']:
-        groups.append(i)
-    return groups
+        res = MirrorEs.index(index=MirrorHost, doc_type="group", id=i, body=json.dumps(newGroup))
 
 
 @app.route("/search", methods=['POST'])
-def doc_2_group():
+def doc_to_group():
+    """
+    Here's a server that takes a search term as an input and provides a list of grouped documents as an output
+    Step 1 -- Query Mirror Elastic
+    Step 2 -- Query CDR Elastic
+    Step 3 -- Check Lookup Table
+    Step 4 -- Post to Mirror Elastic if not yet contained in Mirror Elastic
+    Step 5 -- Query newly updated Mirror Elastic
+    """
     data = request.get_json(force=True)["search"]
     print("You search for: " + data)
-    docIds = query_doc_ids(data, cfg.INT_ELASTIC.INDEX, esInternal)
-    externalDocIds = query_doc_ids(data, cfg.EXT_ELASTIC.INDEX, esExternal)
-    newGroups = look_up(docIds, externalDocIds)
-    post_new(newGroups, cfg.INT_ELASTIC.INDEX, esInternal, cfg.EXT_ELASTIC.INDEX, esExternal)
-    results = query_final(data, cfg.INT_ELASTIC.INDEX, esInternal)
+    docIds = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, esMirror, 50, False)
+    CDRDocIds = query_docs(data, cfg.CDR_ELASTIC.INDEX, esCDR, 50, False)
+    newGroups = look_up(docIds, CDRDocIds)
+    post_new(newGroups, cfg.MIRROR_ELASTIC.INDEX, esMirror, cfg.CDR_ELASTIC.INDEX, esCDR)
+    results = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, esMirror, 100, True)
     if results:
         return json.dumps(results)
     else:
@@ -110,13 +106,12 @@ def doc_2_group():
 
 
 if __name__ == '__main__':
-    print("Getting Started")
-    esInternal = Elasticsearch(cfg.INT_ELASTIC.URL, verify_certs=False)
-    esExternal = Elasticsearch(cfg.EXT_ELASTIC.URL, verify_certs=False)
+    esMirror = Elasticsearch(cfg.MIRROR_ELASTIC.URL, verify_certs=False)
+    esCDR = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
     try:
-        esInternal.indices.create(index=cfg.INT_ELASTIC.INDEX)
+        esMirror.indices.create(index=cfg.MIRROR_ELASTIC.INDEX)
         time.sleep(1)
         print("You've created a new index")
     except:
         print("You're currently working on a pre-existing index")
-    app.run(debug=True)
+    app.run()
