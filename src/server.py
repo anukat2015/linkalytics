@@ -7,7 +7,7 @@ from elasticsearch import Elasticsearch
 import pymysql
 import time
 from environment import cfg
-from flask import Flask, request, jsonify
+from flask import Flask, request  # jsonify
 
 app = Flask(__name__)
 
@@ -23,7 +23,7 @@ Step 5 -- Query newly updated Link
 def query_doc_ids(searchTerm, hostIndex, es):
     payload = {
         "size": 50,
-        "fields": ["*incoming_id*"],
+        # "fields": ["*incoming_id*"],
         "query": {
             "match": {
                 "_all": searchTerm
@@ -31,25 +31,32 @@ def query_doc_ids(searchTerm, hostIndex, es):
             }
         }
     res = es.search(index=hostIndex, body=payload)
-    docIds = {}
+    docIds = set()
     for i in res['hits']['hits']:
-        docIds.add(str(i["_source"]["incoming_id"]))
+        try:
+            docIds.add(str(i["_source"]["incoming_id"]))
+        except KeyError:
+            pass
     return list(set(docIds))
 
 
 def look_up(docIds, externalDocIds):
     newIds = list(set(externalDocIds) - set(docIds))
-    conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
-    cur = conn.cursor()
-    sqlStatement = ("SELECT {docIdName} from {tableName} where {groupIdName} in (SELECT {groupIdName} FROM {tableName} where {docIdName} in {docId})").format(docIdName="ad_id", groupIdName="phone_id", tableName="phone_link", docId="(" + ", ".join(newIds) + ")")
-    cur.execute(sqlStatement)
-    group = {}
-    for row in cur:
-        if row[1] in group:
-            group[row[1]].append(str(row[0]))
-        else:
-            group[row[1]] = str([row[0]])
-    return group
+    if len(newIds) > 0:
+        conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
+        cur = conn.cursor()
+        sqlStatement = ("SELECT {docIdName}, {groupIdName} from {tableName} where {groupIdName} in (SELECT {groupIdName} FROM {tableName} where {docIdName} in {docId})").format(docIdName="ad_id", groupIdName="phone_id", tableName="phone_link", docId="(" + ", ".join(newIds) + ")")
+        cur.execute(sqlStatement)
+        group = {}
+        for row in cur:
+            if row[1] in group:
+                group[str(row[1])].append(str(row[0]))
+            else:
+                group[str(row[1])] = []
+                group[str(row[1])].append(str(row[0]))
+        return group
+    else:
+        return None
 
 
 def post_new(groups, internalHost, internalEs, externalHost, externalEs):
@@ -64,13 +71,12 @@ def post_new(groups, internalHost, internalEs, externalHost, externalEs):
             }
         res = externalEs.search(index=externalHost, body=payload)
         newGroup = {}
-        newGroup["_id"] = i
         newGroup["docs"] = []
         for result in res['hits']['hits']:
             del result[u"_score"]
             del result[u"_type"]
             newGroup["docs"].append(result)
-        res = internalEs.index(index=internalHost, doc_type="group", body=json.dumps(newGroup))
+        res = internalEs.index(index=internalHost, doc_type="group", id=i, body=json.dumps(newGroup))
 
 
 def query_final(searchTerm, hostIndex, es):
@@ -91,13 +97,14 @@ def query_final(searchTerm, hostIndex, es):
 @app.route("/search", methods=['POST'])
 def doc_2_group():
     data = request.get_json(force=True)["search"]
+    print("You search for: " + data)
     docIds = query_doc_ids(data, cfg.INT_ELASTIC.INDEX, esInternal)
     externalDocIds = query_doc_ids(data, cfg.EXT_ELASTIC.INDEX, esExternal)
     newGroups = look_up(docIds, externalDocIds)
     post_new(newGroups, cfg.INT_ELASTIC.INDEX, esInternal, cfg.EXT_ELASTIC.INDEX, esExternal)
     results = query_final(data, cfg.INT_ELASTIC.INDEX, esInternal)
     if results:
-        return jsonify(results)
+        return json.dumps(results)
     else:
         return "No results"
 
@@ -112,4 +119,4 @@ if __name__ == '__main__':
         print("You've created a new index")
     except:
         print("You're currently working on a pre-existing index")
-    app.run()
+    app.run(debug=True)
