@@ -11,7 +11,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 
-def query_docs(search_term, host_index, es, size, ids_only):
+def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
     Here's a function to query Elastic Search and return either all the documents or a list of ids
     """
@@ -27,10 +27,15 @@ def query_docs(search_term, host_index, es, size, ids_only):
     groups = set()
     for i in res['hits']['hits']:
         if ids_only is True:
-            groups.add(str(i["_id"]))
+            if cdr is True:
+                groups.add(str(i["_id"]))
+            else:
+                for j in i["_source"]["docs"]:
+                    groups.add(str(j["_id"]))
         else:
             groups.add(json.dumps(i))
-    return set(groups)
+    groups = map(json.loads, groups)
+    return list(groups)
 
 
 def look_up(doc_ids, cdr_doc_ids):
@@ -39,20 +44,24 @@ def look_up(doc_ids, cdr_doc_ids):
     """
     new_ids = list(set(cdr_doc_ids) - set(doc_ids))
     if new_ids:
-        print("new_ids")
         conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
         cur = conn.cursor(pymysql.cursors.DictCursor)
-        sql_statement = ("SELECT %(doc_id_name)s, %(group_name)s from %(table_name)s where %(group_id_name)s in (SELECT %(group_id_name)s FROM %(table_name)s where %(doc_id_name)s in %(doc_id)s)")
-        parameters = {'doc_id_name': 'ad_id', 'group_id_name': 'phone_id', 'table_name': 'phone_link', 'doc_id': '(' + ', '.join(new_ids) + ')'}
+        sql_statement = """SELECT `phone_id`, `ad_id`
+            FROM `phone_link` WHERE `phone_id` IN (
+            SELECT `phone_id` FROM `phone_link` WHERE `ad_id` in %s )"""
+            #ToDo: Increase speed by adding join
         try:
-            cur.execute(sql_statement, parameters)  #Something is wrong here...
+            cur.execute(sql_statement, (list(map(int, new_ids)),))
             group = {}
             for row in cur:
+                print(row)
                 if row['phone_id'] in group:
                     group[str(row['phone_id'])].append(str(row['ad_id']))
                 else:
                     group[str(row['phone_id'])] = []
                     group[str(row['phone_id'])].append(str(row['ad_id']))
+            print("THE GROUP IS:")
+            print(group)
         except:
             print("Error")
             #The following line is for testing purposes only because the cursor is not
@@ -101,15 +110,19 @@ def doc_to_group():
     """
     data = request.get_json(force=True)["search"]
     print("You search for: " + data)
-    doc_ids = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True)
-    cdr_doc_ids = query_docs(data, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True)
+    doc_ids = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
+    print("Mirror: " + str(len(doc_ids)))
+    cdr_doc_ids = query_docs(data, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
+    print("CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
+    print("New Groups: " + len(new_groups))
     post_new(new_groups, cfg.MIRROR_ELASTIC.INDEX, es_mirror, cfg.CDR_ELASTIC.INDEX, es_cdr)
-    results = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False)
+    results = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
+    print("Results: " + str(len(results)))
     if results:
-        return jsonify(results)
+        return jsonify(results=results)
     else:
-        return jsonify({"message": "No results"})
+        return jsonify({'message': 'no results'})
 
 
 if __name__ == '__main__':
