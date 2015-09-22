@@ -62,7 +62,7 @@ def main():
             }
         }
     }
-    all_ads = eshelp.scan(client, index="memex_ht", doc_type="ad", scroll='30m', query=query)
+    all_ads = eshelp.scan(client, index=cfg.ELS.DB, doc_type="ad", scroll='30m', query=query)
     limited_ads = itertools.islice(all_ads, 1000)
 
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=8)
