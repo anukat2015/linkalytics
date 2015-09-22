@@ -3,10 +3,8 @@ tweepy
 python-instagram
 google-api-python-client
 elasticsearch
-<<<<<<< Updated upstream
 pymysql
 flask
-=======
 phonenumbers
 nose
->>>>>>> Stashed changes
+nltk

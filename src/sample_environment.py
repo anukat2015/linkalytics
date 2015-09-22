@@ -45,8 +45,8 @@ __instagram = API(KEY="k3y", SECRET="t0ps3cr3t")
 # just a developer API key
 __youtube = API(KEY="k3y", SECRET=None)
 
-# This is the MEMEX IST ES instance
-__memex_els = Database(HOST='localhost', PORT=29200, DB=None, USER="root", PASS="s3cr3t")
+# This is the MEMEX ES instance, DB is the index
+__memex_els = Database(HOST='localhost', PORT=9200, DB="my_index", USER="root", PASS="s3cr3t")
 
 
 if prod_env:

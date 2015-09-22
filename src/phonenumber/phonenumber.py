@@ -1,5 +1,6 @@
 import phonenumbers
 from phonenumbers import geocoder, carrier, timezone
+from .. utils import uniq_lod
 
 def run(node):
     """ This returns any US phone numbers in the text.
@@ -15,5 +16,4 @@ def run(node):
             "time_zone" : timezone.time_zones_for_number(match.number)
         })
     # http://stackoverflow.com/questions/11092511/python-list-of-unique-dictionaries
-    uniq_results = list({v['number']:v for v in results}.values())
-    return {"phonenumbers": uniq_results}
+    return {"phonenumbers": uniq_lod(results, 'number')}
