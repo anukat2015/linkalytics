@@ -8,3 +8,9 @@ flask
 phonenumbers
 nose
 nltk
+pandas
+numpy
+geopy
+reverse_geocoder
+flask_restful
+scipy
