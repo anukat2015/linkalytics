@@ -1,6 +1,6 @@
 import nose
 from utils import with_test
-from server import run
+from server import doc_to_group
 
 
 @with_test(doc_to_group, 'server')

@@ -8,6 +8,9 @@ import time
 from environment import cfg
 from flask import Flask, request, jsonify
 
+es_mirror = Elasticsearch(cfg.MIRROR_ELASTIC.URL, verify_certs=False)
+es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
+
 app = Flask(__name__)
 
 
