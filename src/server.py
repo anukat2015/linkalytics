@@ -60,12 +60,10 @@ def look_up(doc_ids, cdr_doc_ids):
                 else:
                     group[str(row['phone_id'])] = []
                     group[str(row['phone_id'])].append(str(row['ad_id']))
-            print("THE GROUP IS:")
+            print("Your search identified the following new groups:")
             print(group)
         except:
             print("Error")
-            #The following line is for testing purposes only because the cursor is not
-            group = {"12899314431": ["11113030", "11113031"]}
         finally:
             conn.close()
         return group
@@ -96,6 +94,7 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
             del result[u"_type"]
             new_group["docs"].append(result)
         res = mirror_es.index(index=mirror_host, doc_type="group", id=i, body=json.dumps(new_group))
+        print("Posted successfully")
 
 
 @app.route("/search", methods=['POST'])
@@ -108,16 +107,20 @@ def doc_to_group():
     Step 4 -- Post to Mirror Elastic if not yet contained in Mirror Elastic
     Step 5 -- Query newly updated Mirror Elastic
     """
-    data = request.get_json(force=True)["search"]
-    print("You search for: " + data)
-    doc_ids = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
-    print("Mirror: " + str(len(doc_ids)))
-    cdr_doc_ids = query_docs(data, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
-    print("CDR: " + str(len(cdr_doc_ids)))
+    search_term = request.get_json(force=True)["search"]
+    print("You searched for: " + search_term)
+    doc_ids = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
+    print("# of Results from Mirror: " + str(len(doc_ids)))
+    cdr_doc_ids = query_docs(search_term, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
+    print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
-    print("New Groups: " + len(new_groups))
-    post_new(new_groups, cfg.MIRROR_ELASTIC.INDEX, es_mirror, cfg.CDR_ELASTIC.INDEX, es_cdr)
-    results = query_docs(data, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
+    if new_groups:
+        print("# of New Groups: " + str(len(new_groups)))
+        post_new(new_groups, cfg.MIRROR_ELASTIC.INDEX, es_mirror, cfg.CDR_ELASTIC.INDEX, es_cdr)
+        time.sleep(2)
+    else:
+        print("No new groups")
+    results = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
     print("Results: " + str(len(results)))
     if results:
         return jsonify(results=results)
