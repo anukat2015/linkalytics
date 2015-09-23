@@ -98,7 +98,7 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
 
 
 @app.route("/search", methods=['POST'])
-def doc_to_group():
+def doc_to_group(search_term):
     """
     Here's a server that takes a search term as an input and provides a list of grouped documents as an output
     Step 1 -- Query Mirror Elastic
@@ -107,7 +107,10 @@ def doc_to_group():
     Step 4 -- Post to Mirror Elastic if not yet contained in Mirror Elastic
     Step 5 -- Query newly updated Mirror Elastic
     """
-    search_term = request.get_json(force=True)["search"]
+    try:
+        search_term = request.get_json(force=True)["search"]
+    except:
+        search_term = search_term["text"]
     print("You searched for: " + search_term)
     doc_ids = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
     print("# of Results from Mirror: " + str(len(doc_ids)))
