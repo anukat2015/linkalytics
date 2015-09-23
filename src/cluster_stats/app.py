@@ -1,35 +1,13 @@
-from flask import Flask
-
-app = Flask(__name__)
-
+from flask import Flask, request
 from elasticsearch import Elasticsearch
 import reverse_geocoder as rg
-from flask import Flask,request,abort
-from flask_restful import Resource, Api
 import json
 from collections import Counter
 import numpy as np
 from itertools import tee, izip
 from geopy.distance import vincenty
 import datetime
-import pandas as pd
-
-
-app = Flask(__name__)
-
-
-from elasticsearch import Elasticsearch
-import reverse_geocoder as rg
-from flask import Flask,request,abort
-from flask_restful import Resource, Api
-import json
-from collections import Counter
-import numpy as np
-from itertools import tee, izip
-from geopy.distance import vincenty
-import datetime
-import pandas as pd
-
+from environment import cfg
 
 app = Flask(__name__)
 
@@ -51,14 +29,12 @@ def window(iterable, size):
             next(each, None)
     return izip(*iters)
 
+
 @app.route('/cluster_analyze', methods=['POST'])
 def analyze_clusters():
-    #if not request.json:
-    #   abort(400)
-
     clusters = json.loads(request.data)['ids']
     q = {
-        "size": 5000,
+        "size": 2000,
         "query": {
             "terms": {
                 "_id": clusters
@@ -76,8 +52,8 @@ def analyze_clusters():
         }
     }
 
-    es = Elasticsearch(['es_url'])
-    res = es.search(body=q, index="memex_ht", doc_type='ad')
+    es = Elasticsearch(cfg.CDR_ELASTIC.URL)
+    res = es.search(body=q, index=cfg.CDR_ELASTIC.INDEX, doc_type='ad')
     geo = filter(lambda x: 'latitude' in x['_source'].keys(), res['hits']['hits'])
     geopts = map(lambda x: (float(x['_source']['latitude']), float(x['_source']['longitude'])), geo)
     ethnicity = filter(lambda x: 'ethnicity' in x['_source'].keys(), res['hits']['hits'])
@@ -111,7 +87,7 @@ def analyze_clusters():
     else:
         eth = "One"
 
-    if len(geopts) > 0:
+    if geopts:
         results = rg.search(geopts)  # default mode = 2
         countries = set(map(lambda x: x['cc'], results))
         states = set(map(lambda x: x['admin1'], results))
@@ -126,7 +102,7 @@ def analyze_clusters():
         location = "No information"
 
     q2 = {
-        "size": 5000,
+        "size": 2000,
         "query": {
             "terms": {
                 "city": list(set(city))
