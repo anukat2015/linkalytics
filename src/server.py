@@ -55,7 +55,6 @@ def look_up(doc_ids, cdr_doc_ids):
     new_ids = list(set(cdr_doc_ids) - set(doc_ids))
     print(new_ids)
     if new_ids:
-
         conn = pymysql.connect(host=cfg["sql"]["host"],
                                port=3306,
                                user=cfg["sql"]["user"],
@@ -190,7 +189,6 @@ def test_doc_to_group(search):
 
     print("# of Results from Mirror: {}".format(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cdr_elastic_index, es_cdr, 50, True, True)
-
     print("# of Results from CDR: {}".format(cdr_doc_ids))
     new_groups = look_up(doc_ids, cdr_doc_ids)
 
@@ -212,7 +210,6 @@ def test_doc_to_group(search):
 
 
 if __name__ == '__main__':
-
     es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
     mirror_elastic_index = cfg["mirror_elastic_search"]["index"]
     es_cdr = Elasticsearch(cfg["cdr_elastic_search"]["hosts"], verify_certs=False)
@@ -225,5 +222,4 @@ if __name__ == '__main__':
 
     except:
         print("You're currently working on a pre-existing index")
-
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=8080)
