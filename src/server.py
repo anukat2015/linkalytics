@@ -18,6 +18,9 @@ import time
 from environment import cfg
 from flask import Flask, request, jsonify
 
+# es_mirror = Elasticsearch(cfg.MIRROR_ELS.HOST, verify_certs=False)
+# es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
+
 app = Flask(__name__)
 
 
@@ -161,7 +164,6 @@ def doc_to_group(endpoint):
 
     else:
         print("No new groups")
-
     results = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 100, False, True)
     print("Results: " + str(len(results)))
 
@@ -189,6 +191,7 @@ def test_doc_to_group(search):
 
     print("# of Results from Mirror: {}".format(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cdr_elastic_index, es_cdr, 50, True, True)
+
     print("# of Results from CDR: {}".format(cdr_doc_ids))
     new_groups = look_up(doc_ids, cdr_doc_ids)
 
@@ -199,7 +202,6 @@ def test_doc_to_group(search):
 
     else:
         print("No new groups")
-
     results = query_docs(search_term, mirror_elastic_index, es_mirror, 100, False, True)
     print("Results: " + str(len(results)))
 
@@ -217,6 +219,13 @@ if __name__ == '__main__':
 
     try:
         es_mirror.indices.create(index=cfg["mirror_elastic_search"]["index"])
+    es_instance = "http://{host}:{port}".format(host=cfg.MIRROR_ELS.HOST, port=cfg.MIRROR_ELS.PORT)
+    es_mirror = Elasticsearch(es_instance, verify_certs=False)
+
+    es_instance = "https://{user}:{passwd}@{host}:{port}".format(user=cfg.CDR_ELS.USER, passwd=cfg.CDR_ELS.PASS, host=cfg.CDR_ELS.HOST, port=cfg.CDR_ELS.PORT)
+    es_cdr = Elasticsearch(es_instance, verify_certs=False)
+    try:
+        es_mirror.indices.create(index=cfg.MIRROR_ELS.DB)
         time.sleep(1)
         print("You've created a new index")
 
