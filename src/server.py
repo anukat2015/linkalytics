@@ -8,8 +8,8 @@ import time
 from environment import cfg
 from flask import Flask, request, jsonify
 
-es_mirror = Elasticsearch(cfg.MIRROR_ELASTIC.URL, verify_certs=False)
-es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
+# es_mirror = Elasticsearch(cfg.MIRROR_ELASTIC.URL, verify_certs=False)
+# es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
 
 app = Flask(__name__)
 
@@ -57,7 +57,7 @@ def look_up(doc_ids, cdr_doc_ids):
             cur.execute(sql_statement, (list(map(int, new_ids)),))
             group = {}
             for row in cur:
-                print(row)
+                # print(row)
                 if row['phone_id'] in group:
                     group[str(row['phone_id'])].append(str(row['ad_id']))
                 else:
@@ -96,12 +96,13 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
             del result[u"_score"]
             del result[u"_type"]
             new_group["docs"].append(result)
+        #Add Instagram, Twitter, and Youtube add-ons here
         res = mirror_es.index(index=mirror_host, doc_type="group", id=i, body=json.dumps(new_group))
         print("Posted successfully")
 
 
 @app.route("/search", methods=['POST'])
-def doc_to_group(search_term):
+def doc_to_group():
     """
     Here's a server that takes a search term as an input and provides a list of grouped documents as an output
     Step 1 -- Query Mirror Elastic
@@ -110,15 +111,14 @@ def doc_to_group(search_term):
     Step 4 -- Post to Mirror Elastic if not yet contained in Mirror Elastic
     Step 5 -- Query newly updated Mirror Elastic
     """
-    try:
-        search_term = request.get_json(force=True)["search"]
-    except:
-        search_term = search_term["text"]
-    print("You searched for: " + search_term)
+    # search_term = search["text"]
+
+    search_term = request.get_json(force=True)["search"]
+    # print("You searched for: " + search_term)
     doc_ids = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
-    print("# of Results from Mirror: " + str(len(doc_ids)))
+    # print("# of Results from Mirror: " + str(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
-    print("# of Results from CDR: " + str(len(cdr_doc_ids)))
+    # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
     if new_groups:
         print("# of New Groups: " + str(len(new_groups)))
@@ -127,7 +127,37 @@ def doc_to_group(search_term):
     else:
         print("No new groups")
     results = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
-    print("Results: " + str(len(results)))
+    #print("Results: " + str(len(results)))
+    if results:
+        return jsonify(results=results)
+    else:
+        return jsonify({'message': 'no results'})
+
+
+def test_doc_to_group(search):
+    """
+    Here's a server that takes a search term as an input and provides a list of grouped documents as an output
+    Step 1 -- Query Mirror Elastic
+    Step 2 -- Query CDR Elastic
+    Step 3 -- Check Lookup Table
+    Step 4 -- Post to Mirror Elastic if not yet contained in Mirror Elastic
+    Step 5 -- Query newly updated Mirror Elastic
+    """
+    search_term = search["text"]
+    # print("You searched for: " + search_term)
+    doc_ids = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
+    # print("# of Results from Mirror: " + str(len(doc_ids)))
+    cdr_doc_ids = query_docs(search_term, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
+    # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
+    new_groups = look_up(doc_ids, cdr_doc_ids)
+    if new_groups:
+        print("# of New Groups: " + str(len(new_groups)))
+        post_new(new_groups, cfg.MIRROR_ELASTIC.INDEX, es_mirror, cfg.CDR_ELASTIC.INDEX, es_cdr)
+        time.sleep(1.2)
+    else:
+        print("No new groups")
+    results = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
+    #print("Results: " + str(len(results)))
     if results:
         return jsonify(results=results)
     else:
