@@ -21,7 +21,7 @@ def query_docs(search_term, host_index, es, size, ids_only, cdr):
     payload = {
         "size": size,
         "query": {
-            "match": {
+            "match_phrase": {
                 "_all": search_term
                 }
             }
