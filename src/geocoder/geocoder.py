@@ -30,8 +30,6 @@ def run(node):
     coordinates = [(i, lat_long(i)) for i in node['city']]
     return {
         'city': [
-            {"name": k,
-             "latitude": v[0],
-             "longitude": v[1],
-        } for k, v in coordinates]
+            {"name": k, "latitude": v[0], "longitude": v[1] } for k, v in coordinates
+        ]
     }
