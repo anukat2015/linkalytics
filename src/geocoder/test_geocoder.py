@@ -5,7 +5,7 @@ from . geocoder import run
 @with_test(run, 'city')
 def data():
     yield (
-        {'city': ('Portland, MA', 'Portland, OR')}, [
+        {'city': ['Portland, MA', 'Portland, OR']}, [
         {'latitude': 42.077535,
            'longitude': -72.654684,
            'name': 'Portland, MA'},

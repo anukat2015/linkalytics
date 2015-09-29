@@ -44,10 +44,11 @@ google = GoogleV3()
 lat_long = functools.partial(get_lat_long, google)
 
 def run(node):
+    coordinates = [(i, lat_long(i)) for i in node['city']]
     return {
         'city': [
-            {"name": n, 
-             "latitude": lat_long(n)[0], 
-             "longitude": lat_long(n)[1]
-            } for n in node.get('city')]
+            {"name": k,
+             "latitude": v[0],
+             "longitude": v[1],
+        } for k, v in coordinates]
     }

@@ -11,4 +11,3 @@ nltk
 numpy
 geopy
 reverse_geocoder
-scipy
