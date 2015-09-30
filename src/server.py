@@ -142,18 +142,18 @@ def test_doc_to_group(search):
     """
     search_term = search["text"]
     # print("You searched for: " + search_term)
-    doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
+    doc_ids = query_docs(search_term, mirror_elastic_index, es_mirror, 50, True, False)
     # print("# of Results from Mirror: " + str(len(doc_ids)))
-    cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
+    cdr_doc_ids = query_docs(search_term, cdr_elastic_index, es_cdr, 50, True, True)
     # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
     if new_groups:
         print("# of New Groups: " + str(len(new_groups)))
-        post_new(new_groups, cfg["mirror_elastic_search"]["index"], es_mirror, cfg["cdr_elastic_search"]["index"], es_cdr)
+        post_new(new_groups, mirror_elastic_index, es_mirror, cdr_elastic_index, es_cdr)
         time.sleep(1.2)
     else:
         print("No new groups")
-    results = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 100, False, True)
+    results = query_docs(search_term, mirror_elastic_index, es_mirror, 100, False, True)
     #print("Results: " + str(len(results)))
     if results:
         return jsonify(results=results)
@@ -163,7 +163,9 @@ def test_doc_to_group(search):
 
 if __name__ == '__main__':
     es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
+    mirror_elastic_index = cfg["mirror_elastic_search"]["index"]
     es_cdr = Elasticsearch(cfg["cdr_elastic_search"]["hosts"], verify_certs=False)
+    cdr_elastic_index = cfg["cdr_elastic_search"]["index"]
     try:
         es_mirror.indices.create(index=cfg["mirror_elastic_search"]["index"])
         time.sleep(1)
