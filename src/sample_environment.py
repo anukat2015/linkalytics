@@ -12,47 +12,28 @@ import sample_environmnet as env
 print(env.cfg.TWITTER.KEY)
 """
 import os
-import collections
 import pytoml as toml
 
 prod_env = os.getenv('PRODUCTION', False)
 
-with open('/environment/common.cfg', 'rb') as fin:
-    common = toml.load(fin)
-with open('/environment/develop.cfg', 'rb') as fin:
-    develop = toml.load(fin)
-with open('/environment/production.cfg', 'rb') as fin:
-    production = toml.load(fin)
 
-# This contains configuration environments
-Config = collections.namedtuple('Config', (
-    'TWITTER_',             # twitter creds
-    'INSTAGRAM_CONSUMER',   # instagram creds
-    'YOUTUBE',              # youtube developer key
-    'SQL',                  # sql instance
-    'CDR_ELASTIC',          # elasticsearch instance for common data repository
-    'MIRROR_ELASTIC'       # elasticsearch instance for mirrored local instance
+def load_config(name):
+    try:
+        with open('/environment/' + name + '.cfg', 'rb') as fin:
+            config = toml.load(fin)
+        return config
+    except:
+        print("ERROR: Did you remember to generate config files with credstmpl?")
 
-    # you can include your own fields too!
-))
+common = load_config("common")
 
 if prod_env:
-    # Any production environments go here....
-    cfg = Config(
-        TWITTER             = common["twitter"]
-        INSTAGRAM           = common["instagram"],
-        YOUTUBE             = common["youtube"],
-        SQL                 = production["sql"],
-        CDR_ELASTIC         = common["cdr_elastic_search"],
-        MIRROR_ELASTIC      = production["mirror_elastic_search"]
-    )
+    production = load_config("production")
+    # Common and Production Configurations Here
+    cfg = common.copy()
+    cfg.update(production)
 else:
-    # Any other environments go here....
-    cfg = Config(
-        TWITTER             = common["twitter"]
-        INSTAGRAM           = common["instagram"],
-        YOUTUBE             = common["youtube"],
-        SQL                 = develop["sql"],
-        CDR_ELASTIC         = common["cdr_elastic_search"],
-        MIRROR_ELASTIC      = develop["mirror_elastic_search"]
-    )
+    develop = load_config("develop")
+    # Common and Development Configurations Here
+    cfg = common.copy()
+    cfg.update(develop)
