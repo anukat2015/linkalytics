@@ -12,58 +12,24 @@ import sample_environmnet as env
 print(env.cfg.TWITTER.KEY)
 """
 import os
-import collections
+import pytoml as toml
 
 prod_env = os.getenv('PRODUCTION', False)
 
-# This contains an API key and its secret
-API = collections.namedtuple('API', ('KEY', 'SECRET'))
 
-# This contains information for databases
-Database = collections.namedtuple('Database', ('HOST', 'PORT', 'DB', 'USER', 'PASS'))
+def load_config(name):
+    try:
+        with open('/environment/' + name + '.cfg', 'rb') as fin:
+            config = toml.load(fin)
+        return config
+    except:
+        print("ERROR: Did you remember to generate config files with credstmpl? Check out credstmpl at https://github.com/qadium/credstmpl -- you'll need to run `credstmpl filename.extension.j2`")
 
-# This contains configuration environments
-Config = collections.namedtuple('Config', (
-    'TWITTER_ACCESS',       # twitter access key and secret
-    'TWITTER_CONSUMER',     # twitter consumer key and secret
-    'INSTAGRAM',            # instagram access key and secret
-    'YOUTUBE',              # youtube developer key
-    'ELS'                   # elasticsearch instance
-    # you can include your own fields here
-))
-
-# This is the twitter access API key
-__twitter_access = API(KEY="k3y", SECRET="t0ps3cr3t")
-
-# This is the twitter consumer API key
-__twitter_consumer = API(KEY="k3y", SECRET="t0ps3cr3t")
-
-# This is the common instagram API key
-__instagram = API(KEY="k3y", SECRET="t0ps3cr3t")
-
-# This is the common youtube API key, the SECRET is None since it's
-# just a developer API key
-__youtube = API(KEY="k3y", SECRET=None)
-
-# This is the MEMEX ES instance, DB is the index
-__memex_els = Database(HOST='localhost', PORT=9200, DB="my_index", USER="root", PASS="s3cr3t")
-
-
+config = {}
 if prod_env:
-    # Any production environments go here....
-    cfg = Config(
-        TWITTER_ACCESS      = __twitter_access,
-        TWITTER_CONSUMER    = __twitter_consumer,
-        INSTAGRAM           = __instagram,
-        YOUTUBE             = __youtube,
-        ELS                 = __memex_els
-    )
+    config = load_config("production")
 else:
-    # Any other environments go here....
-    cfg = Config(
-        TWITTER_ACCESS      = __twitter_access,
-        TWITTER_CONSUMER    = __twitter_consumer,
-        INSTAGRAM           = __instagram,
-        YOUTUBE             = __youtube,
-        ELS                 = __memex_els
-    )
+    config = load_config("develop")
+
+cfg = load_config("common")
+cfg.update(config)

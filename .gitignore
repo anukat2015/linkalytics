@@ -1,5 +1,8 @@
 # environment variables / keys
 environment.py
+common.cfg
+develop.cfg
+production.cfg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
