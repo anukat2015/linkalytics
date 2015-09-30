@@ -13,10 +13,11 @@ Backend analytics to link together disparate data
 
 ###OPTIONAL: Step 2 -- Instantiate credentials from shared repository using `credstmpl`
 
-See Qadium's [credstmpl github repository](https://github.com/qadium/credstmpl) for more installation instructions
-credstmpl /src/environment/common.cfg.j2
-credstmpl /src/environment/develop.cfg.j2
-credstmpl /src/environment/production.cfg.j2
+See Qadium's [credstmpl github repository](https://github.com/qadium/credstmpl) for more installation instructions. Also, please note this requires AWS credentials. If you'd like to work with our data, contact one of us for the creds.
+
+```credstmpl /src/environment/common.cfg.j2```
+```credstmpl /src/environment/develop.cfg.j2```
+```credstmpl /src/environment/production.cfg.j2```
 
 ####Step 2 -- Get going
 
