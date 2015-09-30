@@ -1,0 +1,17 @@
+[twitter]
+access_token        = "{{ credstash('twitter_access_key') }}"
+access_token_secret = "{{ credstash('twitter_access_secret') }}"
+consumer_key        = "{{ credstash('twitter_consumer_key') }}"
+consumer_secret     = "{{ credstash('twitter_consumer_secret') }}"
+
+[instagram]
+client_id           = "{{ credstash('instagram_consumer_key') }}"
+client_secret       = "{{ credstash('instagram_consumer_secret') }}"
+access_token        = "{{ credstash('instagram_access_key') }}"
+
+[youtube]
+developer_key       = "{{ credstash('youtube_common_key') }}"
+
+[cdr_elastic_search]
+hosts               = "{{ credstash('elastic_cdr_url') }}"
+index               = "memex_ht"

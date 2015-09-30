@@ -1,0 +1,9 @@
+[mirror_elastic_search]
+hosts               = "{{ credstash('mirror_cdr_url') }}"
+index               = "entities-v2"
+
+[sql]
+user                = "{{ credstash('link_sql_user') }}"
+host                = "mysql"
+password            = "{{ credstash('link_sql_pass') }}"
+database            = "link_ht”
