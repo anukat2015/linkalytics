@@ -23,17 +23,13 @@ def load_config(name):
             config = toml.load(fin)
         return config
     except:
-        print("ERROR: Did you remember to generate config files with credstmpl?")
+        print("ERROR: Did you remember to generate config files with credstmpl? Check out credstmpl at https://github.com/qadium/credstmpl -- you'll need to run `credstmpl filename.extension.j2`")
 
-common = load_config("common")
-
+config = {}
 if prod_env:
-    production = load_config("production")
-    # Common and Production Configurations Here
-    cfg = common.copy()
-    cfg.update(production)
+    config = load_config("production")
 else:
-    develop = load_config("develop")
-    # Common and Development Configurations Here
-    cfg = common.copy()
-    cfg.update(develop)
+    config = load_config("develop")
+
+cfg = load_config("common")
+cfg.update(config)
