@@ -1,5 +1,5 @@
 # linkalytics
-Source code for various analytics
+Backend analytics to link together disparate data
 
 ##Getting Started with Linkalytics
 
@@ -11,6 +11,12 @@ Source code for various analytics
 
 ```brew install redis```
 
+###OPTIONAL: Step 2 -- Instantiate credentials from shared repository using `credstmpl`
+
+See Qadium's [credstmpl github repository](https://github.com/qadium/credstmpl) for more installation instructions
+credstmpl /src/environment/common.cfg.j2
+credstmpl /src/environment/develop.cfg.j2
+credstmpl /src/environment/production.cfg.j2
 
 ####Step 2 -- Get going
 
