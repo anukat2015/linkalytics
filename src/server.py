@@ -8,9 +8,6 @@ import time
 from environment import cfg
 from flask import Flask, request, jsonify
 
-# es_mirror = Elasticsearch(cfg.MIRROR_ELASTIC.URL, verify_certs=False)
-# es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
-
 app = Flask(__name__)
 
 
@@ -47,7 +44,7 @@ def look_up(doc_ids, cdr_doc_ids):
     """
     new_ids = list(set(cdr_doc_ids) - set(doc_ids))
     if new_ids:
-        conn = pymysql.connect(host=cfg.SQL.HOST, port=3306, user=cfg.SQL.USER, passwd=cfg.SQL.PASS, db=cfg.SQL.DB)
+        conn = pymysql.connect(host=cfg["sql"]["host"], port=3306, user=cfg["sql"]["user"], passwd=cfg["sql"]["password"], db=cfg["sql"]["database"])
         cur = conn.cursor(pymysql.cursors.DictCursor)
         sql_statement = """SELECT `phone_id`, `ad_id`
             FROM `phone_link` WHERE `phone_id` IN (
@@ -115,18 +112,18 @@ def doc_to_group():
 
     search_term = request.get_json(force=True)["search"]
     # print("You searched for: " + search_term)
-    doc_ids = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
+    doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
     # print("# of Results from Mirror: " + str(len(doc_ids)))
-    cdr_doc_ids = query_docs(search_term, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
+    cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
     # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
     if new_groups:
         print("# of New Groups: " + str(len(new_groups)))
-        post_new(new_groups, cfg.MIRROR_ELASTIC.INDEX, es_mirror, cfg.CDR_ELASTIC.INDEX, es_cdr)
+        post_new(new_groups, cfg["mirror_elastic_search"]["index"], es_mirror, cfg["cdr_elastic_search"]["index"], es_cdr)
         time.sleep(2)
     else:
         print("No new groups")
-    results = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
+    results = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 100, False, True)
     #print("Results: " + str(len(results)))
     if results:
         return jsonify(results=results)
@@ -145,18 +142,18 @@ def test_doc_to_group(search):
     """
     search_term = search["text"]
     # print("You searched for: " + search_term)
-    doc_ids = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 50, True, False)
+    doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
     # print("# of Results from Mirror: " + str(len(doc_ids)))
-    cdr_doc_ids = query_docs(search_term, cfg.CDR_ELASTIC.INDEX, es_cdr, 50, True, True)
+    cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
     # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
     if new_groups:
         print("# of New Groups: " + str(len(new_groups)))
-        post_new(new_groups, cfg.MIRROR_ELASTIC.INDEX, es_mirror, cfg.CDR_ELASTIC.INDEX, es_cdr)
+        post_new(new_groups, cfg["mirror_elastic_search"]["index"], es_mirror, cfg["cdr_elastic_search"]["index"], es_cdr)
         time.sleep(1.2)
     else:
         print("No new groups")
-    results = query_docs(search_term, cfg.MIRROR_ELASTIC.INDEX, es_mirror, 100, False, True)
+    results = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 100, False, True)
     #print("Results: " + str(len(results)))
     if results:
         return jsonify(results=results)
@@ -165,10 +162,10 @@ def test_doc_to_group(search):
 
 
 if __name__ == '__main__':
-    es_mirror = Elasticsearch(cfg.MIRROR_ELASTIC.URL, verify_certs=False)
-    es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
+    es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
+    es_cdr = Elasticsearch(cfg["cdr_elastic_search"]["hosts"], verify_certs=False)
     try:
-        es_mirror.indices.create(index=cfg.MIRROR_ELASTIC.INDEX)
+        es_mirror.indices.create(index=cfg["mirror_elastic_search"]["index"])
         time.sleep(1)
         print("You've created a new index")
     except:
