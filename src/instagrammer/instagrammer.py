@@ -10,9 +10,9 @@ logging.basicConfig()
 log = logging.getLogger("linkalytics.instagram")
 
 api = instagram.client.InstagramAPI(
-	client_id		= cfg.INSTAGRAM_CONSUMER.KEY,
-	client_secret	= cfg.INSTAGRAM_CONSUMER.SECRET,
-	access_token	= cfg.INSTAGRAM_ACCESS.KEY
+	client_id	= cfg['instagram']['client_id'],
+	client_secret	= cfg['instagram']['client_secret'],
+	access_token	= cfg['instagram']['access_token'],
 )
 instagram_regex = re.compile('instagram\s*-?@?:?;?(\.com\/)?_?\.?\s*([^\s^\/]*)',re.IGNORECASE)
 

@@ -8,8 +8,8 @@ This is a Python file, so you can customize its behavior as you see fit.
 
 To use these configurations, you can use, for instance
 
-import sample_environmnet as env
-print(env.cfg.TWITTER.KEY)
+>>> import environment as env
+>>> print(env.cfg['twitter']['access_token'])
 """
 import os
 import pytoml as toml
