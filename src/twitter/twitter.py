@@ -7,8 +7,8 @@ from .. utils import retry, sanitize, uniq_lod
 logging.basicConfig()
 log = logging.getLogger("linkalytics.twitter")
 
-auth = tweepy.OAuthHandler(cfg.TWITTER_CONSUMER.KEY, cfg.TWITTER_CONSUMER.SECRET)
-auth.set_access_token(cfg.TWITTER_ACCESS.KEY, cfg.TWITTER_ACCESS.SECRET)
+auth = tweepy.OAuthHandler(cfg['twitter']['consumer_key'], cfg['twitter']['consumer_secret'])
+auth.set_access_token(cfg['twitter']['access_token'], cfg['twitter']['access_token_secret'])
 api = tweepy.API(auth)
 
 twitter_regex = re.compile('twitter\s*-*@*:*;*(\.com\/)?_*\.*\s*([^\s^\/]*)',re.IGNORECASE)

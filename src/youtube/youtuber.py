@@ -8,7 +8,7 @@ from .. utils import uniq_lod, sanitize
 logging.basicConfig()
 log = logging.getLogger("linkalytics.youtube")
 
-YOUTUBE_DEVELOPER_KEY = cfg.YOUTUBE.KEY
+YOUTUBE_DEVELOPER_KEY = cfg['youtube']['developer_key']
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
