@@ -45,7 +45,7 @@ def get_result(job_id):
         return (job.id, job.status, None)
 
 def main():
-    es_instance = "https://{user}:{passwd}@{host}:{port}".format(user=cfg.ELS.USER, passwd=cfg.ELS.PASS, host=cfg.ELS.HOST, port=cfg.ELS.PORT)
+    es_instance = "https://{user}:{passwd}@{host}:{port}".format(user=cfg.CDR_ELS.USER, passwd=cfg.CDR_ELS.PASS, host=cfg.CDR_ELS.HOST, port=cfg.CDR_ELS.PORT)
     client = es.Elasticsearch([es_instance], timeout=60, retry_on_timeout=True)
 
     # j1 = q1.enqueue(twitter.run, {"text": "twitter.com/realDonaldTrump"})
@@ -61,7 +61,7 @@ def main():
             }
         }
     }
-    all_ads = eshelp.scan(client, index=cfg.ELS.DB, doc_type="ad", scroll='30m', query=query)
+    all_ads = eshelp.scan(client, index=cfg.CDR_ELS.DB, doc_type="ad", scroll='30m', query=query)
     limited_ads = itertools.islice(all_ads, 1000)
 
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=8)
