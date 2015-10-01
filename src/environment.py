@@ -17,9 +17,16 @@ import pytoml as toml
 prod_env = os.getenv('PRODUCTION', False)
 
 
+
 def load_config(name):
+
+    base = os.path.dirname(os.path.realpath(__file__))
+    fmt  = '{base}{sep}environment{sep}{name}.cfg'
+
+    config_file_path = fmt.format(sep=os.sep, base=base, name=name)
+
     try:
-        with open('/environment/' + name + '.cfg', 'rb') as fin:
+        with open(config_file_path, 'rb') as fin:
             config = toml.load(fin)
         return config
     except:

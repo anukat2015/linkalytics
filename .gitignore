@@ -1,5 +1,4 @@
 # environment variables / keys
-environment.py
 common.cfg
 develop.cfg
 production.cfg
