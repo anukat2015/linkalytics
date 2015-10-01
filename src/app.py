@@ -18,9 +18,8 @@ queues = {
     'twitter'   : rq.Queue('twitter', connection=redis.Redis()),
     'youtube'   : rq.Queue('youtube', connection=redis.Redis()),
     'phone'     : rq.Queue('phone', connection=redis.Redis()),
-    'instagram' :rq.Queue('instagram', connection=redis.Redis())
+    'instagram' : rq.Queue('instagram', connection=redis.Redis())
 }
-q1 = queues['twitter']
 
 def process_record(record):
     print('got job {}'.format(record['_source']['id']))
