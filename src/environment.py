@@ -19,10 +19,12 @@ prod_env = os.getenv('PRODUCTION', False)
 
 
 def load_config(name):
-    current_file = os.path.realpath(__file__)
-    base = os.path.dirname(current_file)
-    config_file_path = '{base}{sep}environment{sep}{name}.cfg'.format(sep=os.sep, base=base, name=name)
-    print(config_file_path)
+
+    base = os.path.dirname(os.path.realpath(__file__))
+    fmt  = '{base}{sep}environment{sep}{name}.cfg'
+
+    config_file_path = fmt.format(sep=os.sep, base=base, name=name)
+
     try:
         with open(config_file_path, 'rb') as fin:
             config = toml.load(fin)
