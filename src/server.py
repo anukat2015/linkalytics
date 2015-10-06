@@ -131,8 +131,8 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
         print("Posted successfully")
 
 
-@app.route("/search", methods=['POST'])
-def doc_to_group():
+@app.route("/<path:endpoint>", methods=['POST'])
+def doc_to_group(endpoint):
     """
     Here's a server that takes a search term as an input
     and provides a list of grouped documents as an output
@@ -144,7 +144,7 @@ def doc_to_group():
     Step 5 -- Query newly updated Mirror Elastic
     """
     # search_term = search["text"]
-
+    print(endpoint)
     search_term = request.get_json(force=True)["search"]
     print("You searched for: " + search_term)
     doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
@@ -152,11 +152,11 @@ def doc_to_group():
     print("# of Results from Mirror: " + str(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
 
-    print("# of Results from CDR: " + str(len(cdr_doc_ids)))
+    print("# of Results from CDR: {}".format(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
 
     if new_groups:
-        print("# of New Groups: " + str(len(new_groups)))
+        print("# of New Groups: {}".format(len(new_groups)))
         post_new(new_groups, cfg["mirror_elastic_search"]["index"], es_mirror, cfg["cdr_elastic_search"]["index"], es_cdr)
         time.sleep(2)
 
@@ -185,17 +185,17 @@ def test_doc_to_group(search):
     """
     search_term = search["text"]
 
-    print("You searched for: " + search_term)
+    print("You searched for: {}".format(search_term))
     doc_ids = query_docs(search_term, mirror_elastic_index, es_mirror, 50, True, False)
 
-    print("# of Results from Mirror: " + str(len(doc_ids)))
+    print("# of Results from Mirror: {}".format(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cdr_elastic_index, es_cdr, 50, True, True)
 
-    print("# of Results from CDR: " + str(len(cdr_doc_ids)))
+    print("# of Results from CDR: {}".format(cdr_doc_ids))
     new_groups = look_up(doc_ids, cdr_doc_ids)
 
     if new_groups:
-        print("# of New Groups: " + str(len(new_groups)))
+        print("# of New Groups: {}".format(len(new_groups)))
         post_new(new_groups, mirror_elastic_index, es_mirror, cdr_elastic_index, es_cdr)
         time.sleep(1.2)
 
