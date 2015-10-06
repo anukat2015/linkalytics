@@ -53,7 +53,7 @@ def look_up(doc_ids, cdr_doc_ids):
     To use initially queried document ids to identify other related document ids
     """
     new_ids = list(set(cdr_doc_ids) - set(doc_ids))
-
+    print(new_ids)
     if new_ids:
 
         conn = pymysql.connect(host=cfg["sql"]["host"],
@@ -61,7 +61,8 @@ def look_up(doc_ids, cdr_doc_ids):
                                user=cfg["sql"]["user"],
                                passwd=cfg["sql"]["password"],
                                db=cfg["sql"]["database"]
-        )
+                                )
+        print(conn)
         cur = conn.cursor(pymysql.cursors.DictCursor)
 
         #TODO: Increase speed by adding join
@@ -79,7 +80,7 @@ def look_up(doc_ids, cdr_doc_ids):
             cur.execute(sql_statement, (list(map(int, new_ids)),))
             group = {}
             for row in cur:
-                # print(row)
+                print(row)
                 if row['phone_id'] in group:
                     group[str(row['phone_id'])].append(str(row['ad_id']))
                 else:
@@ -145,13 +146,13 @@ def doc_to_group():
     # search_term = search["text"]
 
     search_term = request.get_json(force=True)["search"]
-    # print("You searched for: " + search_term)
+    print("You searched for: " + search_term)
     doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
 
-    # print("# of Results from Mirror: " + str(len(doc_ids)))
+    print("# of Results from Mirror: " + str(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
 
-    # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
+    print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
 
     if new_groups:
@@ -163,7 +164,7 @@ def doc_to_group():
         print("No new groups")
 
     results = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 100, False, True)
-    #print("Results: " + str(len(results)))
+    print("Results: " + str(len(results)))
 
     if results:
         return jsonify(results=results)
@@ -184,13 +185,13 @@ def test_doc_to_group(search):
     """
     search_term = search["text"]
 
-    # print("You searched for: " + search_term)
+    print("You searched for: " + search_term)
     doc_ids = query_docs(search_term, mirror_elastic_index, es_mirror, 50, True, False)
 
-    # print("# of Results from Mirror: " + str(len(doc_ids)))
+    print("# of Results from Mirror: " + str(len(doc_ids)))
     cdr_doc_ids = query_docs(search_term, cdr_elastic_index, es_cdr, 50, True, True)
 
-    # print("# of Results from CDR: " + str(len(cdr_doc_ids)))
+    print("# of Results from CDR: " + str(len(cdr_doc_ids)))
     new_groups = look_up(doc_ids, cdr_doc_ids)
 
     if new_groups:
@@ -202,7 +203,7 @@ def test_doc_to_group(search):
         print("No new groups")
 
     results = query_docs(search_term, mirror_elastic_index, es_mirror, 100, False, True)
-    #print("Results: " + str(len(results)))
+    print("Results: " + str(len(results)))
 
     if results:
         return jsonify(results=results)
