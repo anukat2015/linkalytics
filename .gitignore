@@ -2,6 +2,11 @@
 common.cfg
 develop.cfg
 production.cfg
+account.json
+keys/
+
+# tfstate files
+*.tfstate*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

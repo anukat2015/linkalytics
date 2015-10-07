@@ -1,0 +1,45 @@
+---
+- hosts: linkalytics
+  handlers:
+    - name: Restart server
+      supervisorctl: name=server state=restarted
+  tasks:
+    - name: Install python3
+      apt: pkg=python3 state=installed update_cache=true
+
+    - name: Install pip3
+      apt: pkg=python3-pip state=installed update_cache=true
+
+    - name: Install scipy
+      apt: pkg=python3-scipy state=installed update_cache=true
+
+    - name: Install supervisord
+      apt: pkg=supervisor state=installed update_cache=true
+
+    - name: Copy supervisor configuration
+      copy: src=server.conf dest=/etc/supervisor/conf.d/server.conf
+      notify:
+        - Restart server
+
+    - name: Enable supervisord
+      service: name=supervisor enabled=yes
+
+    - name: Start supervisord
+      service: name=supervisor state=started
+
+    - name: Copy requirements
+      copy: src=../../requirements.txt dest=/home/ansible/requirements.txt
+
+    - name: Copy server
+      copy: src=../../src/server.py dest=/home/ansible/server.py
+
+    - name: Copy environment
+      copy: src=../../src/environment.py dest=/home/ansible/environment.py
+      notify:
+        - Restart server
+
+    - name: Install dependencies
+      pip: requirements=/home/ansible/requirements.txt executable=pip3
+
+    - name: Start server
+      supervisorctl: name=server state=started
