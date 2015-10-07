@@ -18,7 +18,7 @@ instagram_regex = re.compile('instagram\s*-?@?:?;?(\.com\/)?_?\.?\s*([^\s^\/]*)'
 
 def get_instagram_id(username):
 	#It seems difficult to find the id from a username using instagramAPI - figure out if this is possible later
-	instagram_request = requests.get('https://api.instagram.com/v1/users/search?access_token={}&q={}'.format(cfg.INSTAGRAM_ACCESS.KEY, username))
+	instagram_request = requests.get('https://api.instagram.com/v1/users/search?access_token={}&q={}'.format(cfg['instagram']['access_token'], username))
 	id_num = instagram_request.json()['data'][0]['id']
 	return id_num
 
