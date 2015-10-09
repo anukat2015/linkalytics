@@ -16,11 +16,14 @@ import time
 import pymysql
 import disq
 
-from elasticsearch import Elasticsearch
-from environment   import cfg
-from flask         import Flask, request, jsonify
+from elasticsearch  import Elasticsearch
+from environment    import cfg
+from flask          import Flask, request, jsonify
+from flask.ext.cors import CORS
 
 app = Flask(__name__)
+
+CORS(app)
 
 disque = disq.Disque()
 

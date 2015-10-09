@@ -5,6 +5,7 @@ google-api-python-client
 elasticsearch
 pymysql
 flask
+flask-cors
 phonenumbers
 nose
 nltk
