@@ -6,23 +6,23 @@ For testing, in a second terminal window, type
 
     curl -H "Content-type: application/json" \
          -d '{"search":[search_term]}' \
-        -XPOST http://127.0.0.1:5000/search
+         -X POST http://127.0.0.1:5000/search
 
 where you choose the search_term.
 """
 
 import json
-from elasticsearch import Elasticsearch
-import pymysql
 import time
-from environment import cfg
-from flask import Flask, request, jsonify
+import pymysql
+import disq
 
-# es_mirror = Elasticsearch(cfg.MIRROR_ELS.HOST, verify_certs=False)
-# es_cdr = Elasticsearch(cfg.CDR_ELASTIC.URL, verify_certs=False)
+from elasticsearch import Elasticsearch
+from environment   import cfg
+from flask         import Flask, request, jsonify
 
 app = Flask(__name__)
 
+disque = disq.Disque()
 
 def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
@@ -63,7 +63,7 @@ def look_up(doc_ids, cdr_doc_ids):
                                user=cfg["sql"]["user"],
                                passwd=cfg["sql"]["password"],
                                db=cfg["sql"]["database"]
-                                )
+                               )
         print(conn)
         cur = conn.cursor(pymysql.cursors.DictCursor)
 
@@ -133,8 +133,8 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
         print("Posted successfully")
 
 
-@app.route("/<path:endpoint>", methods=['POST'])
-def doc_to_group(endpoint):
+@app.route("/search", methods=['POST'])
+def doc_to_group():
     """
     Here's a server that takes a search term as an input
     and provides a list of grouped documents as an output
@@ -146,25 +146,24 @@ def doc_to_group(endpoint):
     Step 5 -- Query newly updated Mirror Elastic
     """
     # search_term = search["text"]
-    print(endpoint)
     search_term = request.get_json(force=True)["search"]
-    print("You searched for: " + search_term)
-    doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
+    # print("You searched for: " + search_term)
+    # doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
 
-    print("# of Results from Mirror: " + str(len(doc_ids)))
-    cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
+    # print("# of Results from Mirror: " + str(len(doc_ids)))
+    # cdr_doc_ids = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 50, True, True)
 
-    print("# of Results from CDR: {}".format(len(cdr_doc_ids)))
-    new_groups = look_up(doc_ids, cdr_doc_ids)
+    # print("# of Results from CDR: {}".format(len(cdr_doc_ids)))
+    # new_groups = look_up(doc_ids, cdr_doc_ids)
 
-    if new_groups:
-        print("# of New Groups: {}".format(len(new_groups)))
-        post_new(new_groups, cfg["mirror_elastic_search"]["index"], es_mirror, cfg["cdr_elastic_search"]["index"], es_cdr)
-        time.sleep(2)
+    # if new_groups:
+    #     print("# of New Groups: {}".format(len(new_groups)))
+    #     post_new(new_groups, cfg["mirror_elastic_search"]["index"], es_mirror, cfg["cdr_elastic_search"]["index"], es_cdr)
+    #     time.sleep(2)
 
-    else:
-        print("No new groups")
-    results = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 100, False, True)
+    # else:
+    #     print("No new groups")
+    results = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 100, False, True)
     print("Results: " + str(len(results)))
 
     if results:
@@ -172,6 +171,23 @@ def doc_to_group(endpoint):
     else:
         return jsonify({'message': 'no results'})
 
+def process_job(record):
+    job_id = disque.addjob('worker', json.dumps(record))
+    print('submitted job {}'.format(job_id))
+    # wait for result
+    result = get_result(job_id)
+    return json.dumps(result)
+
+def get_result(job_id):
+    qname, result_id, result = disque.getjob(job_id)[0]
+    disque.fastack(result_id)
+    return (qname, result_id, json.loads(result.decode('utf8')))
+
+@app.route('/enhance/<path:endpoint>', methods=['POST'])
+def enhance(endpoint):
+    record = request.get_json()
+    results = process_job(record)
+    return jsonify(results=results, endpoint=endpoint, **record)
 
 def test_doc_to_group(search):
     """
@@ -213,17 +229,11 @@ def test_doc_to_group(search):
 
 if __name__ == '__main__':
     es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
+    es_cdr    = Elasticsearch(cfg["cdr_elastic_search"]["hosts"],    verify_certs=False)
+
     mirror_elastic_index = cfg["mirror_elastic_search"]["index"]
-    es_cdr = Elasticsearch(cfg["cdr_elastic_search"]["hosts"], verify_certs=False)
-    cdr_elastic_index = cfg["cdr_elastic_search"]["index"]
+    cdr_elastic_index    = cfg["cdr_elastic_search"]["index"]
 
-    try:
-        es_mirror.indices.create(index=cfg["mirror_elastic_search"]["index"])
-    es_instance = "http://{host}:{port}".format(host=cfg.MIRROR_ELS.HOST, port=cfg.MIRROR_ELS.PORT)
-    es_mirror = Elasticsearch(es_instance, verify_certs=False)
-
-    es_instance = "https://{user}:{passwd}@{host}:{port}".format(user=cfg.CDR_ELS.USER, passwd=cfg.CDR_ELS.PASS, host=cfg.CDR_ELS.HOST, port=cfg.CDR_ELS.PORT)
-    es_cdr = Elasticsearch(es_instance, verify_certs=False)
     try:
         es_mirror.indices.create(index=cfg.MIRROR_ELS.DB)
         time.sleep(1)
@@ -231,4 +241,5 @@ if __name__ == '__main__':
 
     except:
         print("You're currently working on a pre-existing index")
+
     app.run(debug=True, host="0.0.0.0", port=8080)
