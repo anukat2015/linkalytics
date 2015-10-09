@@ -1,6 +1,8 @@
 import disq
 import json
 import logging
+import sys
+import traceback
 
 def json_deserializer(bytes):
     """ This function deserializes json when the input is a sequence of
@@ -98,16 +100,19 @@ class TaskMux:
                     mux.report_exception(job_id)
 
             :params job_id:     The job that failed.
+            :returns:           The error message.
         """
         exception = sys.exc_info()
         if exception is None:
             return
         exc_type, exc_value, exc_tb = exception
-        self.conn.dequeue(job_id)
-        self.put("-mux:failed-", {
+        message = {
             "job_id": job_id,
             "traceback": traceback.format_exception(exc_type, exc_value, exc_tb)
-        })
+        }
+        self.conn.dequeue(job_id)
+        self.put("-mux:failed-", message)
+        return message
 
     def retrieve(self, job_id, blocking=True):
         """ This function retrieves the result of a job. The "async"
