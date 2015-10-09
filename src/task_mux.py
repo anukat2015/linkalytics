@@ -30,7 +30,7 @@ class TaskMux:
         """
         job_object = {}
         key, value = None, None
-        properties = c.show(job_id)
+        properties = self.conn.show(job_id)
         for i, elem in enumerate(properties):
             if i % 2 == 0:  # on even elements
                 if key and value:
