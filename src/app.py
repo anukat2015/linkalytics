@@ -9,6 +9,7 @@ import elasticsearch.helpers as eshelp
 import warnings
 
 from . environment import cfg
+
 from . import twitter
 from . import youtube
 from . import phonenumber
@@ -49,7 +50,7 @@ def main():
     client = es.Elasticsearch([es_instance], timeout=60, retry_on_timeout=True)
 
     # j1 = q1.enqueue(twitter.run, {"text": "twitter.com/realDonaldTrump"})
-    # j2 = q1.enqueue(twitter.run, {"text": "Here's Nassim Taleb's twitter.....@nntaleb"})
+    # j2 = q1.enqueue(twitter.run, {"text": "here's nassim taleb's twitter.....@nntaleb"})
     # j3 = q2.enqueue(youtube.run, {"text": "Have you seen this https://www.youtube.com/watch?t=3&v=ToyoBTiwZ6c youtube video with Super Marioll"})
     # j4 = q3.enqueue(phonenumber.run, {"text": "1800295 408-291-2521"})
     #
