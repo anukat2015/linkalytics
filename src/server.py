@@ -174,18 +174,6 @@ def doc_to_group():
     else:
         return jsonify({'message': 'no results'})
 
-def process_job(record):
-    job_id = disque.addjob('worker', json.dumps(record))
-    print('submitted job {}'.format(job_id))
-    # wait for result
-    result = get_result(job_id)
-    return json.dumps(result)
-
-def get_result(job_id):
-    qname, result_id, result = disque.getjob(job_id)[0]
-    disque.fastack(result_id)
-    return (qname, result_id, json.loads(result.decode('utf8')))
-
 @app.route('/enhance/<path:endpoint>', methods=['POST'])
 def enhance(endpoint):
     record = request.get_json()
