@@ -14,18 +14,18 @@ where you choose the search_term.
 import json
 import time
 import pymysql
-import disq
 
 from elasticsearch  import Elasticsearch
 from environment    import cfg
 from flask          import Flask, request, jsonify
 from flask.ext.cors import CORS
+from task_mux       import TaskMux
 
 app = Flask(__name__)
 
 CORS(app)
 
-disque = disq.Disque()
+mux = TaskMux(host=cfg["disque"]["host"])
 
 def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
@@ -189,7 +189,12 @@ def get_result(job_id):
 @app.route('/enhance/<path:endpoint>', methods=['POST'])
 def enhance(endpoint):
     record = request.get_json()
-    results = process_job(record)
+    if endpoint not in set(cfg["queues"]["endpoints"]):
+        response = jsonify(results={"message": "endpoint not found"}, endpoint=endpoint, **record)
+        response.status = 404
+        return response
+    jobid = mux.put(endpoint, record)
+    results = mux.retrieve(jobid)
     return jsonify(results=results, endpoint=endpoint, **record)
 
 def test_doc_to_group(search):
