@@ -1,0 +1,142 @@
+swagger: '2.0'
+
+info:
+  title: Linkalytics API
+  description: Backend analytics to link together disparate data
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+host: 'localhost:8080'
+
+schemes:
+  - http
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+paths:
+  /search:
+    post:
+      summary: Search API
+      description: |
+        Search through the entity lists.
+      parameters:
+        - name: query
+          in: body
+          description: 'Search Query'
+          required: true
+          schema:
+            $ref: '#/definitions/SearchQuery'
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Response from elastic search
+          schema:
+            type: object
+            $ref: '#/definitions/SearchResults'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /enhance/{api}:
+    post:
+      summary: Enhance API Endpoint
+      tags:
+        - Enhance
+      parameters:
+        - name: api
+          in: path
+          required: true
+          description: >
+            An API endpoint defined in `[twitter, youtube, phone, instagram]`
+          type: string
+        - name: text
+          in: body
+          required: true
+          description: >
+            Text to send to the enhance API endpoint
+          schema:
+            $ref: '#/definitions/Enhance'
+      responses:
+        200:
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/SearchResults'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  SearchQuery:
+    type: object
+    properties:
+      search:
+        type: string
+        description: 'Query string parameter'
+
+  SearchResults:
+    type: object
+    properties:
+      results:
+        type: array
+        description: 'Result array'
+        items:
+          $ref: '#/definitions/SearchItems'
+
+  SearchItems:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: 'Unique identifier representing a group of entities'
+      _index:
+        type: string
+      _source:
+        $ref: '#/definitions/SearchSource'
+      _type:
+        type: string
+
+  SearchSource:
+    type: object
+    properties:
+      docs:
+        type: array
+        items:
+          $ref: '#/definitions/SearchDocs'
+
+  SearchDocs:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: 'Unique identifier representing an entity'
+      _index:
+        type: string
+      _source:
+        type: object
+  
+  Enhance:
+    type: object
+    properties:
+      text:
+        type: string
+        description: 'Text to send to the enhance api endpoint'
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
