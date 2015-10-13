@@ -8,9 +8,17 @@ If you don't want all the gory details, you can install [Terraform][] and [Ansib
 ## Terraform
 [Terraform][] is a tool to create VMs in remote cloud services such as AWS, GCE, and DigitalOcean. We use `terraform apply` to provision blank VMs on GCE. This folder contains all the files needed to provision blank VMs on GCE with the exception of
 
+You'll need to generate the following:
+
+* `account.json` -- This is the JSON file containing credentials for your GCE account, please check out the Terraform website for details on generating the [account.json][] file.
 * `keys/gce.pub` -- This is the expected path for the public SSH key for [Ansible][] associated with the "ansible" user.
 * `keys/gce` -- This is the corresponding private SSH key for [Ansible][] associated with the "ansible" user.
-* `account.json` -- This is the JSON file containing credentials for your GCE account, see the description on [account.json][] at the Terraform website.
+
+Here's how to generate the SSH keys:
+
+    cd linkalytics/infrastructure
+    mkdir keys
+    ssh-keygen -t rsa -C "example_label" (and save the key named "gce" in the keys folder)
 
 Once you create those files, you can create infrastructure that mirrors ours.
 
