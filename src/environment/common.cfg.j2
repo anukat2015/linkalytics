@@ -15,3 +15,6 @@ developer_key       = "{{ credstash('youtube_common_key') }}"
 [cdr_elastic_search]
 hosts               = "{{ credstash('elastic_cdr_url') }}"
 index               = "memex_ht"
+
+[queues]
+endpoints           = ["twitter", "instagram", "youtube", "phone", "geocode"]

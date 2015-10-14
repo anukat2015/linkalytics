@@ -14,18 +14,25 @@ where you choose the search_term.
 import json
 import time
 import pymysql
-import disq
 
 from elasticsearch  import Elasticsearch
 from environment    import cfg
 from flask          import Flask, request, jsonify
 from flask.ext.cors import CORS
+from task_mux       import TaskMux
+
+from flask.ext.basicauth import BasicAuth
 
 app = Flask(__name__)
 
+app.config['BASIC_AUTH_USERNAME'] = cfg['sql']['user']
+app.config['BASIC_AUTH_PASSWORD'] = cfg['sql']['password']
+
+basic_auth = BasicAuth(app)
+
 CORS(app)
 
-disque = disq.Disque()
+mux = TaskMux(host=cfg["disque"]["host"])
 
 def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
@@ -137,6 +144,7 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
 
 
 @app.route("/search", methods=['POST'])
+@basic_auth.required
 def doc_to_group():
     """
     Here's a server that takes a search term as an input
@@ -174,22 +182,16 @@ def doc_to_group():
     else:
         return jsonify({'message': 'no results'})
 
-def process_job(record):
-    job_id = disque.addjob('worker', json.dumps(record))
-    print('submitted job {}'.format(job_id))
-    # wait for result
-    result = get_result(job_id)
-    return json.dumps(result)
-
-def get_result(job_id):
-    qname, result_id, result = disque.getjob(job_id)[0]
-    disque.fastack(result_id)
-    return (qname, result_id, json.loads(result.decode('utf8')))
-
 @app.route('/enhance/<path:endpoint>', methods=['POST'])
+@basic_auth.required
 def enhance(endpoint):
     record = request.get_json()
-    results = process_job(record)
+    if endpoint not in set(cfg["queues"]["endpoints"]):
+        response = jsonify(results={"message": "endpoint not found"}, endpoint=endpoint, **record)
+        response.status = 404
+        return response
+    jobid = mux.put(endpoint, record)
+    results = mux.retrieve(jobid)
     return jsonify(results=results, endpoint=endpoint, **record)
 
 def test_doc_to_group(search):
