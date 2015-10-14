@@ -13,3 +13,4 @@ geopy
 reverse_geocoder
 pytoml
 -e git+https://github.com/ryansb/disq.git#egg=disq
+Flask-BasicAuth

@@ -76,8 +76,9 @@ class TaskMux:
         """
         self.__logger.debug("Getting job from '{}'".format(work_queue))
         job = self.conn.getjob(work_queue, timeout_ms=timeout)
+        self.__logger.debug('Got job {}'.format(job))
         if job:
-            qname, job_id, data = job
+            qname, job_id, data = job[0]
             self.__logger.debug("Got data '{}'".format(data))
             return (qname, job_id, deserializer(data))
         return job

@@ -21,7 +21,14 @@ from flask          import Flask, request, jsonify
 from flask.ext.cors import CORS
 from task_mux       import TaskMux
 
+from flask.ext.basicauth import BasicAuth
+
 app = Flask(__name__)
+
+app.config['BASIC_AUTH_USERNAME'] = cfg['sql']['user']
+app.config['BASIC_AUTH_PASSWORD'] = cfg['sql']['password']
+
+basic_auth = BasicAuth(app)
 
 CORS(app)
 
@@ -137,6 +144,7 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
 
 
 @app.route("/search", methods=['POST'])
+@basic_auth.required
 def doc_to_group():
     """
     Here's a server that takes a search term as an input
@@ -175,6 +183,7 @@ def doc_to_group():
         return jsonify({'message': 'no results'})
 
 @app.route('/enhance/<path:endpoint>', methods=['POST'])
+@basic_auth.required
 def enhance(endpoint):
     record = request.get_json()
     if endpoint not in set(cfg["queues"]["endpoints"]):

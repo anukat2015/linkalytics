@@ -12,6 +12,7 @@ host: 'localhost:8080'
 
 schemes:
   - http
+  - https
 
 produces:
   - application/json
