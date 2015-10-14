@@ -46,3 +46,8 @@ In the second, type
 $ python3 dowork.py instagram twitter phone
 ```
 
+## [Documentation](https://swaggerhub.com/api/jjangsangy/linkalytics)
+
+Interactive documentation for the Linkalytics API can be found [here](https://swaggerhub.com/api/jjangsangy/linkalytics).
+
+For more information about generating a client or server, check out [swagger](http://swagger.io/) project
