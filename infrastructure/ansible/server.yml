@@ -1,9 +1,32 @@
 ---
+- hosts: all
+  tasks:
+    - name: Create disque node groups
+      group_by: key={{ ansible_hostname | regex_replace('-[\d]+', '')}}
+
+- hosts: disque-*
+  roles:
+    - disque
+
+- hosts: disque-0
+  tasks:
+    - name: Configure disque cluster meets
+      command: disque cluster meet {{ hostvars[item].ansible_eth0.ipv4.address }} 7711
+      with_items: "{{ groups.disque }}"
+      when: "'disque' in item and item != 'disque-0'"
+
+- hosts: dqworker-*
+  roles:
+    - worker
+
 - hosts: linkalytics
   handlers:
     - name: Restart server
       supervisorctl: name=server state=restarted
   tasks:
+    - name: Install git
+      apt: pkg=git state=installed update_cache=true
+
     - name: Install python3
       apt: pkg=python3 state=installed update_cache=true
 
@@ -17,7 +40,7 @@
       apt: pkg=supervisor state=installed update_cache=true
 
     - name: Copy supervisor configuration
-      copy: src=server.conf dest=/etc/supervisor/conf.d/server.conf
+      copy: src=supervisor/templates/server.conf dest=/etc/supervisor/conf.d/server.conf
       notify:
         - Restart server
 
@@ -27,19 +50,19 @@
     - name: Start supervisord
       service: name=supervisor state=started
 
+    - name: Assure existence of app directory
+      file: path=/home/ansible/app/ state=directory
+
     - name: Copy requirements
-      copy: src=../../requirements.txt dest=/home/ansible/requirements.txt
+      copy: src=../../requirements.txt dest=/home/ansible/app/requirements.txt
 
     - name: Copy server
-      copy: src=../../src/server.py dest=/home/ansible/server.py
-
-    - name: Copy environment
-      copy: src=../../src/environment.py dest=/home/ansible/environment.py
+      synchronize: src=../../src/ dest=/home/ansible/app/
       notify:
         - Restart server
 
     - name: Install dependencies
-      pip: requirements=/home/ansible/requirements.txt executable=pip3
+      pip: requirements=/home/ansible/app/requirements.txt executable=pip3
 
     - name: Start server
       supervisorctl: name=server state=started

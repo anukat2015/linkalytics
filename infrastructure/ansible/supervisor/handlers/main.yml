@@ -1,0 +1,6 @@
+---
+- name: Start {{ service }}
+  service: name={{ service }} start=started
+  
+- name: Restart {{ service }}
+  service: name=supervisor state=restarted

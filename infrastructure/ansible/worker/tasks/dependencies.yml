@@ -1,0 +1,12 @@
+---
+- name: Install git
+  apt: pkg=git state=installed update_cache=true
+
+- name: Install python3
+  apt: pkg=python3 state=installed update_cache=true
+
+- name: Install pip3
+  apt: pkg=python3-pip state=installed update_cache=true
+
+# - name: Install scipy
+#   apt: pkg=python3-scipy state=installed update_cache=true
