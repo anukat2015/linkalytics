@@ -3,6 +3,7 @@ import concurrent.futures
 import argparse
 import logging
 
+from multiprocessing import cpu_count
 from .environment import cfg
 from .task_mux import TaskMux
 from . import instagrammer
@@ -44,6 +45,6 @@ def main():
 
     args = parser.parse_args()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count()) as executor:
         futures = executor.map(handle, args.queues)
         concurrent.futures.wait(futures)
