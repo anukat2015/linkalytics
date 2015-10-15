@@ -22,17 +22,19 @@ from flask.ext.cors import CORS
 from task_mux       import TaskMux
 
 from flask.ext.basicauth import BasicAuth
+from flask.ext.restful   import Api
 
-app = Flask(__name__)
+app  = Flask(__name__)
+cors = CORS(app, resources={r"/enhance/*": {"origins": "*"}, r"/search":    {'origins': '*'}})
+api  = Api(app)
 
 app.config['BASIC_AUTH_USERNAME'] = cfg['api']['username']
 app.config['BASIC_AUTH_PASSWORD'] = cfg['api']['password']
 
 basic_auth = BasicAuth(app)
 
-CORS(app)
-
 mux = TaskMux(host=cfg["disque"]["host"])
+
 
 def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
@@ -231,6 +233,12 @@ def test_doc_to_group(search):
     else:
         return jsonify({'message': 'no results'})
 
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+  return response
 
 if __name__ == '__main__':
     es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
@@ -248,3 +256,5 @@ if __name__ == '__main__':
         print("You're currently working on a pre-existing index")
 
     app.run(debug=True, host="0.0.0.0", port=8080)
+
+
