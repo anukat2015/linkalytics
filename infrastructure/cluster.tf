@@ -3,7 +3,7 @@ resource "google_compute_instance" "linkalytics" {
   description   = "The VM hosting our API"
   machine_type  = "n1-standard-1"
   zone          = "us-central1-b"
-  tags          = ["memex", "linkalytics"]
+  tags          = ["memex", "linkalytics", "api-server"]
 
   disk {
       image = "debian-8-jessie-v20150915"
