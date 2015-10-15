@@ -25,8 +25,8 @@ from flask.ext.basicauth import BasicAuth
 
 app = Flask(__name__)
 
-app.config['BASIC_AUTH_USERNAME'] = cfg['sql']['user']
-app.config['BASIC_AUTH_PASSWORD'] = cfg['sql']['password']
+app.config['BASIC_AUTH_USERNAME'] = cfg['api']['username']
+app.config['BASIC_AUTH_PASSWORD'] = cfg['api']['password']
 
 basic_auth = BasicAuth(app)
 
