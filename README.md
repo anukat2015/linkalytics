@@ -15,17 +15,13 @@ $ git clone git@github.com:qadium-memex/linkalytics.git
 $ pip3 install -r requirements.txt
 ```
 
-### _OPTIONAL_: Step 2 -- Instantiate credentials from shared repository using `credstmpl`
-
-See Qadium's [credstmpl github repository](https://github.com/qadium/credstmpl) for more installation instructions.
-
-Also, please note this requires AWS credentials.
-
-If you'd like to work with our data, contact one of us for the creds.
+### _OPTIONAL_ --  Instantiate credentials from shared repository using `credstmpl`
 
 ```sh
 $ credstmpl /src/environment/*.j2
 ```
+
+See Qadium's [credstmpl github repository](https://github.com/qadium/credstmpl) for installation instructions. Also, please note this requires AWS credentials.
 
 
 ### Step 2 -- Get going
