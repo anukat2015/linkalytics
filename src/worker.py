@@ -44,7 +44,7 @@ def main():
     parser.add_argument('queues', nargs='+')
 
     args = parser.parse_args()
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+    max_workers = max(cpu_count(), len(args.queues))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = executor.map(handle, args.queues)
         concurrent.futures.wait(futures)
