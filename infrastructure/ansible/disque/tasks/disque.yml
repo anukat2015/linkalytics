@@ -1,0 +1,12 @@
+---
+- name: Install git
+  apt: pkg=git state=installed update_cache=true
+
+- name: Install build tools
+  apt: pkg=build-essential state=installed update_cache=true
+
+- name: Clone disque source
+  git: repo=https://github.com/antirez/disque.git dest=/home/ansible/disque
+
+- name: Build and install disque
+  command: make install chdir=/home/ansible/disque

@@ -1,0 +1,20 @@
+---
+- name: Assure existence of src directory
+  file: path=/home/ansible/src/ state=directory
+
+- name: Copy requirements
+  copy: src=../../requirements.txt dest=/home/ansible/requirements.txt
+
+- name: Copy dowork
+  copy: src=../../dowork.py dest=/home/ansible/dowork.py
+
+- name: Copy worker
+  synchronize: src=../../src/ dest=/home/ansible/src/
+  notify:
+    - Restart dqworker
+
+- name: Install dependencies
+  pip: requirements=/home/ansible/requirements.txt executable=pip3
+
+- name: Install English stopwords via nltk
+  command: python3 -m nltk.downloader stopwords

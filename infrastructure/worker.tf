@@ -1,13 +1,12 @@
-resource "google_compute_instance" "disque-node" {
-  name          = "disque-${count.index}"
-  description   = "The VM hosting a disque server"
+resource "google_compute_instance" "disque-worker" {
+  name          = "dqworker-${count.index}"
+  description   = "The VM hosting the rq workers"
   machine_type  = "n1-standard-1"
   zone          = "us-central1-b"
-  tags          = ["memex", "linkalytics", "disque", "server"]
+  tags          = ["memex", "linkalytics", "disque", "worker"]
 
   disk {
       image = "debian-8-jessie-v20150915"
-      size  = 100 # for disque persistence
   }
 
   metadata {

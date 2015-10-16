@@ -34,8 +34,10 @@ def load_config(name):
 
 config = {}
 if prod_env:
+    print("Using production environment.")
     config = load_config("production")
 else:
+    print("Using development environment.")
     config = load_config("develop")
 
 cfg = load_config("common")
