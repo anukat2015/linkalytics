@@ -25,8 +25,10 @@ from flask.ext.basicauth import BasicAuth
 from flask.ext.restful   import Api
 
 app  = Flask(__name__)
-cors = CORS(app, resources={r"/enhance/*": {"origins": "*"}, r"/search":    {'origins': '*'}})
+cors = CORS(app)
 api  = Api(app)
+
+version = cfg['api']['version']
 
 app.config['BASIC_AUTH_USERNAME'] = cfg['api']['username']
 app.config['BASIC_AUTH_PASSWORD'] = cfg['api']['password']
@@ -34,7 +36,6 @@ app.config['BASIC_AUTH_PASSWORD'] = cfg['api']['password']
 basic_auth = BasicAuth(app)
 
 mux = TaskMux(host=cfg["disque"]["host"])
-
 
 def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
@@ -145,7 +146,7 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
         print("Posted successfully")
 
 
-@app.route("/search", methods=['POST'])
+@app.route("/{version}/search".format(version=version), methods=['POST'])
 @basic_auth.required
 def doc_to_group():
     """
@@ -184,7 +185,7 @@ def doc_to_group():
     else:
         return jsonify({'message': 'no results'})
 
-@app.route('/enhance/<path:endpoint>', methods=['POST'])
+@app.route('/{version}/enhance/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def enhance(endpoint):
     record = request.get_json()
