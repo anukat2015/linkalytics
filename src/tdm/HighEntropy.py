@@ -150,10 +150,7 @@ if __name__ == "__main__":
     n = int(sys.argv[1])
     query = sys.argv[2]
 
-    es_cdr = Elasticsearch(cfg["cdr_elastic_search"]["hosts"], verify_certs=False)
-    cdr_elastic_index = cfg["cdr_elastic_search"]["index"]
-
-    es      = elastic(es_cdr, cdr_elastic_index)
+    es      = elastic(cfg["cdr_elastic_search"]["hosts"], cfg["cdr_elastic_search"]["index"])
     results = search(query, 100, True)
     tdm     = TermDocumentMatrix()
 
