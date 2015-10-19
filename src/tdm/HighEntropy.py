@@ -7,8 +7,7 @@ from elasticsearch import Elasticsearch
 import urllib3
 urllib3.disable_warnings()
 
-from .. environment    import cfg
-
+from ..environment import cfg
 
 #This is a necessary work around to set the character encoding to UTF8 as opposed to ASCII and only works in Python 2
 reload(sys)
@@ -129,16 +128,14 @@ def elastic(instance, index):
 def search(search_term, size, phrase=True):
     match_type = 'match_phrase' if phrase else 'match'
     output     = set()
-
     payload = {
-                "size": size,
-                # "from": paginator_number,
-                "query": {
-                    match_type: {
-                        "text": search_term
-                    }
-                },
+        "size": size,
+        "query" : {
+            match_type : {
+                "_all" : search_term
             }
+        }
+    }
     results = es.search(body=payload)
 
     for hit in results['hits']['hits']:
@@ -159,3 +156,6 @@ if __name__ == "__main__":
 
     for row in tdm.rows(cutoff=2):
         tdm.write_csv(os.getcwd() + "/test.csv", 2)
+
+    for result in results:
+        print(result)
