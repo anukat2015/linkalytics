@@ -77,39 +77,33 @@ class TermDocumentMatrix(object):
 
     def __init__(self, tokenizer=ngram_tokenize):
         """Initialize with tokenizer to split documents into words."""
-        # Set tokenizer to use for tokenizing new documents
         self.tokenize = tokenizer
-        # The term document matrix is a sparse matrix represented as a
-        # list of dictionaries. Each dictionary contains the word
-        # counts for a document.
         self.sparse = []
-        # Keep track of the number of documents containing the word.
         self.doc_count = {}
 
     def add_doc(self, document, n=2):
         """Add document to the term-document matrix."""
-        # Split document up into list of strings
         words = self.tokenize(document, n)
-        # Count word frequencies in this document
+
         word_counts = {}
         for word in words:
             word_counts[word] = word_counts.get(word, 0) + 1
-        # Add word counts as new row to sparse matrix
+
         self.sparse.append(word_counts)
-        # Add to total document count for each word
+
         for word in word_counts:
             self.doc_count[word] = self.doc_count.get(word, 0) + 1
 
     def rows(self, cutoff=2):
         """Helper function that returns rows of term-document matrix."""
-        # Get master list of words that meet or exceed the cutoff frequency
-        words = [word for word in self.doc_count if self.doc_count[word] >= cutoff]
-        # Return header
+
+        words = [
+            word for word in
+                self.doc_count if self.doc_count[word] >= cutoff
+        ]
         yield words
-        # Loop over rows
+
         for row in self.sparse:
-            # Get word counts for all words in master list. If a word does
-            # not appear in this document it gets a count of 0.
             data = [row.get(word, 0) for word in words]
             yield data
 
@@ -129,21 +123,13 @@ class TermDocumentMatrix(object):
 
 
 def elastic(instance, index):
-    es = Elasticsearch(
-        [instance + index],
-        port=443,
-        use_ssl=False,
-        verify_certs=False
-    )
-    return es
+    return Elasticsearch([instance + index], port=443, use_ssl=False, verify_certs=False)
 
 
 def search(search_term, size, phrase=True):
-    if phrase:
-        match_type = "match_phrase"
-    else:
-        match_type = "match"
-    output = set()
+    match_type = 'match_phrase' if phrase else 'match'
+    output     = set()
+
     payload = {
                 "size": size,
                 # "from": paginator_number,
@@ -154,8 +140,10 @@ def search(search_term, size, phrase=True):
                 },
             }
     results = es.search(body=payload)
+
     for hit in results['hits']['hits']:
         output.add(hit["_source"]["text"])
+
     return output
 
 if __name__ == "__main__":
@@ -165,11 +153,12 @@ if __name__ == "__main__":
     es_cdr = Elasticsearch(cfg["cdr_elastic_search"]["hosts"], verify_certs=False)
     cdr_elastic_index = cfg["cdr_elastic_search"]["index"]
 
-    es = elastic(es_cdr, cdr_elastic_index)
+    es      = elastic(es_cdr, cdr_elastic_index)
     results = search(query, 100, True)
-    tdm = TermDocumentMatrix()
+    tdm     = TermDocumentMatrix()
+
     for result in results:
         tdm.add_doc(result, n)
+
     for row in tdm.rows(cutoff=2):
         tdm.write_csv(os.getcwd() + "/test.csv", 2)
-        # print row
