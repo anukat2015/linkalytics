@@ -25,7 +25,10 @@ from flask.ext.basicauth import BasicAuth
 from flask.ext.restful   import Api
 
 app  = Flask(__name__)
+
+# By default this sets CORS access to resource endpoints to `*`
 cors = CORS(app)
+
 api  = Api(app)
 
 version = cfg['api']['version']
