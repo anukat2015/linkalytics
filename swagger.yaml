@@ -20,6 +20,8 @@ produces:
 consumes:
   - application/json
 
+basePath: v1
+
 paths:
   /search:
     post:
