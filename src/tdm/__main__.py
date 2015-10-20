@@ -9,9 +9,12 @@ urllib3.disable_warnings()
 
 from ..environment import cfg
 
-#This is a necessary work around to set the character encoding to UTF8 as opposed to ASCII and only works in Python 2
-reload(sys)
-sys.setdefaultencoding('UTF8')
+try:
+    #This is a necessary work around to set the character encoding to UTF8 as opposed to ASCII and only works in Python 2
+    reload(sys)
+    sys.setdefaultencoding('UTF8')
+except NameError:
+    pass
 
 
 def ngram_tokenize(document, n):
