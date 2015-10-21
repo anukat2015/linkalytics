@@ -118,6 +118,10 @@ class TermDocumentMatrix:
         it = self.rows()
         headers = next(it)
         return pd.DataFrame(it, columns=headers).to_sparse(fill_value=0)
+    
+    def sum_columns(self):
+        df = self.to_sparse()
+        return np.sum(df).astype(int).to_dict()
 
     def write_csv(self, filename):
         """
