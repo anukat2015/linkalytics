@@ -10,11 +10,11 @@ def ngram_tokenize(document, n):
     """
 
     raw = document.lower()
-    raw = re.sub("\\xbb", ' ', raw)
-    raw = re.sub("\.|\,|\:|\;", ' ', raw)
-    #Create your ngrams
+    raw = re.sub(r"\xbb", ' ', raw)
+    raw = re.sub(r".|,|:|;", ' ', raw)
+    # Create your ngrams
     ngs = nltk.ngrams(raw.split(), n)
-    #compute frequency distribution for all the bigrams in the text
+    # Compute frequency distribution for all the bigrams in the text
     fdist = nltk.FreqDist(ngs)
     token = []
     for k, v in fdist.items():
@@ -45,9 +45,10 @@ def high_entropy_featurizing(document):
     print(unique)
 
 
-class TermDocumentMatrix(object):
+class TermDocumentMatrix:
     """
     ***Code adapted from https://github.com/ytmytm/python-textmining***
+
     Class to efficiently create a term-document matrix.
 
     The only initialization parameter is a tokenizer function, which should
@@ -63,14 +64,21 @@ class TermDocumentMatrix(object):
     """
 
     def __init__(self, tokenizer=ngram_tokenize):
-        """Initialize with tokenizer to split documents into words."""
-        self.tokenize = tokenizer
+        self.tokenizer = tokenizer
         self.sparse = []
         self.doc_count = {}
 
+    def __repr__(self):
+        return 'TermDocumentMatrix(tokenizer={tokenizer})'.format(tokenizer=self.tokenizer.__name__)
+
+    def __len__(self):
+        return len([i for i in self.rows()])
+
     def add_doc(self, document, n=2):
-        """Add document to the term-document matrix."""
-        words = self.tokenize(document, n)
+        """
+        Add document to the term-document matrix
+        """
+        words = self.tokenizer(document, n)
 
         word_counts = {}
         for word in words:
@@ -82,8 +90,9 @@ class TermDocumentMatrix(object):
             self.doc_count[word] = self.doc_count.get(word, 0) + 1
 
     def rows(self, cutoff=2):
-        """Helper function that returns rows of term-document matrix."""
-
+        """
+        Helper function that returns rows of term-document matrix
+        """
         words = [
             word for word in
                 self.doc_count if self.doc_count[word] >= cutoff
@@ -98,11 +107,12 @@ class TermDocumentMatrix(object):
         """
         Write term-document matrix to a CSV file.
 
-        filename is the name of the output file (e.g. 'mymatrix.csv').
-        cutoff is an integer that specifies only words which appear in
-        'cutoff' or more documents should be written out as columns in
-        the matrix.
+        :param filename: Name of the output file (e.g. `mymatrix.csv`).
+        :type  filename: str
 
+        :param cutoff: Specifies only words which appear in minimum
+                       documents to be written out as columns in the matrix.
+        :type  cutoff: int
         """
         f = csv.writer(open(filename, 'wt'))
         for row in self.rows(cutoff=cutoff):
