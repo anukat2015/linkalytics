@@ -3,7 +3,6 @@ import nltk
 import csv
 
 import pandas as pd
-import numpy as np
 
 def ngram_tokenize(document, n):
     """
@@ -114,15 +113,17 @@ class TermDocumentMatrix:
         for row in self.sparse:
             data = [row.get(word, 0) for word in words]
             yield data
-
-    def to_sparse(self):
+            
+    def to_df(self):
         it = self.rows()
         headers = next(it)
-        return pd.DataFrame(it, columns=headers).to_sparse(fill_value=0)
+        return pd.DataFrame(it, columns=headers)
+
+    def to_sparse(self):
+        return self.to_df().to_sparse(fill_value=0)
     
     def sum_columns(self):
-        df = self.to_sparse()
-        return np.sum(df).astype(int).to_dict()
+        return np.sum(self.to_df()).astype(int).to_dict()
 
     def write_csv(self, filename):
         """
