@@ -1,11 +1,6 @@
 import re
 import nltk
 import csv
-import os
-import json
-import time
-
-from contextlib import contextmanager
 
 def ngram_tokenize(document, n):
     """
@@ -135,7 +130,7 @@ def search(search_term, size, es, phrase=True):
     return output
 
 def main(n, query, es):
-    results  = search(query, 4000, es, True)
+    results  = search(query, 1000, es, True)
     tdm      = TermDocumentMatrix()
 
     for result in results:
