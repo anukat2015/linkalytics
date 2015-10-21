@@ -10,8 +10,7 @@ def ngram_tokenize(document, n):
     """
 
     raw = document.lower()
-    raw = re.sub(r"\xbb", ' ', raw)
-    raw = re.sub(r".|,|:|;", ' ', raw)
+    raw = re.sub(r".\|,\|:\|;", ' ', raw)
     # Create your ngrams
     ngs = nltk.ngrams(raw.split(), n)
     # Compute frequency distribution for all the bigrams in the text
