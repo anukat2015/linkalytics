@@ -78,3 +78,5 @@ src/disq
 ehthumbs.db
 Thumbs.db
 Icon*
+.idea**
+output.*

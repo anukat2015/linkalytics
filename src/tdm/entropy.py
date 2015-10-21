@@ -5,6 +5,8 @@ import os
 import json
 import time
 
+from contextlib import contextmanager
+
 def ngram_tokenize(document, n):
     """
     Function to clean your document, remove common punctuation marks,
@@ -107,7 +109,7 @@ class TermDocumentMatrix(object):
         the matrix.
 
         """
-        f = csv.writer(open(filename, 'wb'))
+        f = csv.writer(open(filename, 'wt'))
         for row in self.rows(cutoff=cutoff):
             f.writerow(row)
 
@@ -132,48 +134,19 @@ def search(search_term, size, es, phrase=True):
 
     return output
 
+@contextmanager
+def timer(label):
+    output = '{label}: {time:03.3f} sec'
+    start = time.time()
+    try:
+        yield
+    finally:
+        end = time.time()
+    print(output.format(label=label, time=end-start))
 
 def main(n, query, es):
     results  = search(query, 1000, es, True)
     tdm      = TermDocumentMatrix()
-
-    # with open(os.getcwd() + 'data.json') as data_file:
-    #         results = json.load(data_file)
-    # data_file.close()
-    # print(len(results))
-    # text = set()
-    # for result in results:
-    #     if len(text) < 2000:
-    #         try:
-    #             text.add(result["text"])
-    #         except KeyError:
-    #             pass
-    # print(len(text))
-
-    start = time.time()
-    #for result in text: """ Use this when you want to use data.json"""
-    for result in results:
-        tdm.add_doc(result, n)
-    end = time.time()
-    print("Adding docs to TDM takes:")
-    print(end - start)
-
-    start = time.time()
-    with open(os.getcwd() + "/output.tsv", 'w') as g:
-        for row in tdm.rows(cutoff=2):
-            row_items = []
-            for item in row:
-                try:
-                    row_items.append(str(item, "utf-8"))
-                except TypeError:
-                    row_items.append(str(item))
-            g.write("\t".join(row_items))
-            g.write("\n")
-    g.close()
-    end = time.time()
-    print("Writing TDM takes:")
-    print(end - start)
-
 
     for result in results:
         tdm.add_doc(result, n)
