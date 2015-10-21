@@ -80,3 +80,4 @@ Thumbs.db
 Icon*
 .idea**
 output.*
+venv
