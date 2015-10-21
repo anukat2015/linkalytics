@@ -14,4 +14,4 @@ if __name__ == '__main__':
         tdm = main(int(sys.argv[1]), sys.argv[2], es)
 
     with timer('Writing TDM takes'):
-        tdm.write_csv('output.csv', cutoff=1)
+        tdm.write_csv('output.csv', cutoff=0)

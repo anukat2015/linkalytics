@@ -134,18 +134,8 @@ def search(search_term, size, es, phrase=True):
 
     return output
 
-@contextmanager
-def timer(label):
-    output = '{label}: {time:03.3f} sec'
-    start = time.time()
-    try:
-        yield
-    finally:
-        end = time.time()
-    print(output.format(label=label, time=end-start))
-
 def main(n, query, es):
-    results  = search(query, 1000, es, True)
+    results  = search(query, 4000, es, True)
     tdm      = TermDocumentMatrix()
 
     for result in results:
