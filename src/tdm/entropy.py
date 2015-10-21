@@ -3,6 +3,7 @@ import nltk
 import csv
 
 import pandas as pd
+import numpy as np
 
 def ngram_tokenize(document, n):
     """
