@@ -10,6 +10,7 @@ def ngram_tokenize(document, n):
     """
 
     raw = document.lower()
+    raw = re.sub("\\xbb", ' ', raw)
     raw = re.sub(r".\|,\|:\|;", ' ', raw)
     # Create your ngrams
     ngs = nltk.ngrams(raw.split(), n)
@@ -46,36 +47,44 @@ def high_entropy_featurizing(document):
 
 class TermDocumentMatrix:
     """
-    ***Code adapted from https://github.com/ytmytm/python-textmining***
-
-    Class to efficiently create a term-document matrix.
-
-    The only initialization parameter is a tokenizer function, which should
-    take in a single string representing a document and return a list of
-    strings representing the n-grams in the document.
-
-    Use the add_doc method to add a document. Use the
-    write_csv method to output the current term-document matrix to a csv
-    file. You can use the rows method to return the rows of the matrix if
-    you wish to access the individual elements without writing directly to a
-    file.
-
+    Efficiently create a term-document matrix.
     """
 
-    def __init__(self, tokenizer=ngram_tokenize):
+    def __init__(self, cutoff=2, tokenizer=ngram_tokenize):
+        """
+        :param cutoff: int
+            Specifies only words which appear in minimum documents to be
+            written out as columns in the matrix.
+        :param tokenizer: function
+            Function that takes a single string representing a document
+            and return a list of strings representing the n-grams in the document.
+        """
+        self.cutoff    = cutoff
         self.tokenizer = tokenizer
-        self.sparse = []
+        self.sparse    = []
         self.doc_count = {}
 
     def __repr__(self):
-        return 'TermDocumentMatrix(tokenizer={tokenizer})'.format(tokenizer=self.tokenizer.__name__)
+        return 'TermDocumentMatrix(cutoff={cutoff}, tokenizer={tokenizer})'.format(
+            cutoff=self.cutoff,
+            tokenizer=self.tokenizer.__name__,
+        )
 
     def __len__(self):
-        return len([i for i in self.rows()])
+        rows = [i for i in self.rows() if i]
+        return 0 if not rows else len(rows)
+
+    def __iter__(self):
+        return self.rows()
 
     def add_doc(self, document, n=2):
         """
         Add document to the term-document matrix
+
+        :param document: str
+            String to be tokenized
+        :param n: int
+            n-grams
         """
         words = self.tokenizer(document, n)
 
@@ -88,13 +97,14 @@ class TermDocumentMatrix:
         for word in word_counts:
             self.doc_count[word] = self.doc_count.get(word, 0) + 1
 
-    def rows(self, cutoff=2):
+    def rows(self):
         """
-        Helper function that returns rows of term-document matrix
+        Use the `rows` method to return the rows of the matrix if you wish
+        to access the individual elements without writing directly to a file.
         """
         words = [
             word for word in
-                self.doc_count if self.doc_count[word] >= cutoff
+                self.doc_count if self.doc_count[word] >= self.cutoff
         ]
         yield words
 
@@ -102,19 +112,16 @@ class TermDocumentMatrix:
             data = [row.get(word, 0) for word in words]
             yield data
 
-    def write_csv(self, filename, cutoff=2):
+    def write_csv(self, filename):
         """
         Write term-document matrix to a CSV file.
 
         :param filename: Name of the output file (e.g. `mymatrix.csv`).
         :type  filename: str
 
-        :param cutoff: Specifies only words which appear in minimum
-                       documents to be written out as columns in the matrix.
-        :type  cutoff: int
         """
         f = csv.writer(open(filename, 'wt'))
-        for row in self.rows(cutoff=cutoff):
+        for row in self.rows():
             f.writerow(row)
 
 def search(search_term, size, es, phrase=True):
@@ -140,7 +147,7 @@ def search(search_term, size, es, phrase=True):
 
 def main(n, query, es):
     results  = search(query, 1000, es, True)
-    tdm      = TermDocumentMatrix()
+    tdm      = TermDocumentMatrix(cutoff=1)
 
     for result in results:
         tdm.add_doc(result, n)
