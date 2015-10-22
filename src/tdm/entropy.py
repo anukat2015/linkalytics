@@ -1,12 +1,14 @@
 import itertools
-from operator import itemgetter
+import string
 
 import pandas as pd
 import numpy as np
 
 def n_grams(document, n):
+    table = dict((ord(char), None) for char in string.punctuation)
+    raw   = document.lower().translate(table)
     grams = [
-        itertools.islice(document.lower().split(), i, None) for i in range(n)
+        itertools.islice(raw.split(), i, None) for i in range(n)
     ]
     return [' '.join(i) for i in zip(*grams)]
 
