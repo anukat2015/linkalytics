@@ -49,9 +49,10 @@ class TermDocumentMatrix:
         self.doc_count = {}
 
     def __repr__(self):
-        return 'TermDocumentMatrix(cutoff={cutoff}, tokenizer={tokenizer})'.format(
-            cutoff=self.cutoff,
+        return '{classname}(cutoff={cutoff}, tokenizer={tokenizer})'.format(
+            classname=self.__class__.__name__,
             tokenizer=self.tokenizer.__name__,
+            cutoff=self.cutoff,
         )
 
     def __len__(self):
@@ -95,9 +96,9 @@ class TermDocumentMatrix:
         for row in self.sparse:
             data = [row.get(word, 0) for word in words]
             yield data
-            
+
     def to_df(self):
-        it = self.rows()
+        it      = self.rows()
         headers = next(it)
         return pd.DataFrame(it, columns=headers)
 
