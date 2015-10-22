@@ -1,12 +1,13 @@
 import itertools
 import string
+import re
 
 import pandas as pd
 import numpy as np
 
 def n_grams(document, n):
     table = dict((ord(char), None) for char in string.punctuation)
-    raw   = document.lower().translate(table)
+    raw   = re.sub('<[^<]+?>', '', document).lower().translate(table)
     grams = [
         itertools.islice(raw.split(), i, None) for i in range(n)
     ]
