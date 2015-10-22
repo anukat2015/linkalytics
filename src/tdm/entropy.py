@@ -1,31 +1,13 @@
-import re
-import nltk
-import csv
+import itertools
 
 import pandas as pd
+import numpy as np
 
-def ngram_tokenize(document, n):
-    """
-    Function to clean your document, remove common punctuation marks,
-    split into n-grams, and return a list of n-grams that may contain
-    duplicates
-    """
-
-    raw = document.lower()
-    raw = re.sub("\\xbb", ' ', raw)
-    raw = re.sub(r".\|,\|:\|;", ' ', raw)
-    # Create your ngrams
-    ngs = nltk.ngrams(raw.split(), n)
-    # Compute frequency distribution for all the bigrams in the text
-    fdist = nltk.FreqDist(ngs)
-    token = []
-    for k, v in fdist.items():
-        x = 1
-        while x <= v:
-            token.append((" ".join(k)).encode("utf-8"))
-            x += 1
-    return token
-
+def n_grams(document, n):
+    grams = [
+        itertools.islice(document.lower().split(), i, None) for i in range(n)
+    ]
+    return [' '.join(i) for i in zip(*grams)]
 
 def high_entropy_featurizing(document):
     """
@@ -52,7 +34,7 @@ class TermDocumentMatrix:
     Efficiently create a term-document matrix.
     """
 
-    def __init__(self, cutoff=2, tokenizer=ngram_tokenize):
+    def __init__(self, cutoff=2, tokenizer=n_grams):
         """
         :param cutoff: int
             Specifies only words which appear in minimum documents to be
@@ -133,9 +115,7 @@ class TermDocumentMatrix:
         :type  filename: str
 
         """
-        f = csv.writer(open(filename, 'wt'))
-        for row in self.rows():
-            f.writerow(row)
+        self.to_df().to_csv(filename)
 
 def search(search_term, size, es, phrase=True):
     match_type = 'match_phrase' if phrase else 'match'

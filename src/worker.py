@@ -21,7 +21,7 @@ RUNNERS = {
     'youtube': youtube.run
 }
 
-logging.getLogger('').setLevel(logging.DEBUG)
+logging.getLogger('').setLevel(logging.INFO)
 
 def process_record(q):
     qname, jobid, job = mux.get(q)
