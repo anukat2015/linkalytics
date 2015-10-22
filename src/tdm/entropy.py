@@ -90,10 +90,11 @@ class TermDocumentMatrix:
             yield data
 
     def to_df(self):
-        init = pd.DataFrame()
+        df = pd.DataFrame()
         for doc in self.rows():
-            init = init.append(pd.DataFrame(doc, index=self.doc_count.index.values).T)
-        return init
+            df = df.append(pd.DataFrame(doc, index=self.doc_count.index.values).T)
+        df.index.name = '_id'
+        return df
 
     def to_sparse(self):
         return self.to_df().to_sparse(fill_value=0)
