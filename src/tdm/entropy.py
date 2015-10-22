@@ -46,8 +46,8 @@ class TermDocumentMatrix:
         """
         self.cutoff    = cutoff
         self.tokenizer = tokenizer
-        self.sparse    = []
-        self.doc_count = {}
+        self.sparse    = {}
+        self.doc_count = pd.Series()
 
     def __repr__(self):
         return '{classname}(cutoff={cutoff}, tokenizer={tokenizer})'.format(
@@ -63,51 +63,43 @@ class TermDocumentMatrix:
     def __iter__(self):
         return self.rows()
 
-    def add_doc(self, document, n=2):
+    def add_doc(self, key, document, ngs=2):
         """
         Add document to the term-document matrix
 
         :param document: str
             String to be tokenized
-        :param n: int
+        :param ngs: int
             n-grams
         """
-        words = self.tokenizer(document, n)
+        words  = self.tokenizer(document, ngs)
+        counts = pd.Series(words).value_counts()
+        cutoff = counts[counts >= self.cutoff]
+        
+        self.sparse[key] = cutoff
 
-        word_counts = {}
-        for word in words:
-            word_counts[word] = word_counts.get(word, 0) + 1
-
-        self.sparse.append(word_counts)
-
-        for word in word_counts:
-            self.doc_count[word] = self.doc_count.get(word, 0) + 1
+        self.doc_count = self.doc_count.append(cutoff)
 
     def rows(self):
         """
         Use the `rows` method to return the rows of the matrix if you wish
         to access the individual elements without writing directly to a file.
         """
-        words = [
-            word for word in
-                self.doc_count if self.doc_count[word] >= self.cutoff
-        ]
-        yield words
-
-        for row in self.sparse:
-            data = [row.get(word, 0) for word in words]
+        for key, row in self.sparse.items():
+            data = {key: [row.get(word, 0) for word in self.doc_count.index.values]}
             yield data
 
     def to_df(self):
-        it      = self.rows()
-        headers = next(it)
-        return pd.DataFrame(it, columns=headers)
+        init = pd.DataFrame()
+        for doc in self.rows():
+            init = init.append(pd.DataFrame(doc, index=self.doc_count.index.values).T)
+        return init
 
     def to_sparse(self):
         return self.to_df().to_sparse(fill_value=0)
 
     def sum_columns(self):
-        return np.sum(self.to_df()).astype(int).sort(inplace=False, ascending=False)
+        return np.sum(self.to_df(), dtype=int).sort(inplace=False, ascending=False)
 
     def write_csv(self, filename):
         """
@@ -121,7 +113,7 @@ class TermDocumentMatrix:
 
 def search(search_term, size, es, phrase=True):
     match_type = 'match_phrase' if phrase else 'match'
-    output     = set()
+    output     = dict()
     payload = {
         "size": size,
         "query" : {
@@ -134,7 +126,7 @@ def search(search_term, size, es, phrase=True):
 
     for hit in results['hits']['hits']:
         try:
-            output.add(hit["_source"]["text"])
+            output[hit['_id']] = hit["_source"]["text"]
         except KeyError:
             pass
 
@@ -145,8 +137,7 @@ def main(n, query, es):
     results  = search(query, 1000, es, True)
     tdm      = TermDocumentMatrix(cutoff=2)
 
-    for result in results:
-        tdm.add_doc(result, n)
-    print(tdm.sum_columns())
-    print("_______________")
+    for key, document in results.items():
+        tdm.add_doc(key, document)
+
     return tdm
