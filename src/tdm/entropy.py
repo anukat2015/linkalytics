@@ -1,4 +1,5 @@
 import itertools
+from operator import itemgetter
 
 import pandas as pd
 import numpy as np
@@ -104,9 +105,11 @@ class TermDocumentMatrix:
 
     def to_sparse(self):
         return self.to_df().to_sparse(fill_value=0)
-    
+
     def sum_columns(self):
-        return np.sum(self.to_df()).astype(int).to_dict()
+        summation = np.sum(self.to_df()).astype(int).to_dict()
+        sorted_sum = sorted(list(summation.items()), key=itemgetter(1))
+        return sorted_sum
 
     def write_csv(self, filename):
         """
@@ -139,11 +142,13 @@ def search(search_term, size, es, phrase=True):
 
     return output
 
+
 def main(n, query, es):
     results  = search(query, 1000, es, True)
-    tdm      = TermDocumentMatrix(cutoff=1)
+    tdm      = TermDocumentMatrix(cutoff=2)
 
     for result in results:
         tdm.add_doc(result, n)
-
+    print(tdm.sum_columns())
+    print("_______________")
     return tdm
