@@ -107,9 +107,7 @@ class TermDocumentMatrix:
         return self.to_df().to_sparse(fill_value=0)
 
     def sum_columns(self):
-        summation = np.sum(self.to_df()).astype(int).to_dict()
-        sorted_sum = sorted(list(summation.items()), key=itemgetter(1))
-        return sorted_sum
+        return np.sum(self.to_df()).astype(int).sort(inplace=False, ascending=False)
 
     def write_csv(self, filename):
         """
