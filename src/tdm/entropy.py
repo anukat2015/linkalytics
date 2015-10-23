@@ -1,5 +1,6 @@
 import itertools
 import string
+import json
 import re
 
 import pandas as pd
@@ -43,6 +44,7 @@ class TermDocumentMatrix:
         :param cutoff: int
             Specifies only words which appear in minimum documents to be
             written out as columns in the matrix.
+
         :param tokenizer: function
             Function that takes a single string representing a document
             and return a list of strings representing the n-grams in the document.
@@ -62,11 +64,11 @@ class TermDocumentMatrix:
         return len(self.sparse)
 
     def __iter__(self):
+        """
+        Iterating over this object will output a tuple of key, value pairs
+        """
         for k, v in self.sparse.items():
-            yield {k: v}
-
-    def load_json(self, filepath):
-
+            yield k, v
 
     def add_doc(self, key, document, ngs=2):
         """
@@ -74,6 +76,7 @@ class TermDocumentMatrix:
 
         :param document: str
             String to be tokenized
+
         :param ngs: int
             n-grams
         """
@@ -83,18 +86,48 @@ class TermDocumentMatrix:
 
         if not cutoff.empty:
             self.sparse[key] = cutoff
+            
+    def load_json(self, filepath, ngs=2):
+        """
+        Batch load documents from a fully qualified JSON file
+        with the following schema.
+
+        :param filepath: str
+            File directory path
+
+        :param ngs: int
+            N-Grams to split using the tokenizer
+        
+        Schema
+        ------
+        {
+            “id”:  ”text”,
+            "id2": "text2"
+        }
+        """
+        loaded = json.load(open(filepath))
+        for key, document in loaded.items():
+            self.add_doc(key, document, ngs)
+        
 
     def to_df(self):
+        """
+        Convert internal TDM representation into a tabular
+        Pandas DataFrame object.
+        """
         return pd.DataFrame.from_dict(self.sparse, orient='index')\
                            .fillna(value=0)\
-                           .astype(dtype=np.uint32)\
+                           .astype(dtype=int)\
                            .sort(axis=0, inplace=False)
 
     def to_sparse(self):
+        """
+        Get the SparseDataFrame representation
+        """
         return self.to_df().to_sparse(fill_value=0)
 
     def sum_columns(self):
-        return np.sum(self.to_df()).sort(inplace=False, ascending=False).astype(np.uint32)
+        return np.sum(self.to_df()).sort(inplace=False, ascending=False).astype(int)
 
     def write_csv(self, filename):
         """
