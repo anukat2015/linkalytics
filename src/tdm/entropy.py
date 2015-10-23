@@ -60,6 +60,10 @@ class TermDocumentMatrix:
 
     def __len__(self):
         return len(self.sparse)
+    
+    def __iter__(self):
+        for k, v in self.sparse.items():
+            yield {k: v}
 
     def add_doc(self, key, document, ngs=2):
         """
