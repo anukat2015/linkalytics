@@ -65,6 +65,9 @@ class TermDocumentMatrix:
         for k, v in self.sparse.items():
             yield {k: v}
 
+    def load_json(self, filepath):
+
+
     def add_doc(self, key, document, ngs=2):
         """
         Add document to the term-document matrix

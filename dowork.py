@@ -1,2 +1,3 @@
 import src
-src.main()
+
+src.worker.main()
