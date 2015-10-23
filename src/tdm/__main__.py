@@ -13,7 +13,7 @@ if __name__ == '__main__':
     with timer('Adding Docs to TDM takes'):
         tdm = main(int(sys.argv[1]), sys.argv[2], es)
 
-    print(tdm.to_df())
+    print(tdm.sum_columns(), file=sys.stderr)
 
     with timer('Writing TDM takes'):
         tdm.write_csv('output.csv')
