@@ -90,23 +90,49 @@ class TermDocumentMatrix:
             
     def load_json(self, filepath, n=2):
         """
-        Batch load documents from a fully qualified JSON file with the following schemas.
+        Batch load documents from a fully qualified JSON file.
 
         :param filepath: str
             File directory path
 
         :param n: int
             N-Grams to split using the tokenizer
-        
-        Schema 1: Single Dictionary
-        ---------------------------
+        """
+        loaded = json.load(open(filepath))
+
+        if isinstance(loaded, list):
+            self.load_list(loaded)
+        else:
+            self.load_dict(loaded)
+
+    def load_dict(self, loaded, n=2):
+        """
+        :param loaded: dict
+            Dictionary with the following schema
+
+        :param n: int
+            N-Grams to split using the tokenizer
+
+        Schema
+        ------
         {
             “id1”: ”text1”,
             "id2": "text2"
         }
+        """
+        for key, document in loaded.items():
+            self.add_doc(key, document, n)
 
-        Schema 2: List of Dictionaries
-        ------------------------------
+    def load_list(self, loaded, n=2):
+        """
+        :param loaded: list
+            Dictionary with the following schema
+
+        :param n: int
+            N-Grams to split using the tokenizer
+
+        Schema
+        ------
         [
             {
                 "id": 2314134,
@@ -117,20 +143,13 @@ class TermDocumentMatrix:
                 "text" "Some other text"
             }
         ]
-
         """
-        loaded = json.load(open(filepath))
-
-        # Schema 2
-        if isinstance(loaded, list):
-            loaded = {
+        self.load_dict(
+            {
                 str(item['id']): item['text']
                     for item in loaded if item.get('text', None)
-            }
-
-        for key, document in loaded.items():
-            self.add_doc(key, document, n)
-        
+            }, n
+        )
 
     def to_df(self):
         """
