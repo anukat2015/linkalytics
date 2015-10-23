@@ -88,27 +88,48 @@ class TermDocumentMatrix:
         if not cutoff.empty:
             self.sparse[key] = cutoff
             
-    def load_json(self, filepath, ngs=2):
+    def load_json(self, filepath, n=2):
         """
-        Batch load documents from a fully qualified JSON file
-        with the following schema.
+        Batch load documents from a fully qualified JSON file with the following schemas.
 
         :param filepath: str
             File directory path
 
-        :param ngs: int
+        :param n: int
             N-Grams to split using the tokenizer
         
-        Schema
-        ------
+        Schema 1: Single Dictionary
+        ---------------------------
         {
-            “id”:  ”text”,
+            “id1”: ”text1”,
             "id2": "text2"
         }
+
+        Schema 2: List of Dictionaries
+        ------------------------------
+        [
+            {
+                "id": 2314134,
+                "text": "Some Text"
+            },
+            {
+                "id":  4324353,
+                "text" "Some other text"
+            }
+        ]
+
         """
         loaded = json.load(open(filepath))
+
+        # Schema 2
+        if isinstance(loaded, list):
+            loaded = {
+                str(item['id']): item['text']
+                    for item in loaded if item.get('text', None)
+            }
+
         for key, document in loaded.items():
-            self.add_doc(key, document, ngs)
+            self.add_doc(key, document, n)
         
 
     def to_df(self):
