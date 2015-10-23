@@ -2,6 +2,7 @@ import itertools
 import string
 import json
 import re
+import functools
 
 import pandas as pd
 import numpy as np
@@ -162,10 +163,10 @@ def search(search_term, size, es, phrase=True):
 
 
 def main(n, query, es):
-    results  = search(query, 1000, es, True)
-    tdm      = TermDocumentMatrix(cutoff=2)
+    results   = search(query, 1000, es, True)
+    tdm       = TermDocumentMatrix()
 
     for key, document in results.items():
-        tdm.add_doc(key, document)
+        tdm.add_doc(key, document, n)
 
     return tdm
