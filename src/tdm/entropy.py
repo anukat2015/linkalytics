@@ -50,7 +50,6 @@ class TermDocumentMatrix:
         self.cutoff    = cutoff
         self.tokenizer = tokenizer
         self.sparse    = {}
-        self.doc_count = pd.Series()
 
     def __repr__(self):
         return '{classname}(cutoff={cutoff}, tokenizer={tokenizer})'.format(
@@ -60,11 +59,7 @@ class TermDocumentMatrix:
         )
 
     def __len__(self):
-        rows = [i for i in self.rows() if i]
-        return 0 if not rows else len(rows)
-
-    def __iter__(self):
-        return self.rows()
+        return len(self.sparse)
 
     def add_doc(self, key, document, ngs=2):
         """
@@ -79,31 +74,20 @@ class TermDocumentMatrix:
         counts = pd.Series(words).value_counts()
         cutoff = counts[counts >= self.cutoff]
         
-        self.sparse[key] = cutoff
-
-        self.doc_count = self.doc_count.append(cutoff)
-
-    def rows(self):
-        """
-        Use the `rows` method to return the rows of the matrix if you wish
-        to access the individual elements without writing directly to a file.
-        """
-        for key, row in self.sparse.items():
-            data = {key: [row.get(word, 0) for word in self.doc_count.index.values]}
-            yield data
+        if not cutoff.empty:
+            self.sparse[key] = cutoff
 
     def to_df(self):
-        df = pd.DataFrame()
-        for doc in self.rows():
-            df = df.append(pd.DataFrame(doc, index=self.doc_count.index.values).T)
-        df.index.name = '_id'
-        return df
+        return pd.DataFrame.from_dict(self.sparse, orient='index')\
+                           .fillna(value=0)\
+                           .astype(dtype=np.uint32)\
+                           .sort(axis=0)
 
     def to_sparse(self):
         return self.to_df().to_sparse(fill_value=0)
 
     def sum_columns(self):
-        return np.sum(self.to_df(), dtype=int).sort(inplace=False, ascending=False)
+        return np.sum(self.to_df()).sort(inplace=False, ascending=False).astype(np.uint32)
 
     def write_csv(self, filename):
         """
