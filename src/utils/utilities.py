@@ -4,12 +4,6 @@ import logging
 
 from contextlib import contextmanager
 
-class SetLogging:
-    def __enter__(self):
-       logging.disable(logging.CRITICAL)
-    def __exit__(self, a, b, c):
-       logging.disable(logging.NOTSET)
-
 def memoize(func):
     """
     Memoizing decorator for functions, methods, or classes, exposing
