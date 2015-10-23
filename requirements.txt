@@ -1,5 +1,4 @@
 pandas
-numpy
 tweepy
 python-instagram
 google-api-python-client
