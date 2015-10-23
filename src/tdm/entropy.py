@@ -85,13 +85,13 @@ class TermDocumentMatrix:
         return pd.DataFrame.from_dict(self.sparse, orient='index')\
                            .fillna(value=0)\
                            .astype(dtype=np.uint32)\
-                           .sort_index(inplace=False)
+                           .sort(axis=0, inplace=False)
 
     def to_sparse(self):
         return self.to_df().to_sparse(fill_value=0)
 
     def sum_columns(self):
-        return np.sum(self.to_df()).sort_values(inplace=False, ascending=False).astype(np.uint32)
+        return np.sum(self.to_df()).sort(inplace=False, ascending=False).astype(np.uint32)
 
     def write_csv(self, filename):
         """
