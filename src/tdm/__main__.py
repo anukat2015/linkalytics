@@ -8,7 +8,8 @@ from logging        import CRITICAL
 from .. utils       import SetLogging
 from .. utils       import timer
 from .. environment import cfg
-from .  entropy     import main
+from .  entropy     import search
+from .  entropy     import TermDocumentMatrix
 
 if __name__ == '__main__':
 
@@ -17,8 +18,11 @@ if __name__ == '__main__':
         url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
         es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False)
 
+        results = search(sys.argv[2], 1000, es, True)
+        tdm     = TermDocumentMatrix()
+
         with timer('Adding Docs to TDM takes'):
-            tdm = main(int(sys.argv[1]), sys.argv[2], es)
+            tdm.load_dict(results, int(sys.argv[1]))
 
         with timer('Writing TDM takes'):
             tdm.write_csv('output.csv')
