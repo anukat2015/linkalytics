@@ -200,12 +200,3 @@ def search(search_term, size, es, phrase=True):
             pass
 
     return output
-
-
-def main(n, query, es):
-    results   = search(query, 1000, es, True)
-    tdm       = TermDocumentMatrix()
-
-    tdm.load_dict(results, n)
-
-    return tdm
