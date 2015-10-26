@@ -161,8 +161,8 @@ class TermDocumentMatrix:
         Pandas DataFrame object.
         """
         return pd.DataFrame.from_dict(self.sparse, orient='index')\
-                           .fillna(value=0)\
-                           .astype(dtype=np.bool)\
+                           .fillna(value=np.False_)\
+                           .astype(np.bool)\
                            .sort(axis=0, inplace=False)
 
     def to_sparse(self):
@@ -182,7 +182,7 @@ class TermDocumentMatrix:
         :type  filename: str
 
         """
-        self.to_df().to_csv(filename)
+        self.to_df().to_csv(filename, chunksize=128)
 
     def to_doc_id(self):
         df = self.to_df()

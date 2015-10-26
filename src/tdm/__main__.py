@@ -17,7 +17,6 @@ from .  entropy     import TermDocumentMatrix
 
 def command_line():
     description = 'Backend analytics to link together disparate data'
-    version     = ' '.join([__version__, __build__])
     parser      = ArgumentParser(prog='linkalytics', description=description)
 
     parser.add_argument('--version', '-v',
