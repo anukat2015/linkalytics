@@ -85,9 +85,11 @@ class TermDocumentMatrix:
         counts = pd.Series(words).value_counts()
         cutoff = counts[counts >= self.cutoff]
 
+        cutoff[cutoff.index] = 1
+
         if not cutoff.empty:
             self.sparse[key] = cutoff
-            
+
     def load_json(self, filepath, n=2):
         """
         Batch load documents from a fully qualified JSON file.
@@ -179,6 +181,10 @@ class TermDocumentMatrix:
 
         """
         self.to_df().to_csv(filename)
+
+    def to_doc_id(self):
+        df = self.to_df()
+        return df.T > 0
 
 def search(search_term, size, es, phrase=True):
     match_type = 'match_phrase' if phrase else 'match'

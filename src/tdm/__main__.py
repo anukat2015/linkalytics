@@ -50,7 +50,7 @@ def main():
     with SetLogging(CRITICAL):
 
         url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
-        es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False)
+        es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
 
         results = search(args.query[0], int(args.size[0]), es, True)
         tdm     = TermDocumentMatrix()
