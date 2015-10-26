@@ -216,14 +216,17 @@ def get_ad_ids(tdm, term):
         df.reset_index(inplace=True)
     except:
         pass
-    return (set(df[df[term]!=0]["ad_id"]))
+    return (set(df[df[term]!=0]["ad_id"])) #Need to update to handle np.bool
 
-def query_ad_ids(tdm, term):
+def query_ad_ids(tdm, term, value="text"):
     ads = get_ad_ids(tdm, term)
     ad_ids = []
     for ad_id in ads:
         ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-
+    if value == "text":
+        size = len(ad_ids)
+    else:
+        size = 500
     query = {
             "filtered" : {
                  "filter" : {
@@ -235,7 +238,7 @@ def query_ad_ids(tdm, term):
             }
 
     payload = {
-                "size": len(ad_ids),
+                "size": size,
                 "query" : query
                }
 
@@ -243,12 +246,48 @@ def query_ad_ids(tdm, term):
     output     = dict()
     for hit in results['hits']['hits']:
         try:
-            output[hit['_id']] = hit["_source"]["text"]
+            output[int(hit['_id'])] = hit["_source"][value]
         except KeyError:
             pass
     return output
 
-def get_connected_components_jaccard_similarity(tdm, term, output, jaccard_threshold=.2):
+def query_phones(phones):
+    clean_phones = set()
+    for i in phones.values():
+        if isinstance(i,str):
+            clean_phones.add(int(i))
+        elif isinstance(i,list):
+            for j in i:
+                clean_phones.add(int(j))
+    query_phones = []
+    for phone in clean_phones:
+        query_phones.append({ "term" : {"phone" : phone }})
+
+    query = {
+            "filtered" : {
+                 "filter" : {
+                    "bool" : {
+                      "should" : query_phones
+                        }
+                    }
+                }
+            }
+
+    payload = {
+                "size": 500,
+                "query" : query
+               }
+
+    results = es.search(body=payload)
+    output     = dict()
+    for hit in results['hits']['hits']:
+        try:
+            output[int(hit['_id'])] = hit["_source"]["text"]
+        except KeyError:
+            pass
+    return output
+
+def get_connected_components_jaccard_similarity(output, jaccard_threshold=.2):
     G = nx.Graph()
     similarity = {}
     ads = list(output)
@@ -260,5 +299,7 @@ def get_connected_components_jaccard_similarity(tdm, term, output, jaccard_thres
     for k, v in similarity.items():
         if v <= jaccard_threshold:
             G.add_edge(k[0],k[1])
-    connected_components = nx.number_connected_components(G)
+    connected_components = set()
+    for i in G.nodes():
+        connected_components.add(str(sorted(nx.node_connected_component(G, i))))
     return connected_components
