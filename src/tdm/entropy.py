@@ -1,3 +1,4 @@
+import collections
 import itertools
 import string
 import json
@@ -90,7 +91,7 @@ class TermDocumentMatrix:
         cutoff[cutoff.index] = 1
 
         if not cutoff.empty:
-            self.sparse[key] = cutoff
+            self.sparse[key] = cutoff.to_dict()
 
     def load_json(self, filepath, n=2):
         """
@@ -161,8 +162,8 @@ class TermDocumentMatrix:
         Pandas DataFrame object.
         """
         return pd.DataFrame.from_dict(self.sparse, orient='index')\
-                           .fillna(value=np.False_)\
-                           .astype(np.bool)\
+                           .fillna(value=0)\
+                           .astype(np.uint16)\
                            .sort(axis=0, inplace=False)
 
     def to_sparse(self):
@@ -172,7 +173,13 @@ class TermDocumentMatrix:
         return self.to_df().to_sparse(fill_value=0)
 
     def sum_columns(self):
-        return np.sum(self.to_df()).sort(inplace=False, ascending=False).astype(int)
+        c = collections.Counter()
+
+        for key in self.sparse:
+            c.update(self.sparse[key])
+            
+        return pd.Series(c).sort(inplace=False, ascending=False)
+        
 
     def write_csv(self, filename):
         """
