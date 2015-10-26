@@ -2,7 +2,6 @@ import itertools
 import string
 import json
 import re
-import functools
 
 import pandas as pd
 import numpy as np
@@ -163,7 +162,7 @@ class TermDocumentMatrix:
         """
         return pd.DataFrame.from_dict(self.sparse, orient='index')\
                            .fillna(value=0)\
-                           .astype(dtype=int)\
+                           .astype(dtype=np.bool)\
                            .sort(axis=0, inplace=False)
 
     def to_sparse(self):
@@ -217,7 +216,7 @@ def get_ad_ids(tdm, term):
         df.reset_index(inplace=True)
     except:
         pass
-    return(set(df[df[term]!=0]["ad_id"]))
+    return (set(df[df[term]!=0]["ad_id"]))
 
 def query_ad_ids(tdm, term):
     ads = get_ad_ids(tdm, term)

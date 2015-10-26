@@ -53,7 +53,7 @@ def main():
         es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
 
         results = search(args.query[0], int(args.size[0]), es, True)
-        tdm     = TermDocumentMatrix()
+        tdm     = TermDocumentMatrix(cutoff=1)
 
         with timer('Adding Docs to TDM takes'):
             tdm.load_dict(results, int(args.ngrams[0]))
