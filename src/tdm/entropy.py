@@ -206,3 +206,52 @@ def search(search_term, size, es, phrase=True):
             pass
 
     return output
+
+def get_ad_ids(tdm, term):
+    df = tdm.to_df()
+    try:
+        df.index.name = 'ad_id'
+        df.reset_index(inplace=True)
+    except:
+        pass
+    return(set(df[df[term]!=0]["ad_id"]))
+
+def query_ad_ids(tdm, term):
+    ads = get_ad_ids(tdm, term)
+    ad_ids = []
+    for ad_id in ads:
+        ad_ids.append({ "term" : {"_id" : int(ad_id) }})
+
+    query = {
+            "filtered" : {
+                 "filter" : {
+                    "bool" : {
+                      "should" : ad_ids
+                        }
+                    }
+                }
+            }
+
+    payload = {
+                "size": len(ad_ids),
+                "query" : query
+               }
+
+    results = es.search(body=payload)
+    output     = dict()
+    for hit in results['hits']['hits']:
+        try:
+            output[hit['_id']] = hit["_source"]["text"]
+        except KeyError:
+            pass
+    return output
+
+def get_similarity(tdm, term, output):
+    """Work in progress"""
+    similarity = {}
+    ads = list(get_ad_ids(tdm, term))
+    for i in range(0,len(ads)-1):
+        a = []
+        for j in range(i+1,len(ads)):
+            similarity[str(ads[i]) + "--" + str(ads[j])] =  distance.jaccard(output[ads[i]], output[ads[j]])
+    return similarity
