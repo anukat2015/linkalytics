@@ -6,6 +6,9 @@ import functools
 
 import pandas as pd
 import numpy as np
+import distance
+import networkx as nx
+
 
 def n_grams(document, n):
     table = dict((ord(char), None) for char in string.punctuation)
@@ -246,12 +249,17 @@ def query_ad_ids(tdm, term):
             pass
     return output
 
-def get_similarity(tdm, term, output):
-    """Work in progress"""
+def get_connected_components_jaccard_similarity(tdm, term, output, jaccard_threshold=.2):
+    G = nx.Graph()
     similarity = {}
-    ads = list(get_ad_ids(tdm, term))
+    ads = list(output)
+    G.add_nodes_from(ads)
     for i in range(0,len(ads)-1):
         a = []
         for j in range(i+1,len(ads)):
-            similarity[str(ads[i]) + "--" + str(ads[j])] =  distance.jaccard(output[ads[i]], output[ads[j]])
-    return similarity
+            similarity[(ads[i],ads[j])] =  round(distance.jaccard(output[ads[i]], output[ads[j]]),3)
+    for k, v in similarity.items():
+        if v <= jaccard_threshold:
+            G.add_edge(k[0],k[1])
+    connected_components = nx.number_connected_components(G)
+    return connected_components
