@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import sys
+import json
 
 from elasticsearch  import Elasticsearch
 from logging        import CRITICAL
@@ -34,7 +35,7 @@ def command_line():
     parser.add_argument('--query', '-q', help='Elasticsearch query string',
                         metavar='query',
                         nargs=1,
-                        default=['cali'],
+                        default=['bouncy'],
     )
     parser.add_argument('--size', '-s', help='Maximum size of elasticsearch query',
                         metavar='size',
@@ -63,12 +64,12 @@ def main():
         with timer('Writing TDM takes'):
             tdm.write_csv('output.csv')
 
-        # print(tdm.sum_columns(), file=sys.stderr)
-        output = query_ad_ids(es, tdm, "you the cali way dont", "text")
-        cc = get_connected_components_jaccard_similarity(output, .1)
-        print("There are " + str(len(cc)) + " connected components for 'you the cali way dont', which are made up of the following ad_ids:", file=sys.stderr)
-        print(cc, file=sys.stderr)
-        print(tdm.term2doc())
+        output = query_ad_ids(es, tdm, "eyes bouncy juicy booty 22", "text")
+        cc = {}
+        for k, v in output.items():
+            cc[k] = get_connected_components_jaccard_similarity(v, .1)
+            print("There are " + str(len(cc[k])) + " connected components for " + json.dumps(k) + ", which are made up of the following ad_ids:" + json.dumps(list(v)), file=sys.stderr)
+        # print(tdm.term2doc())
 
 if __name__ == '__main__':
     sys.exit(main())
