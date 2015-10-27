@@ -158,7 +158,7 @@ class TermDocumentMatrix:
             {
                 str(item['id']): item['text']
                     for item in loaded if item.get('text', None)
-            }, n
+            }, n, **kwargs
         )
 
     def to_df(self):
