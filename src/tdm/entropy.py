@@ -276,7 +276,7 @@ def query_ad_ids(es, tdm, term, value="text"):
             pass
     return output
 
-def query_phones(phones):
+def query_phones(es, phones):
     clean_phones = set()
     for i in phones.values():
         if isinstance(i,str):
@@ -312,15 +312,15 @@ def query_phones(phones):
             pass
     return output
 
-def get_connected_components_jaccard_similarity(output, jaccard_threshold=.2):
+def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2):
     G = nx.Graph()
     similarity = {}
-    ads = list(output)
+    ads = list(documents)
     G.add_nodes_from(ads)
     for i in range(0,len(ads)-1):
         a = []
         for j in range(i+1,len(ads)):
-            similarity[(ads[i],ads[j])] =  round(distance.jaccard(output[ads[i]], output[ads[j]]),3)
+            similarity[(ads[i],ads[j])] =  round(distance.jaccard(documents[ads[i]], documents[ads[j]]),3)
     for k, v in similarity.items():
         if v <= jaccard_threshold:
             G.add_edge(k[0],k[1])
