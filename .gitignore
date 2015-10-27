@@ -81,3 +81,6 @@ Icon*
 .idea**
 output.*
 venv
+elastic.json
+.ipynb_checkpoints
+.idea

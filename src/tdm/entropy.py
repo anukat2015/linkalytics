@@ -77,7 +77,7 @@ class TermDocumentMatrix:
         for k, v in self.sparse.items():
             yield k, v
 
-    def add_doc(self, key, document, ngs=2):
+    def add_doc(self, key, document, ngs=2, remove_duplicates=True):
         """
         Add document to the term-document matrix
 
@@ -92,6 +92,9 @@ class TermDocumentMatrix:
             k: 1 for k, v in counter.items()
                 if v >= self.cutoff
         }
+        if remove_duplicates and cutoff in self.sparse.values():
+            return
+
         if cutoff:
             self.sparse[key] = cutoff
 
