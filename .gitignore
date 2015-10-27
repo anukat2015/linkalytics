@@ -84,3 +84,4 @@ venv
 elastic.json
 .ipynb_checkpoints
 .idea
+data.json

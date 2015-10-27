@@ -98,7 +98,7 @@ class TermDocumentMatrix:
         if cutoff:
             self.sparse[key] = cutoff
 
-    def load_json(self, filepath, **kwargs):
+    def load_json(self, filepath, *args, **kwargs):
         """
         Batch load documents from a fully qualified JSON file.
 
@@ -111,11 +111,11 @@ class TermDocumentMatrix:
         loaded = json.load(open(filepath))
 
         if isinstance(loaded, list):
-            self.load_list(loaded, **kwargs)
+            self.load_list(loaded, *args, **kwargs)
         else:
-            self.load_dict(loaded, **kwargs)
+            self.load_dict(loaded, *args, **kwargs)
 
-    def load_dict(self, loaded, n=2, **kwargs):
+    def load_dict(self, loaded, *args, **kwargs):
         """
         :param loaded: dict
             Dictionary with the following schema
@@ -131,9 +131,9 @@ class TermDocumentMatrix:
         }
         """
         for key, document in loaded.items():
-            self.add_doc(key, document, n, **kwargs)
+            self.add_doc(key, document, *args, **kwargs)
 
-    def load_list(self, loaded, n=2, **kwargs):
+    def load_list(self, loaded, *args, **kwargs):
         """
         :param loaded: list
             Dictionary with the following schema
@@ -158,7 +158,7 @@ class TermDocumentMatrix:
             {
                 str(item['id']): item['text']
                     for item in loaded if item.get('text', None)
-            }, n, **kwargs
+            }, *args, **kwargs
         )
 
     def to_df(self):
