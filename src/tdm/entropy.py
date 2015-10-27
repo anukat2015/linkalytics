@@ -250,41 +250,36 @@ def get_ad_ids(tdm, term):
     return (set(df[df[term]!=0]["ad_id"])) #Need to update to handle np.bool
 
 def query_ad_ids(es, tdm, term, value="text"):
-    phrases = tdm.term2doc()
-    filtered_phrases = filter_ngrams(phrases, True, True)
-    print(filtered_phrases)
-    output = {}
-    for k, v in filtered_phrases.items():
-        ad_ids = []
-        for ad_id in v:
-            ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-        if value == "text":
-            size = len(ad_ids)
-        else:
-            size = 500
-        query = {
-                "filtered" : {
-                     "filter" : {
-                        "bool" : {
-                          "should" : ad_ids
-                            }
+    ads = get_ad_ids(tdm, term)
+    ad_ids = []
+    for ad_id in ads:
+        ad_ids.append({ "term" : {"_id" : int(ad_id) }})
+    if value == "text":
+        size = len(ad_ids)
+    else:
+        size = 500
+    query = {
+            "filtered" : {
+                 "filter" : {
+                    "bool" : {
+                      "should" : ad_ids
                         }
                     }
                 }
+            }
 
-        payload = {
-                    "size": size,
-                    "query" : query
-                   }
+    payload = {
+                "size": size,
+                "query" : query
+               }
 
-        results = es.search(body=payload)
-        res     = dict()
-        for hit in results['hits']['hits']:
-            try:
-                res[int(hit['_id'])] = hit["_source"][value]
-            except KeyError:
-                pass
-        output[k] = res
+    results = es.search(body=payload)
+    output     = dict()
+    for hit in results['hits']['hits']:
+        try:
+            output[int(hit['_id'])] = hit["_source"][value]
+        except KeyError:
+            pass
     return output
 
 def query_phones(es, phones):
@@ -328,43 +323,48 @@ def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2)
     similarity = {}
     ads = list(documents)
     G.add_nodes_from(ads)
+
     for i in range(0,len(ads)-1):
         a = []
         for j in range(i+1,len(ads)):
             similarity[(ads[i],ads[j])] =  round(distance.jaccard(documents[ads[i]], documents[ads[j]]),3)
+
     for k, v in similarity.items():
         if v <= jaccard_threshold:
             G.add_edge(k[0],k[1])
+
     connected_components = set()
+
     for i in G.nodes():
         connected_components.add(str(sorted(nx.node_connected_component(G, i))))
+
     return connected_components
 
 def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False, contains_alpha=False, contains_non_alphanumeric=False):
     chkr = SpellChecker("en_US")
     print(len(terms), "n-grams before filter")
     if spelling == True:
-        for k in list(terms.keys()):
+        for k in terms.keys():
             chkr.set_text(k)
             errors = set()
             for err in chkr:
                 errors.add(err.word)
             if len(errors) > 0:
-                del terms[k]
+                del terms[i]
     if singletons == True:
-        for k,v in list(terms.items()):
+        for k,v in terms.items():
             if len(v) == 1:
                 del terms[k]
     if contains_numeric == True:
-        for k in list(terms.keys()):
+        for k in terms.keys():
             if re.search("[^0-9]",k):
                 del terms[k]
     if contains_alpha == True:
-        for k in list(terms.keys()):
+        for k in terms.keys():
             if re.search("[^a-z]",k):
                 del terms[k]
     if contains_non_alphanumeric == True:
-        for k in list(terms.keys()):
+        for k in terms.keys():
             if re.search("[^[:alnum:]]",k):
                 del terms[k]
     print(len(terms), "n-grams after filter")
