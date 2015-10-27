@@ -14,7 +14,6 @@ from .. utils       import timer
 from .. environment import cfg
 from .  entropy     import search
 from .  entropy     import TermDocumentMatrix
-from .  entropy     import get_ad_ids
 from .  entropy     import query_ad_ids
 from .  entropy     import get_connected_components_jaccard_similarity
 
