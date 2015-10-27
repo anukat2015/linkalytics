@@ -14,6 +14,9 @@ from .. utils       import timer
 from .. environment import cfg
 from .  entropy     import search
 from .  entropy     import TermDocumentMatrix
+from .  entropy     import get_ad_ids
+from .  entropy     import query_ad_ids
+from .  entropy     import get_connected_components_jaccard_similarity
 
 def command_line():
     description = 'Backend analytics to link together disparate data'
@@ -60,8 +63,11 @@ def main():
         with timer('Writing TDM takes'):
             tdm.write_csv('output.csv')
 
-    print(tdm.sum_columns(), file=sys.stderr)
-
+        # print(tdm.sum_columns(), file=sys.stderr)
+        output = query_ad_ids(es, tdm, "you the cali way dont", "text")
+        cc = get_connected_components_jaccard_similarity(output, .1)
+        print("There are " + str(len(cc)) + " connected components, which are made up of the following ad_ids:", file=sys.stderr)
+        print(cc, file=sys.stderr)
 
 if __name__ == '__main__':
     sys.exit(main())

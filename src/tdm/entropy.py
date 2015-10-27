@@ -243,7 +243,7 @@ def get_ad_ids(tdm, term):
         pass
     return (set(df[df[term]!=0]["ad_id"])) #Need to update to handle np.bool
 
-def query_ad_ids(tdm, term, value="text"):
+def query_ad_ids(es, tdm, term, value="text"):
     ads = get_ad_ids(tdm, term)
     ad_ids = []
     for ad_id in ads:
