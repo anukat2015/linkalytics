@@ -240,15 +240,6 @@ def search(search_term, size, es, phrase=True):
 
     return output
 
-def get_ad_ids(tdm, term):
-    df = tdm.to_df()
-    try:
-        df.index.name = 'ad_id'
-        df.reset_index(inplace=True)
-    except:
-        pass
-    return (set(df[df[term]!=0]["ad_id"])) #Need to update to handle np.bool
-
 def query_ad_ids(es, tdm, term, value="text"):
     ads = get_ad_ids(tdm, term)
     ad_ids = []
