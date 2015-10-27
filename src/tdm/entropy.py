@@ -84,14 +84,13 @@ class TermDocumentMatrix:
         :param ngs: int
             n-grams
         """
-        words  = self.tokenizer(document, ngs)
-        counts = pd.Series(words).value_counts()
-        cutoff = counts[counts >= self.cutoff]
-
-        cutoff[cutoff.index] = 1
-
-        if not cutoff.empty:
-            self.sparse[key] = cutoff.to_dict()
+        counter = collections.Counter(self.tokenizer(document, ngs))
+        cutoff  = {
+            k: v for k, v in counter.items()
+                if v >= self.cutoff
+        }
+        if cutoff:
+            self.sparse[key] = cutoff
 
     def load_json(self, filepath, n=2):
         """
@@ -177,9 +176,9 @@ class TermDocumentMatrix:
 
         for key in self.sparse:
             c.update(self.sparse[key])
-            
+
         return pd.Series(c).sort(inplace=False, ascending=False)
-        
+
 
     def write_csv(self, filename):
         """
