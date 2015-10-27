@@ -86,7 +86,7 @@ class TermDocumentMatrix:
         """
         counter = collections.Counter(self.tokenizer(document, ngs))
         cutoff  = {
-            k: v for k, v in counter.items()
+            k: 1 for k, v in counter.items()
                 if v >= self.cutoff
         }
         if cutoff:
