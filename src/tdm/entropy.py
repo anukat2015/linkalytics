@@ -77,7 +77,7 @@ class TermDocumentMatrix:
         for k, v in self.sparse.items():
             yield k, v
 
-    def add_doc(self, key, document, ngs=2, remove_duplicates=True):
+    def add_doc(self, key, document, n=2, remove_duplicates=True):
         """
         Add document to the term-document matrix
 
@@ -87,7 +87,7 @@ class TermDocumentMatrix:
         :param ngs: int
             n-grams
         """
-        counter = collections.Counter(self.tokenizer(document, ngs))
+        counter = collections.Counter(self.tokenizer(document, n))
         cutoff  = {
             k: 1 for k, v in counter.items()
                 if v >= self.cutoff
@@ -98,7 +98,7 @@ class TermDocumentMatrix:
         if cutoff:
             self.sparse[key] = cutoff
 
-    def load_json(self, filepath, n=2):
+    def load_json(self, filepath, **kwargs):
         """
         Batch load documents from a fully qualified JSON file.
 
@@ -111,11 +111,11 @@ class TermDocumentMatrix:
         loaded = json.load(open(filepath))
 
         if isinstance(loaded, list):
-            self.load_list(loaded)
+            self.load_list(loaded, **kwargs)
         else:
-            self.load_dict(loaded)
+            self.load_dict(loaded, **kwargs)
 
-    def load_dict(self, loaded, n=2):
+    def load_dict(self, loaded, n=2, **kwargs):
         """
         :param loaded: dict
             Dictionary with the following schema
@@ -131,9 +131,9 @@ class TermDocumentMatrix:
         }
         """
         for key, document in loaded.items():
-            self.add_doc(key, document, n)
+            self.add_doc(key, document, n, **kwargs)
 
-    def load_list(self, loaded, n=2):
+    def load_list(self, loaded, n=2, **kwargs):
         """
         :param loaded: list
             Dictionary with the following schema
