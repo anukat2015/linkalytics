@@ -66,7 +66,7 @@ def main():
         # print(tdm.sum_columns(), file=sys.stderr)
         output = query_ad_ids(es, tdm, "you the cali way dont", "text")
         cc = get_connected_components_jaccard_similarity(output, .1)
-        print("There are " + str(len(cc)) + " connected components, which are made up of the following ad_ids:", file=sys.stderr)
+        print("There are " + str(len(cc)) + " connected components for 'you the cali way dont', which are made up of the following ad_ids:", file=sys.stderr)
         print(cc, file=sys.stderr)
 
 if __name__ == '__main__':
