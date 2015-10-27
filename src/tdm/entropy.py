@@ -5,9 +5,12 @@ import json
 import re
 
 import pandas as pd
-import numpy as np
+import numpy  as np
+import scipy  as sp
 import distance
 import networkx as nx
+
+from scipy import sparse
 from enchant.checker import SpellChecker
 
 def n_grams(document, n):
@@ -164,6 +167,19 @@ class TermDocumentMatrix:
                            .fillna(value=0)\
                            .astype(np.uint16)\
                            .sort(axis=0, inplace=False)
+
+    def to_sparse(self):
+        """
+        Get the SparseDataFrame representation
+        """
+        return sparse.csr_matrix(pd.DataFrame.as_matrix(self.to_df()), dtype=int)
+
+    def save_sparse(self, filename):
+        return sp.io.mmwrite(filename, self.to_sparse())
+        
+    def load_sparse(self, filename):
+        return sp.io.mmread(filename)
+
     def term2doc(self):
         """
         For every term get the documents associated with the term.
@@ -184,12 +200,6 @@ class TermDocumentMatrix:
 
         return docs
 
-    def to_sparse(self):
-        """
-        Get the SparseDataFrame representation
-        """
-        return self.to_df().to_sparse(fill_value=0)
-
     def sum_columns(self):
         c = collections.Counter()
 
@@ -208,10 +218,6 @@ class TermDocumentMatrix:
 
         """
         self.to_df().to_csv(filename, chunksize=128)
-
-    def to_doc_id(self):
-        df = self.to_df()
-        return df.T > 0
 
 def search(search_term, size, es, phrase=True):
     match_type = 'match_phrase' if phrase else 'match'
