@@ -68,6 +68,7 @@ def main():
         cc = get_connected_components_jaccard_similarity(output, .1)
         print("There are " + str(len(cc)) + " connected components for 'you the cali way dont', which are made up of the following ad_ids:", file=sys.stderr)
         print(cc, file=sys.stderr)
+        print(tdm.term2doc())
 
 if __name__ == '__main__':
     sys.exit(main())

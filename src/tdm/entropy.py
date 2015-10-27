@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import distance
 import networkx as nx
-
+from enchant.checker import SpellChecker
 
 def n_grams(document, n):
     table = dict((ord(char), None) for char in string.punctuation)
@@ -328,3 +328,34 @@ def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2)
     for i in G.nodes():
         connected_components.add(str(sorted(nx.node_connected_component(G, i))))
     return connected_components
+
+def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False, contains_alpha=False, contains_non_alphanumeric=False):
+    chkr = SpellChecker("en_US")
+    print(len(terms), "n-grams before filter")
+    if spelling == True:
+        for k in terms.keys():
+            chkr.set_text(k)
+            errors = set()
+            for err in chkr:
+                errors.add(err.word)
+            if len(errors) > 0:
+                del terms[i]
+    if singletons == True:
+        for k,v in terms.items():
+            if len(v) == 1:
+                del terms[k]
+    if contains_numeric == True:
+        for k in terms.keys():
+            if re.search("[^0-9]",k):
+                del terms[k]
+    if contains_alpha == True:
+        for k in terms.keys():
+            if re.search("[^a-z]",k):
+                del terms[k]
+    if contains_non_alphanumeric == True:
+        for k in terms.keys():
+            if re.search("[^[:alnum:]]",k):
+                del terms[k]
+    print(len(terms), "n-grams after filter")
+    return terms
+
