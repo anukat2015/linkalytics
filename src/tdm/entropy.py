@@ -164,6 +164,25 @@ class TermDocumentMatrix:
                            .fillna(value=0)\
                            .astype(np.uint16)\
                            .sort(axis=0, inplace=False)
+    def term2doc(self):
+        """
+        For every term get the documents associated with the term.
+        """
+        grams = set()
+
+        for i in self.sparse.values():
+            grams.update(i.keys())
+
+        docs = dict.fromkeys(grams)
+
+        for k, v in self.sparse.items():
+            for word in v.keys():
+                if not docs[word]:
+                    docs[word] = [k]
+                else:
+                    docs[word].append(k)
+
+        return docs
 
     def to_sparse(self):
         """
