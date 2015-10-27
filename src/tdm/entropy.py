@@ -84,8 +84,11 @@ class TermDocumentMatrix:
         :param document: str
             String to be tokenized
 
-        :param ngs: int
-            n-grams
+        :param n: int
+            N-Grams to split using the tokenizer
+
+        :param remove_duplicates: bool
+            Flag that sets whether to add duplicate entries
         """
         counter = collections.Counter(self.tokenizer(document, n))
         cutoff  = {
@@ -105,8 +108,10 @@ class TermDocumentMatrix:
         :param filepath: str
             File directory path
 
-        :param n: int
-            N-Grams to split using the tokenizer
+        Also takes any arguments allowed by
+
+            TermDocumentMatrix.add_doc(*args, **kwargs)
+
         """
         loaded = json.load(open(filepath))
 
@@ -165,6 +170,10 @@ class TermDocumentMatrix:
         """
         Convert internal TDM representation into a tabular
         Pandas DataFrame object.
+
+        :return: df
+        :rtype: pd.DataFrame
+
         """
         return pd.DataFrame.from_dict(self.sparse, orient='index')\
                            .fillna(value=0)\
@@ -186,6 +195,9 @@ class TermDocumentMatrix:
     def term2doc(self):
         """
         For every term get the documents associated with the term.
+
+        :return: docs
+        :rtype: dict
         """
         grams = set()
 
@@ -204,6 +216,12 @@ class TermDocumentMatrix:
         return docs
 
     def sum_columns(self):
+        """
+        Sum up all the table columns
+
+        :return: columns
+        :rtype: pd.Series
+        """
         c = collections.Counter()
 
         for key in self.sparse:
