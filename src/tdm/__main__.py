@@ -63,7 +63,13 @@ def main():
         with timer('Writing TDM takes'):
             tdm.write_csv('output.csv')
 
-        print(tdm.sum_columns(), file=sys.stderr)
+        output = query_ad_ids(es, tdm, "eyes bouncy juicy booty 22", "text")
+        cc = {}
+        for k, v in output.items():
+            cc[k] = get_connected_components_jaccard_similarity(v, .1)
+            print("There are " + str(len(cc[k])) + " connected components for " + json.dumps(k) + ", which are made up of the following ad_ids:" + json.dumps(list(v)), file=sys.stderr)
+
+        # print(tdm.term2doc())
 
 if __name__ == '__main__':
     sys.exit(main())

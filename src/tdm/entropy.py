@@ -276,36 +276,42 @@ def search(search_term, size, es, phrase=True):
     return output
 
 def query_ad_ids(es, tdm, term, value="text"):
-    ads = get_ad_ids(tdm, term)
-    ad_ids = []
-    for ad_id in ads:
-        ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-    if value == "text":
-        size = len(ad_ids)
-    else:
-        size = 500
-    query = {
-            "filtered" : {
-                 "filter" : {
-                    "bool" : {
-                      "should" : ad_ids
-                        }
-                    }
-                }
-            }
+    phrases = tdm.term2doc()
+    filtered_phrases = filter_ngrams(phrases, True, True)
+    print(filtered_phrases)
+    output = {}
+    for k, v in filtered_phrases.items():
+        ad_ids = []
+        for ad_id in v:
+            ad_ids.append({ "term" : {"_id" : int(ad_id) }})
+        if value == "text":
+            size = len(ad_ids)
+        else:
+            size = 500
+        query = {
+                "filtered" : {
+                     "filter" : {
+                        "bool" : {
+                          "should" : ad_ids
+                            }
 
-    payload = {
-                "size": size,
-                "query" : query
-               }
+                         }
+                     }
+                 }
 
-    results = es.search(body=payload)
-    output     = dict()
-    for hit in results['hits']['hits']:
-        try:
-            output[int(hit['_id'])] = hit["_source"][value]
-        except KeyError:
-            pass
+        payload = {
+                    "size": size,
+                    "query" : query
+                   }
+
+        results = es.search(body=payload)
+        res     = dict()
+        for hit in results['hits']['hits']:
+            try:
+                res[int(hit['_id'])] = hit["_source"][value]
+            except KeyError:
+                pass
+        output[k] = res
     return output
 
 def query_phones(es, phones):
@@ -370,27 +376,27 @@ def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False
     chkr = SpellChecker("en_US")
     print(len(terms), "n-grams before filter")
     if spelling == True:
-        for k in terms.keys():
+        for k in list(terms.keys()):
             chkr.set_text(k)
             errors = set()
             for err in chkr:
                 errors.add(err.word)
             if len(errors) > 0:
-                del terms[i]
+                del terms[k]
     if singletons == True:
-        for k,v in terms.items():
+        for k,v in list(terms.items()):
             if len(v) == 1:
                 del terms[k]
     if contains_numeric == True:
-        for k in terms.keys():
+        for k in list(terms.keys()):
             if re.search("[^0-9]",k):
                 del terms[k]
     if contains_alpha == True:
-        for k in terms.keys():
+        for k in list(terms.keys()):
             if re.search("[^a-z]",k):
                 del terms[k]
     if contains_non_alphanumeric == True:
-        for k in terms.keys():
+        for k in list(terms.keys()):
             if re.search("[^[:alnum:]]",k):
                 del terms[k]
     print(len(terms), "n-grams after filter")
