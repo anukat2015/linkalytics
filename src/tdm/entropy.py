@@ -14,8 +14,14 @@ from scipy import sparse
 from enchant.checker import SpellChecker
 
 def n_grams(document, n):
-    table = dict((ord(char), None) for char in string.punctuation)
-    raw   = re.sub('<[^<]+?>', '', document).lower().translate(table)
+    numbers = 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
+    table   = dict((ord(char), None) for char in string.punctuation)
+    raw     = re.sub('<[^<]+?>', '', document).lower().translate(table)
+    
+    # Replace spelled out numbers with actual numbers
+    for word, num in list(zip(numbers, list(range(10)))):
+        raw = raw.replace(word, str(num))
+
     grams = [
         itertools.islice(raw.split(), i, None) for i in range(n)
     ]
