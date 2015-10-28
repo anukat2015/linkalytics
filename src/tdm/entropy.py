@@ -184,13 +184,27 @@ class TermDocumentMatrix:
         """
         Get the SparseDataFrame representation
         """
-        return sparse.csr_matrix(pd.DataFrame.as_matrix(self.to_df()), dtype=int)
+        df = self.to_df()
+        return sparse.csr_matrix(pd.DataFrame.as_matrix(df), dtype=int), df.index, df.columns
 
     def save_sparse(self, filename):
-        return sp.io.mmwrite(filename, self.to_sparse())
+        matrix, index, columns = self.to_sparse()
+        name, _ = filename.rsplit('.')
+
+        sp.io.mmwrite(filename, matrix)
+
+        index.to_series().to_csv('.'.join([name, 'index']))
+        columns.to_series().to_csv('.'.join([name, 'columns']))
+
+    @classmethod
+    def load_sparse(cls, filename):
+        matrix  = sp.io.mmread(filename)
+        name, _ = filename.rsplit('.')
         
-    def load_sparse(self, filename):
-        return sp.io.mmread(filename)
+        index   = pd.Series.from_csv('.'.join([name, 'index']))
+        columns = pd.Series.from_csv('.'.join([name, 'columns']))
+
+        return pd.DataFrame(matrix.todense(), index=index, columns=columns).to_sparse(fill_value=0)
 
     def term2doc(self):
         """
