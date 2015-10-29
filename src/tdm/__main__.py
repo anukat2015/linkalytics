@@ -5,6 +5,7 @@ from __future__ import print_function
 import sys
 import json
 import os
+import functools
 
 from elasticsearch  import Elasticsearch
 from logging        import CRITICAL
@@ -15,6 +16,7 @@ from .. utils       import SetLogging
 from .. utils       import timer
 from .. environment import cfg
 from .  entropy     import search
+from .  entropy     import n_grams
 from .  entropy     import TermDocumentMatrix
 from .  entropy     import query_ad_ids
 from .  entropy     import get_connected_components_jaccard_similarity
@@ -56,9 +58,10 @@ def main():
         url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
         es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
 
-        tdm     = TermDocumentMatrix(cutoff=1)
+        tokenizer = functools.partial(n_grams, numbers=True, normalize=True)
+        tdm       = TermDocumentMatrix(cutoff=1, tokenizer=tokenizer)
         """Create the tdm from a json in the top level directory of linkalytics"""
-        tdm.load_json(os.getcwd() + '/elastic.json', n=5, remove_duplicates=True)
+        tdm.load_json('elastic.json', n=int(args.ngrams[0]), remove_duplicates=True)
 
         """Create the tdm from an Elastic query"""
         # results = search(args.query[0], int(args.size[0]), es, True)

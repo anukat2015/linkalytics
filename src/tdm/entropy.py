@@ -20,16 +20,17 @@ from enchant.checker import SpellChecker
 
 stop = stopwords.words('english')
 
-def n_grams(document, n):
+def n_grams(document, n, normalize=True, numbers=True):
     numbers = 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
     table   = dict((ord(char), None) for char in string.punctuation)
     raw     = re.sub('<[^<]+?>', '', document).lower().translate(table)
-    raw     = ''.join(c for c in raw if not unicodedata.combining(c))
-    
+
     # Replace spelled out numbers with actual numbers
-    for word, num in list(zip(numbers, range(10))):
-        raw = raw.replace(word, str(num))
-    
+    if numbers:
+        for word, num in list(zip(numbers, range(10))):
+            raw = raw.replace(word, str(num))
+    if normalize:
+        raw     = ''.join(c for c in raw if not unicodedata.combining(c))
 
     grams = [
         itertools.islice(raw.split(), i, None) for i in range(n)
@@ -256,7 +257,9 @@ class TermDocumentMatrix:
         for key in self.sparse:
             c.update(self.sparse[key])
 
-        return pd.Series(c).sort(inplace=False, ascending=False)
+        sums = pd.Series(c).sort(inplace=False, ascending=False)
+
+        return sums[sums > self.cutoff]
 
 
     def write_csv(self, filename):
