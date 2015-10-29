@@ -4,6 +4,59 @@ import logging
 
 from contextlib import contextmanager
 
+def search(es):
+    """
+    Elasticsearch Decorator
+    -----------------------
+    Wraps a function which becomes the payload for a query to an elasticsearch.
+
+    :param es: Elasticsearch instance
+
+    :return: Elasticsearch results
+    :rtype:  dict
+
+    Usage:
+    ------
+    from elasticsearch import Elasticsearch
+
+    es = Elasticsearch("https://elasticsearch.com/index")
+
+    @search()
+    def get_results(search_term, size):
+        return {
+            "size": size,
+            "query" : {
+                "match": {
+                    "_all": search_term
+                }
+            }
+        }
+
+    results = get_results('foo', 1000)
+    """
+    def wrap(func):
+        """
+        :param func: Decorated Function
+        """
+        @functools.wraps(func)
+        def _wrap(*args, **kwargs):
+            output, payload = dict(), func(*args, **kwargs)
+
+            results = es.search(body=payload)
+
+            for hit in results['hits']['hits']:
+                try:
+                    output[hit['_id']] = hit["_source"]["text"]
+                except KeyError:
+                    pass
+
+            return output
+
+        return _wrap
+
+    return wrap
+
+
 def memoize(func):
     """
     Memoizing decorator for functions, methods, or classes, exposing

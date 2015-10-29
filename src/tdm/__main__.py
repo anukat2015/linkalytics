@@ -14,13 +14,29 @@ from argparse       import ArgumentParser
 from .. __version__ import __version__, __build__
 from .. utils       import SetLogging
 from .. utils       import timer
+from .. utils       import search
 from .. environment import cfg
-from .  entropy     import search
 from .  entropy     import n_grams
 from .  entropy     import TermDocumentMatrix
 from .  entropy     import query_ad_ids
 from .  entropy     import get_connected_components_jaccard_similarity
 from .  entropy     import similarity_to_csv
+
+url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
+es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
+
+@search(es)
+def get_results(search_term, size, phrase=True):
+    match_type = 'match_phrase' if phrase else 'match'
+    payload = {
+        "size": size,
+        "query" : {
+            match_type : {
+                "_all" : search_term
+            }
+        }
+    }
+    return payload
 
 def command_line():
     description = 'Backend analytics to link together disparate data'
@@ -54,9 +70,6 @@ def main():
     print(args, file=sys.stderr)
 
     with SetLogging(CRITICAL):
-
-        url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
-        es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
 
         tokenizer = functools.partial(n_grams, numbers=True, normalize=True)
         tdm       = TermDocumentMatrix(cutoff=1, tokenizer=tokenizer)

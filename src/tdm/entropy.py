@@ -2,6 +2,7 @@
 
 import collections
 import unicodedata
+import functools
 import itertools
 import string
 import json
@@ -15,10 +16,7 @@ import distance
 import networkx as nx
 
 from scipy import sparse
-from nltk.corpus import stopwords
 from enchant.checker import SpellChecker
-
-stop = stopwords.words('english')
 
 def n_grams(document, n, normalize=True, numbers=True):
     numbers = 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
@@ -216,7 +214,7 @@ class TermDocumentMatrix:
     def load_sparse(cls, filename):
         matrix  = sp.io.mmread(filename)
         name, _ = filename.rsplit('.')
-        
+
         index   = pd.Series.from_csv('.'.join([name, 'index']))
         columns = pd.Series.from_csv('.'.join([name, 'columns']))
 
@@ -271,27 +269,6 @@ class TermDocumentMatrix:
 
         """
         self.to_df().to_csv(filename, chunksize=128)
-
-def search(search_term, size, es, phrase=True):
-    match_type = 'match_phrase' if phrase else 'match'
-    output     = dict()
-    payload = {
-        "size": size,
-        "query" : {
-            match_type : {
-                "_all" : search_term
-            }
-        }
-    }
-    results = es.search(body=payload)
-
-    for hit in results['hits']['hits']:
-        try:
-            output[hit['_id']] = hit["_source"]["text"]
-        except KeyError:
-            pass
-
-    return output
 
 def query_ad_ids(es, tdm, value="text"):
     """
@@ -453,4 +430,3 @@ def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False
                 del terms[k]
     print(len(terms), "n-grams after filter")
     return terms
-

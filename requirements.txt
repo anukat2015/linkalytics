@@ -1,6 +1,8 @@
 networkx
 distance
 pandas
+scipy
+pyenchant
 tweepy
 python-instagram
 google-api-python-client
