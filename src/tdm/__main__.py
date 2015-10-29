@@ -18,7 +18,7 @@ from .. utils       import search
 from .. environment import cfg
 from .  entropy     import n_grams
 from .  entropy     import TermDocumentMatrix
-from .  entropy     import query_ad_ids
+from .  entropy     import filter_ngrams
 from .  entropy     import get_connected_components_jaccard_similarity
 from .  entropy     import similarity_to_csv
 
@@ -37,6 +37,45 @@ def get_results(search_term, size, phrase=True):
         }
     }
     return payload
+
+def query_ad_ids(tdm, value="text"):
+    """
+    Query ads containing the n-gram
+    We use a boolean Elastic query rather than phrase match because we may be working with a subset of the Elastic instance
+    """
+    phrases = tdm.term2doc()
+    filtered_phrases = filter_ngrams(phrases, True, True)
+    output = {}
+    for k, v in filtered_phrases.items():
+        results = query_ads(k, v, value)
+        output[k] = results
+    return output
+
+@search(es)
+def query_ads(k, v, value='text'):
+    ad_ids = []
+    for ad_id in v:
+        ad_ids.append({ "term" : {"_id" : int(ad_id) }})
+    if value == "text":
+        size = len(ad_ids)
+    else:
+        size = 500
+    query = {
+        "filtered" : {
+            "filter" : {
+                "bool" : {
+                    "should" : ad_ids
+                }
+            }
+        }
+    }
+
+    payload = {
+        "size": size,
+        "query" : query
+    }
+    return payload
+
 
 def command_line():
     description = 'Backend analytics to link together disparate data'
@@ -84,7 +123,7 @@ def main():
         # with timer('Writing TDM takes'):
         #     tdm.write_csv('output.csv')
 
-        output = query_ad_ids(es, tdm, "text")
+        output = query_ad_ids(tdm, "text")
         # print(output)
         cc_text = {}
         cc_phone = {}

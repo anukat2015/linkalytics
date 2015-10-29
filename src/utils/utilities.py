@@ -46,7 +46,7 @@ def search(es):
 
             for hit in results['hits']['hits']:
                 try:
-                    output[hit['_id']] = hit["_source"]["text"]
+                    output[int(hit['_id'])] = hit["_source"]
                 except KeyError:
                     pass
 
