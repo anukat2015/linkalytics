@@ -2,7 +2,6 @@
 
 import collections
 import unicodedata
-import functools
 import itertools
 import string
 import json
@@ -282,15 +281,15 @@ def query_phones(es, phones):
         elif isinstance(i,list):
             for j in i:
                 clean_phones.add(int(j))
-    query_phones = []
+    query_phones_list = []
     for phone in clean_phones:
-        query_phones.append({ "term" : {"phone" : phone }})
+        query_phones_list.append({ "term" : {"phone" : phone }})
 
     query = {
             "filtered" : {
                  "filter" : {
                     "bool" : {
-                      "should" : query_phones
+                      "should" : query_phones_list
                         }
                     }
                 }
@@ -367,7 +366,7 @@ def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False
     """
     chkr = SpellChecker("en_US")
     print(len(terms), "n-grams before filter")
-    if spelling == True:
+    if spelling:
         for k in list(terms.keys()):
             chkr.set_text(k)
             errors = set()
@@ -375,19 +374,19 @@ def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False
                 errors.add(err.word)
             if len(errors) > 0:
                 del terms[k]
-    if singletons == True:
+    if singletons:
         for k,v in list(terms.items()):
             if len(v) == 1:
                 del terms[k]
-    if contains_numeric == True:
+    if contains_numeric:
         for k in list(terms.keys()):
             if re.search("[^0-9]",k):
                 del terms[k]
-    if contains_alpha == True:
+    if contains_alpha:
         for k in list(terms.keys()):
             if re.search("[^a-z]",k):
                 del terms[k]
-    if contains_non_alphanumeric == True:
+    if contains_non_alphanumeric:
         for k in list(terms.keys()):
             if re.search("[^[:alnum:]]",k):
                 del terms[k]
