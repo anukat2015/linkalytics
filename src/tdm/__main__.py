@@ -102,6 +102,10 @@ def command_line():
                         nargs=1,
                         default=[1000],
     )
+    parser.add_argument('--file', '-f', help='Load TDM from file',
+                        metavar='file',
+                        nargs=1,
+    )
 
     return parser.parse_args()
 
@@ -114,19 +118,22 @@ def main():
 
         tokenizer = functools.partial(n_grams, numbers=True, normalize=True)
         tdm       = TermDocumentMatrix(cutoff=1, tokenizer=tokenizer)
-        """Create the tdm from a json in the top level directory of linkalytics"""
-        tdm.load_json('elastic.json', n=int(args.ngrams[0]), remove_duplicates=True)
 
-        """Create the tdm from an Elastic query"""
-        # results = search(args.query[0], int(args.size[0]), es, True)
-        # with timer('Adding Docs to TDM takes'):
-        #     tdm.load_dict(results, int(args.ngrams[0]))
+        # Load from File
+        if args.file:
+            tdm.load_json(args.file[0], n=int(args.ngrams[0]), remove_duplicates=True)
 
-        # with timer('Writing TDM takes'):
-        #     tdm.write_csv('output.csv')
+        # Load from Elasticsearch
+        else:
+            results = get_results(args.query[0], int(args.size[0]), True)
+
+            with timer('Adding Docs to TDM takes'):
+                tdm.load_dict(results, n=int(args.ngrams[0]), remove_duplicates=True)
+
+        with timer('Writing TDM takes'):
+            tdm.write_csv('output.csv')
 
         output = query_ad_ids(tdm, "text")
-        # print(output)
         cc_text = {}
         cc_phone = {}
         similarity_to_csv(output)
