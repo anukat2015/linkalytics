@@ -5,6 +5,10 @@ production.cfg
 account.json
 keys/
 
+#data
+elastic.json
+results.tsv
+
 # tfstate files
 *.tfstate*
 
