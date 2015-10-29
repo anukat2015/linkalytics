@@ -1,4 +1,7 @@
+# encoding: utf-8
+
 import collections
+import unicodedata
 import itertools
 import string
 import json
@@ -12,11 +15,22 @@ import distance
 import networkx as nx
 
 from scipy import sparse
+from nltk.corpus import stopwords
 from enchant.checker import SpellChecker
 
+stop = stopwords.words('english')
+
 def n_grams(document, n):
-    table = dict((ord(char), None) for char in string.punctuation)
-    raw   = re.sub('<[^<]+?>', '', document).lower().translate(table)
+    numbers = 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
+    table   = dict((ord(char), None) for char in string.punctuation)
+    raw     = re.sub('<[^<]+?>', '', document).lower().translate(table)
+    raw     = ''.join(c for c in raw if not unicodedata.combining(c))
+    
+    # Replace spelled out numbers with actual numbers
+    for word, num in list(zip(numbers, range(10))):
+        raw = raw.replace(word, str(num))
+    
+
     grams = [
         itertools.islice(raw.split(), i, None) for i in range(n)
     ]
