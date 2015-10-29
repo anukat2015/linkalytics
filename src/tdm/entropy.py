@@ -270,46 +270,6 @@ class TermDocumentMatrix:
         """
         self.to_df().to_csv(filename, chunksize=128)
 
-def query_ad_ids(es, tdm, value="text"):
-    """
-        Query ads containing the n-gram -- we use a boolean Elastic query rather than phrase match because we may be working with a subset of the Elastic instance
-    """
-    phrases = tdm.term2doc()
-    filtered_phrases = filter_ngrams(phrases, True, True)
-    output = {}
-    for k, v in filtered_phrases.items():
-            ad_ids = []
-            for ad_id in v:
-                ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-            if value == "text":
-                size = len(ad_ids)
-            else:
-                size = 500
-            query = {
-                    "filtered" : {
-                         "filter" : {
-                            "bool" : {
-                              "should" : ad_ids
-                                }
-
-                             }
-                         }
-                     }
-
-            payload = {
-                        "size": size,
-                        "query" : query
-                       }
-
-            results = es.search(body=payload)
-            res     = dict()
-            for hit in results['hits']['hits']:
-                try:
-                    res[int(hit['_id'])] = hit["_source"]
-                except KeyError:
-                    pass
-            output[k] = res
-    return output
 
 def query_phones(es, phones):
     clean_phones = set()
