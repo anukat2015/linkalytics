@@ -3,6 +3,7 @@ import itertools
 import string
 import json
 import re
+import os
 
 import pandas as pd
 import numpy  as np
@@ -275,43 +276,45 @@ def search(search_term, size, es, phrase=True):
 
     return output
 
-def query_ad_ids(es, tdm, term, value="text"):
+def query_ad_ids(es, tdm, value="text"):
+    """
+        Query ads containing the n-gram -- we use a boolean Elastic query rather than phrase match because we may be working with a subset of the Elastic instance
+    """
     phrases = tdm.term2doc()
     filtered_phrases = filter_ngrams(phrases, True, True)
-    print(filtered_phrases)
     output = {}
     for k, v in filtered_phrases.items():
-        ad_ids = []
-        for ad_id in v:
-            ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-        if value == "text":
-            size = len(ad_ids)
-        else:
-            size = 500
-        query = {
-                "filtered" : {
-                     "filter" : {
-                        "bool" : {
-                          "should" : ad_ids
-                            }
+            ad_ids = []
+            for ad_id in v:
+                ad_ids.append({ "term" : {"_id" : int(ad_id) }})
+            if value == "text":
+                size = len(ad_ids)
+            else:
+                size = 500
+            query = {
+                    "filtered" : {
+                         "filter" : {
+                            "bool" : {
+                              "should" : ad_ids
+                                }
 
+                             }
                          }
                      }
-                 }
 
-        payload = {
-                    "size": size,
-                    "query" : query
-                   }
+            payload = {
+                        "size": size,
+                        "query" : query
+                       }
 
-        results = es.search(body=payload)
-        res     = dict()
-        for hit in results['hits']['hits']:
-            try:
-                res[int(hit['_id'])] = hit["_source"][value]
-            except KeyError:
-                pass
-        output[k] = res
+            results = es.search(body=payload)
+            res     = dict()
+            for hit in results['hits']['hits']:
+                try:
+                    res[int(hit['_id'])] = hit["_source"]
+                except KeyError:
+                    pass
+            output[k] = res
     return output
 
 def query_phones(es, phones):
@@ -344,22 +347,32 @@ def query_phones(es, phones):
     results = es.search(body=payload)
     output     = dict()
     for hit in results['hits']['hits']:
+        output[int(hit['_id'])] = {}
         try:
-            output[int(hit['_id'])] = hit["_source"]["text"]
+            output[int(hit['_id'])]["text"] = hit["_source"]["text"]
         except KeyError:
             pass
     return output
 
-def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2):
+def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2, field_type="text"):
+    """
+        Find the connected components of documents sharing the same n-gram based on a threshold for Jaccard similarity.
+    """
+    document_text = {}
+    for k,v in documents.items():
+        try:
+            document_text[k] = v[field_type]
+        except:
+            pass
     G = nx.Graph()
     similarity = {}
-    ads = list(documents)
+    ads = list(document_text)
     G.add_nodes_from(ads)
 
     for i in range(0,len(ads)-1):
         a = []
         for j in range(i+1,len(ads)):
-            similarity[(ads[i],ads[j])] =  round(distance.jaccard(documents[ads[i]], documents[ads[j]]),3)
+            similarity[(ads[i],ads[j])] =  round(distance.jaccard(document_text[ads[i]], document_text[ads[j]]),3)
 
     for k, v in similarity.items():
         if v <= jaccard_threshold:
@@ -372,7 +385,29 @@ def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2)
 
     return connected_components
 
+def similarity_to_csv(output):
+    with open(os.getcwd() + '/results.tsv', 'w') as g:
+        cc_text = {}
+        cc_phone = {}
+        g.write("phrase\ttext_connected_components\ttext_ad_ids\tphone_connected_components\tphone_ad_ids\n")
+        for k, v in output.items():
+                    print("_______")
+                    print(k)
+                    print(v)
+                    cc_text[k] = get_connected_components_jaccard_similarity(v, .1, "text")
+                    g.write(k + "\t")
+                    g.write(str(len(cc_text[k])) + "\t")
+                    g.write(",".join(str(x) for x in list(cc_text[k])) + "\t")
+                    cc_phone[k] = get_connected_components_jaccard_similarity(v, 0, "phone")
+                    g.write(str(len(cc_phone[k])) + "\t")
+                    g.write(",".join(str(x) for x in list(cc_phone[k])) + "\n")
+
+    g.close()
+
 def filter_ngrams(terms, spelling=False, singletons=True, contains_numeric=False, contains_alpha=False, contains_non_alphanumeric=False):
+    """
+        Filter n-grams by a variety of features
+    """
     chkr = SpellChecker("en_US")
     print(len(terms), "n-grams before filter")
     if spelling == True:

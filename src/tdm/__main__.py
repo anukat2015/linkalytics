@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import sys
 import json
+import os
 
 from elasticsearch  import Elasticsearch
 from logging        import CRITICAL
@@ -17,6 +18,7 @@ from .  entropy     import search
 from .  entropy     import TermDocumentMatrix
 from .  entropy     import query_ad_ids
 from .  entropy     import get_connected_components_jaccard_similarity
+from .  entropy     import similarity_to_csv
 
 def command_line():
     description = 'Backend analytics to link together disparate data'
@@ -54,20 +56,24 @@ def main():
         url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
         es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
 
-        results = search(args.query[0], int(args.size[0]), es, True)
         tdm     = TermDocumentMatrix(cutoff=1)
+        """Create the tdm from a json in the top level directory of linkalytics"""
+        tdm.load_json(os.getcwd() + '/elastic.json', n=5, remove_duplicates=True)
 
-        with timer('Adding Docs to TDM takes'):
-            tdm.load_dict(results, int(args.ngrams[0]))
+        """Create the tdm from an Elastic query"""
+        # results = search(args.query[0], int(args.size[0]), es, True)
+        # with timer('Adding Docs to TDM takes'):
+        #     tdm.load_dict(results, int(args.ngrams[0]))
 
-        with timer('Writing TDM takes'):
-            tdm.write_csv('output.csv')
+        # with timer('Writing TDM takes'):
+        #     tdm.write_csv('output.csv')
 
-        output = query_ad_ids(es, tdm, "eyes bouncy juicy booty 22", "text")
-        cc = {}
-        for k, v in output.items():
-            cc[k] = get_connected_components_jaccard_similarity(v, .1)
-            print("There are " + str(len(cc[k])) + " connected components for " + json.dumps(k) + ", which are made up of the following ad_ids:" + json.dumps(list(v)), file=sys.stderr)
+        output = query_ad_ids(es, tdm, "text")
+        # print(output)
+        cc_text = {}
+        cc_phone = {}
+        similarity_to_csv(output)
+
 
         # print(tdm.term2doc())
 
