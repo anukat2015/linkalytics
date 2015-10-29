@@ -23,7 +23,7 @@ from .  entropy     import get_connected_components_jaccard_similarity
 from .  entropy     import similarity_to_csv
 
 url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
-es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=120)
+es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
 
 @search(es)
 def get_results(search_term, size, phrase=True):
@@ -75,7 +75,6 @@ def query_ads(k, v, value='text'):
         "query" : query
     }
     return payload
-
 
 def command_line():
     description = 'Backend analytics to link together disparate data'
