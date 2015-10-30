@@ -58,65 +58,34 @@ def get_bandwidth(n, tr):
         return best
 
 def jaccard(h1, h2):
-    '''
+    """
     Compute Jaccard Similarity between two minhash signatures.
 
     Make sure to only compute jaccard similarity for hashes created with same hash functions
     (i.e. same seed for random permutation)
-    '''
+    """
     return np.float(np.count_nonzero(h1 == h2)) /np.float(h2.size)
 
 def run_jaccard_list(obj):
-    '''
+    """
     Compute jaccard similarity between two hash signatures
 
     Input
     -----
     Two hash signatures
-    '''
+    """
     x1, x2 = obj['signatures']
 
     return jaccard(np.array(x1), np.jaccard(x2))
 
 def run_jaccard_array(obj):
-    '''
+    """
     Compute Jaccard Similarity between two hash signatures
     input:
         two hash signatures
-    '''
-    x1,x2=obj['signatures']
-    return jaccard(x1,x2)
-
-def connected(seed, lshdict, doc2lsh, t):
-    '''
-    Computes clusters based on the lsh bucket candidates.
-    We do not actually check the full connected component. 
-    We only check for similar docs amongst the lsh candidates for each cluster member.
-    currently requires as input
-        - doc2lsh: dictionary of documentID:lsh_signatures 
-        - lshdict: dictionary of lsh_signature:documentIDs
-        - seed: seed document id
-        - threshold: jaccard similarity threshold
-    output:
-        -set of documentIDs
-    '''
-    seed, lshdict, doc2lsh, t = obj['seed'], obj['lshdict'], obj['doc2lsh'], obj['threshold']
-
-    cluster = set([seed])
-    base    = set([seed])
-
-    while len(base) > 0:
-        s = base.pop()
-        candidates = set(itertools.chain.from_iterable([lshdict[sig] for sig in doc2lsh[s]]))
-        m1 = hashcorp[s]
-        for cand in candidates:
-            if cand in cluster:
-                continue
-            m2 = hashcorp[cand]
-            if jaccard(m2,m1) >=t:
-                cluster.add(cand)
-                base.add(cand)
-    return cluster
+    """
+    x1, x2 = obj['signatures']
+    return jaccard(x1, x2)
 
 def run_near_duplicates(obj):
     '''

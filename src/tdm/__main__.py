@@ -3,10 +3,7 @@
 from __future__ import print_function
 
 import sys
-import json
-import os
 import functools
-import pandas as pd
 
 from elasticsearch  import Elasticsearch
 from logging        import CRITICAL
@@ -20,7 +17,6 @@ from .. environment import cfg
 from .  entropy     import n_grams
 from .  entropy     import TermDocumentMatrix
 from .  entropy     import filter_ngrams
-from .  entropy     import get_connected_components_jaccard_similarity
 from .  entropy     import similarity_to_csv
 
 from .  import nearduplicates
