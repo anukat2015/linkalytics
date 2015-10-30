@@ -1,153 +1,134 @@
 # -*- coding: utf-8 -*-
-"""
-Code modified from original implementation by
-
-    Benedikt Boecking:
-        boecking@andrew.cmu.edu
-
-    https://github.com/benbo/FastDocumentClusters
-"""
-
-from __future__ import print_function
 
 import itertools
-import math
-import numpy as np
-from hashlib import sha1
 import random
+import math
 
-NUM_PERM=100
+import numpy as np
 
+from hashlib import sha1
 
-#we truncate sha1 for now. We should probably replace this with a proper hash function.
-M_PRIME = (1 << 89) - 1 #(x << n) is x shifted left by n bit
+NUM_PERM = 100
+
+# We truncate sha1 for now
+# We should probably replace this with a proper hash function.
+M_PRIME  = (1 << 89) - 1
 MAX_HASH = (1 << 64) - 1 
 
 random.seed(427)
-A,B = np.array([(random.randint(1, M_PRIME),random.randint(0, M_PRIME)) for _ in range(NUM_PERM)]).T
 
-#############
-# functions #
-#############
+A, B = np.array([(random.randint(1, M_PRIME), random.randint(0, M_PRIME)) for _ in range(NUM_PERM)]).T
 
 def get_permuted_hashes(token):
-    # get a hash value
-    #abusing sha1 and truncating to 12 digit number
-    hv=int(sha1(token).hexdigest(),16)% (10 ** 12) 
-    #do Carter and Wegman like hashing.
-    return np.bitwise_and((A * hv + B) % M_PRIME,MAX_HASH)
+    """
+    Get a hash value
+    Abusing sha1 and truncating to 12 digit number
+    """
+    hv = int(sha1(token).hexdigest(), 16) % (10 ** 12)
 
-def get_lsh(sig,nbands):
-    for i, band in enumerate(np.array_split(sig,nbands)):
-        yield sha1(("ab" + str(band) + "ba"+str(i)).encode('utf-8')).digest()
+    # Do Carter and Wegman like hashing.
+    return np.bitwise_and((A * hv + B) % M_PRIME, MAX_HASH)
+
+def get_lsh(sig, nbands):
+    for i, band in enumerate(np.array_split(sig, nbands)):
+        yield sha1("ab{band}ba{i}".format(band=band, i=i).encode('utf-8')).digest()
 
 def get_bandwidth(n, tr):
         """
-        Threshold tr = (1/b) ** (1/r) where
-        b #bands
-        r #rows per band
-        n = b * r  #elements in signature
+        Threshold:
+            tr = (1/b) ** (1/r)
+        Where:
+            b: bands
+            r: rows per band
+        And:
+            n = b * r
+        Elements in signature
         """
-        best = n, 1
-        minerr  = float("inf")
+        best       = n, 1
+        min_error  = float("inf")
         for r in range(1, n + 1):
             try:
                 b = 1. / (tr ** r)
             except: 
                 return best
             err = abs(n - b * r)
-            if err < minerr:
-                best = r
-                minerr = err
+            if err < min_error:
+                best, min_error = r, err
+
         return best
 
-def jaccard(h1,h2):
-    '''
-    Compute jaccard similarity between two minhash signatures.
-    Make sure to only compute jaccard similarity for hashes created with same hash functions (i.e. same seed for random permutation)
-    '''
-    return np.float(np.count_nonzero(h1==h2)) /np.float(h2.size)
+def jaccard(h1, h2):
+    """
+    Compute Jaccard Similarity between two minhash signatures.
+
+    Make sure to only compute jaccard similarity for hashes created with same hash functions
+    (i.e. same seed for random permutation)
+    """
+    return np.float(np.count_nonzero(h1 == h2)) /np.float(h2.size)
 
 def run_jaccard_list(obj):
-    '''
-    compute jaccard similarity between two hash signatures
-    input:
-        two hash signatures
-    '''
-    x1,x2=obj['signatures']
-    return jaccard(np.array(x1),np.jaccard(x2))
+    """
+    Compute jaccard similarity between two hash signatures
+
+    Input
+    -----
+    Two hash signatures
+    """
+    x1, x2 = obj['signatures']
+
+    return jaccard(np.array(x1), np.jaccard(x2))
 
 def run_jaccard_array(obj):
-    '''
-    compute jaccard similarity between two hash signatures
+    """
+    Compute Jaccard Similarity between two hash signatures
     input:
         two hash signatures
-    '''
-    x1,x2=obj['signatures']
-    return jaccard(x1,x2)
-
-def connected(seed,lshdict,doc2lsh,t):
-    '''
-    Computes clusters based on the lsh bucket candidates.
-    We do not actually check the full connected component. 
-    We only check for similar docs amongst the lsh candidates for each cluster member.
-    currently requires as input
-        - doc2lsh: dictionary of documentID:lsh_signatures 
-        - lshdict: dictionary of lsh_signature:documentIDs
-        - seed: seed document id
-        - threshold: jaccard similarity threshold
-    output:
-        -set of documentIDs
-    '''
-    seed = obj['seed']
-    lshdict = obj['lshdict']
-    doc2lsh = obj['doc2lsh']
-    t= obj['threshold']
-    cluster=set([seed])
-    #get candidates and flatten list
-    base=set([seed])
-    while len(base)>0:
-        s=base.pop()
-        #get candidates and flatten list
-        candidates=set(itertools.chain.from_iterable([lshdict[sig] for sig in doc2lsh[s]]))
-        m1=hashcorp[s]
-        for cand in candidates:
-            if cand in cluster:continue#don't check if we've already added this
-            m2=hashcorp[cand]
-            if jaccard(m2,m1) >=t:
-                cluster.add(cand)
-                base.add(cand)
-    #all candidates have been checked 
-    return cluster 
+    """
+    x1, x2 = obj['signatures']
+    return jaccard(x1, x2)
 
 def run_near_duplicates(obj):
     '''
-    get near duplicates for a seed ad
-    currently requires as input
-        - hashcorp: dictionary of documentID:minhash
-        - doc2lsh: dictionary of documentID:lsh_signatures 
-        - lshdict: dictionary of lsh_signature:documentIDs
-        - seed: seed document id
-        - threshold: jaccard similarity threshold
-    output:
-        -set of documentIDs
+    Get near duplicates for a seed
+
+    Input Dictionary
+    ----------------
+    :param hashcorp: dict
+        minhash
+    :param doc2lsh: dict
+        lsh_signatures
+    :param lshdict: dict
+        lsh_signature
+    :param seed: int
+        seed document id
+    :param threshold:
+        jaccard similarity threshold
+
+    Output
+    ------
+    :return: Document ID's
+    :rtype:  set
     '''
-    seed = obj['seed']
-    hashcorp = obj['hashcorp']
-    lshdict = obj['lsh_dict']
-    doc2lsh = obj['doc_to_lsh']
-    t= obj['threshold']
-    cluster=set([seed])
-    #get candidates and flatten list
-    candidates=set(itertools.chain.from_iterable([lshdict[sig] for sig in doc2lsh[seed]]))
-    m1=hashcorp[seed]
+
+    cluster = set([obj['seed']])
+
+    # Get candidates and flatten list
+    iterable   = [obj['lsh_dict'][sig] for sig in obj['doc_to_lsh'][obj['seed']]]
+    candidates = set(itertools.chain.from_iterable(iterable))
+
+    m1 = obj['hashcorp'][obj['seed']]
+
     for cand in candidates:
-        if cand in cluster:continue#don't check if we've already added this
-        m2=hashcorp[cand]
-        if jaccard(m2,m1) >=t:
+
+        if cand in cluster:
+            continue
+
+        m2 = obj['hashcorp'][cand]
+
+        if jaccard(m2, m1) >= obj['threshold']:
             cluster.add(cand)
-    #all candidates have been checked 
-    return cluster 
+
+    return cluster
 
 def run_getminhash(node):
     '''
@@ -170,7 +151,7 @@ def run_getminhash(node):
     hashvalues.fill(MAX_HASH)
     for token in node['text'].lower().split(): 
         hashvalues = np.minimum(get_permuted_hashes(token.encode('utf-8','ignore')), hashvalues)
-    output_node['hashv']=hashvalues.astype(np.uint64)
+    output_node['hashv']=hashvalues
     return output_node
 
 def run_lsh_batch(obj):
