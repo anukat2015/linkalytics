@@ -87,7 +87,7 @@ def both_hits(search_term, phone, size, es, phrase=True):
 
 
 if __name__ == "__main__":
-    es  = Elasticsearch("https://memex:3vYAZ8bSztbxmznvhD4C@els.istresearch.com:29200/memex_ht", port=443, verify_certs=False, use_ssl=False)
+    es  = Elasticsearch("...", port=443, verify_certs=False, use_ssl=False)
     query = sys.argv[1]
     results = search(query, 1000, es, True)
     phone = unique_features("phone", results)
