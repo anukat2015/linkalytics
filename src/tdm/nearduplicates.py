@@ -89,33 +89,42 @@ def run_jaccard_array(obj):
 
 def run_near_duplicates(obj):
     '''
-    get near duplicates for a seed ad
-    currently requires as input
-        - hashcorp: dictionary of documentID:minhash
-        - doc2lsh: dictionary of documentID:lsh_signatures 
-        - lshdict: dictionary of lsh_signature:documentIDs
-        - seed: seed document id
-        - threshold: jaccard similarity threshold
-    output:
-        -set of documentIDs
-    '''
+    Get near duplicates for a seed
 
-    hashcorp, lshdict, doc2lsh, t = obj['hashcorp'], obj['lsh_dict'], obj['doc_to_lsh'], obj['threshold']
+    Input Dictionary
+    ----------------
+    :param hashcorp: dict
+        minhash
+    :param doc2lsh: dict
+        lsh_signatures
+    :param lshdict: dict
+        lsh_signature
+    :param seed: int
+        seed document id
+    :param threshold:
+        jaccard similarity threshold
+
+    Output
+    ------
+    :return: Document ID's
+    :rtype:  set
+    '''
 
     cluster = set([obj['seed']])
 
     # Get candidates and flatten list
-    candidates = set(itertools.chain.from_iterable([lshdict[sig] for sig in doc2lsh[obj['seed']]]))
-    m1 = hashcorp[obj['seed']]
+    candidates = set(itertools.chain.from_iterable([obj['lsh_dict'][sig] for sig in obj['doc_to_lsh'][obj['seed']]]))
+
+    m1 = obj['hashcorp'][obj['seed']]
 
     for cand in candidates:
 
         if cand in cluster:
             continue
 
-        m2 = hashcorp[cand]
+        m2 = obj['hashcorp'][cand]
 
-        if jaccard(m2, m1) >= t:
+        if jaccard(m2, m1) >= obj['threshold']:
             cluster.add(cand)
 
     return cluster
