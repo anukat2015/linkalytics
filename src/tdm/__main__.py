@@ -40,6 +40,43 @@ def get_results(search_term, size, phrase=True):
     }
     return payload
 
+@search(es)
+def query_ads(k, v, value='text'):
+
+    ad_ids = []
+    for ad_id in v:
+        ad_ids.append({ "term" : {"_id" : int(ad_id) }})
+
+    size    = len(ad_ids) if value == 'text' else 500
+    query   = { "filtered" : { "filter" : { "bool" : { "should" : ad_ids } } } }
+    payload = { "size": size, "query" : query }
+
+    return payload
+
+@search(es)
+def phone_hits(phone, size):
+    payload = {
+        "size": size,
+        "query" : {
+            "match_phrase": {
+                "phone" : phone
+            }
+        }
+    }
+    return payload
+
+@search(es)
+def both_hits(search_term, phone):
+    query =  {
+        "bool": {
+            "must": [
+                { "match_phrase": { "_all": search_term } },
+                { "match": { "phone": phone } }
+            ]
+        }
+    }
+    return { "size": 500, "query" : query }
+
 def query_ad_ids(tdm, value="text"):
     """
     Query ads containing the n-gram
@@ -54,19 +91,6 @@ def query_ad_ids(tdm, value="text"):
         output[k] = results
 
     return output
-
-@search(es)
-def query_ads(k, v, value='text'):
-
-    ad_ids = []
-    for ad_id in v:
-        ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-
-    size    = len(ad_ids) if value == 'text' else 500
-    query   = { "filtered" : { "filter" : { "bool" : { "should" : ad_ids } } } }
-    payload = { "size": size, "query" : query }
-
-    return payload
 
 def command_line():
     """
@@ -176,30 +200,6 @@ def unique_features(feature, data):
             pass
 
     return features
-
-@search(es)
-def phone_hits(phone, size):
-    payload = {
-        "size": size,
-        "query" : {
-            "match_phrase": {
-                "phone" : phone
-            }
-        }
-    }
-    return payload
-
-@search(es)
-def both_hits(search_term, phone):
-    query =  {
-        "bool": {
-            "must": [
-                { "match_phrase": { "_all": search_term } },
-                { "match": { "phone": phone } }
-            ]
-        }
-    }
-    return { "size": 500, "query" : query }
 
 def specific_term():
 
