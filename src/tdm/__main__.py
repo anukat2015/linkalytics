@@ -209,14 +209,15 @@ def specific_term():
     phone    = unique_features("phone", results)
     posttime = unique_features("posttime", results)
 
-    print("We found {total} phone numbers containing the phrase {query} which appear between {initial} and {final}".format(
-            total=len(phone),
-            query=query,
-            initial=parse(min(posttime)),
-            final=parse(max(posttime)),
-        )
-    )
+    print()
+    print("Phrase:        {phrase}".format(phrase=query))
+    print("Total Numbers: {total}".format(total=len(phone)))
+    print("Initial Date:  {date:%Y-%m-%d %H:%M}".format(date=parse(min(posttime))))
+    print("Final   Date:  {date:%Y-%m-%d %H:%M}".format(date=parse(max(posttime))))
+    print()
+
     print("ID         Phone Both  Start              End")
+
     for i in phone:
         phone_res  = phone_hits(i, 1000)
         both_res   = both_hits(query, i)
