@@ -114,26 +114,24 @@ def command_line():
     parser_term  = subparsers.add_parser('term')
 
     parser_run.add_argument('--ngrams', '-n', help='Amount of ngrams to seperate query',
-                        metavar='n',
-                        nargs=1,
-                        default=[2],
-                        )
+                            metavar='n',
+                            nargs=1,
+                            default=[2],
+                            )
     parser_run.add_argument('--query', '-q', help='Elasticsearch query string',
-                        metavar='query',
-                        nargs=1,
-                        default=['bouncy'],
-                        )
+                            metavar='query',
+                            nargs=1,
+                            default=['bouncy'],
+                            )
     parser_run.add_argument('--size', '-s', help='Maximum size of elasticsearch query',
-                        metavar='size',
-                        nargs=1,
-                        default=[1000],
-                        )
+                            metavar='size',
+                            nargs=1,
+                            default=[1000],
+                            )
     parser_run.add_argument('--file', '-f', help='Load TDM from file',
-                        metavar='file',
-                        nargs=1,
-                        )
-
-
+                            metavar='file',
+                            nargs=1,
+                            )
     parser_lsh.add_argument('--query', '-q', help='Elasticsearch query string',
                             metavar='query',
                             nargs=1,
@@ -144,7 +142,6 @@ def command_line():
                             nargs=1,
                             default=[1000],
                             )
-
     parser_term.add_argument('term', help='Search term',
                              metavar='term',
                              nargs=1,
