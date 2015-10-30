@@ -141,17 +141,17 @@ def run_getminhash(node):
     output:
         node: dicionary with id,hashvalues (id,hashv)
     '''
-    #compute hashes
-    output_node={
-            'id'    :   node['id'],
-            'hashv' :   None
-            }
-    #compute minhash signature
-    hashvalues=np.empty(NUM_PERM)
+    output_node = { 'id': node['id'], 'hashv' : None }
+
+    # Compute minhash signature
+    hashvalues = np.empty(NUM_PERM)
     hashvalues.fill(MAX_HASH)
+
     for token in node['text'].lower().split(): 
-        hashvalues = np.minimum(get_permuted_hashes(token.encode('utf-8','ignore')), hashvalues)
-    output_node['hashv']=hashvalues
+        hashvalues = np.minimum(get_permuted_hashes(token.encode('utf-8', 'ignore')), hashvalues)
+
+    output_node['hashv'] = hashvalues
+
     return output_node
 
 def run_lsh_batch(obj):
