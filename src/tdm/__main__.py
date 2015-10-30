@@ -56,30 +56,21 @@ def query_ad_ids(tdm, value="text"):
 
 @search(es)
 def query_ads(k, v, value='text'):
+
     ad_ids = []
     for ad_id in v:
         ad_ids.append({ "term" : {"_id" : int(ad_id) }})
-    if value == "text":
-        size = len(ad_ids)
-    else:
-        size = 500
-    query = {
-        "filtered" : {
-            "filter" : {
-                "bool" : {
-                    "should" : ad_ids
-                }
-            }
-        }
-    }
 
-    payload = {
-        "size": size,
-        "query" : query
-    }
+    size    = len(ad_ids) if value == 'text' else 500
+    query   = { "filtered" : { "filter" : { "bool" : { "should" : ad_ids } } } }
+    payload = { "size": size, "query" : query }
+
     return payload
 
 def command_line():
+    """
+    Parse command line arguments using Python arparse
+    """
     description = 'Backend analytics to link together disparate data'
     parser      = ArgumentParser(prog='linkalytics', description=description)
 
@@ -112,8 +103,6 @@ def command_line():
 def main():
     args = command_line()
 
-    print(args, file=sys.stderr)
-
     with SetLogging(CRITICAL):
 
         tokenizer = functools.partial(n_grams, numbers=True, normalize=True)
@@ -141,35 +130,37 @@ def main():
 
         # print(tdm.term2doc())
 
-def lsh():
+def lsh(threshold=0.7):
     args       = command_line()
-    results    = get_results(args.query[0], int(args.size[0]), True)
-    threshold  = 0.7
 
-    hashcorpus = [
-        nearduplicates.run_getminhash({'id': key, 'text': value['text']})
-            for key, value in results.items() if 'text' in value
-    ]
+    with SetLogging(CRITICAL):
 
-    doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold':threshold, 'data':hashcorpus})
+        results    = get_results(args.query[0], int(args.size[0]), True)
 
-    hashdict = {
-        obj['id']: obj['hashv'] for obj in hashcorpus
-    }
+        hashcorpus = [
+            nearduplicates.run_getminhash({'id': key, 'text': value['text']})
+                for key, value in results.items() if 'text' in value
+        ]
 
-    for i in results.keys():
-        print('Near Duplicates For:', results[i]['text'], sep='\t')
-        docs = {
-            'seed'      : i,
-            'hashcorp'  : hashdict,
-            'doc_to_lsh': doc_to_lsh,
-            'lsh_dict'  : lsh_dict,
-            'threshold' : threshold
+        doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold':threshold, 'data':hashcorpus})
+
+        hashdict = {
+            obj['id']: obj['hashv'] for obj in hashcorpus
         }
-        cluster = nearduplicates.run_near_duplicates(docs)
-        for j in cluster:
-            if j != i:
-                print('', results[j]['text'], sep='\t')
+
+        for i in results.keys():
+            print('Near Duplicates For:', results[i]['text'], sep='\t')
+            docs = {
+                'seed'      : i,
+                'hashcorp'  : hashdict,
+                'doc_to_lsh': doc_to_lsh,
+                'lsh_dict'  : lsh_dict,
+                'threshold' : threshold
+            }
+            cluster = nearduplicates.run_near_duplicates(docs)
+            for j in cluster:
+                if j != i:
+                    print('', results[j]['text'], sep='\t')
 
 
 if __name__ == '__main__':
