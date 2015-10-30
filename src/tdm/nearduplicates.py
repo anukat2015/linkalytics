@@ -113,7 +113,8 @@ def run_near_duplicates(obj):
     cluster = set([obj['seed']])
 
     # Get candidates and flatten list
-    candidates = set(itertools.chain.from_iterable([obj['lsh_dict'][sig] for sig in obj['doc_to_lsh'][obj['seed']]]))
+    iterable   = [obj['lsh_dict'][sig] for sig in obj['doc_to_lsh'][obj['seed']]]
+    candidates = set(itertools.chain.from_iterable(iterable))
 
     m1 = obj['hashcorp'][obj['seed']]
 
