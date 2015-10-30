@@ -105,31 +105,60 @@ def command_line():
     parser.add_argument('--version', '-v',
                         action='version',
                         version='%(prog)s ' + __version__ + '.0.0 ' + __build__
-    )
-    parser.add_argument('--ngrams', '-n', help='Amount of ngrams to seperate query',
+                        )
+
+    subparsers = parser.add_subparsers()
+
+    parser_run   = subparsers.add_parser('run')
+    parser_lsh   = subparsers.add_parser('lsh')
+    parser_term  = subparsers.add_parser('term')
+
+    parser_run.add_argument('--ngrams', '-n', help='Amount of ngrams to seperate query',
                         metavar='n',
                         nargs=1,
                         default=[2],
-    )
-    parser.add_argument('--query', '-q', help='Elasticsearch query string',
+                        )
+    parser_run.add_argument('--query', '-q', help='Elasticsearch query string',
                         metavar='query',
                         nargs=1,
                         default=['bouncy'],
-    )
-    parser.add_argument('--size', '-s', help='Maximum size of elasticsearch query',
+                        )
+    parser_run.add_argument('--size', '-s', help='Maximum size of elasticsearch query',
                         metavar='size',
                         nargs=1,
                         default=[1000],
-    )
-    parser.add_argument('--file', '-f', help='Load TDM from file',
+                        )
+    parser_run.add_argument('--file', '-f', help='Load TDM from file',
                         metavar='file',
                         nargs=1,
-    )
+                        )
+
+
+    parser_lsh.add_argument('--query', '-q', help='Elasticsearch query string',
+                            metavar='query',
+                            nargs=1,
+                            default=['bouncy'],
+                            )
+    parser_lsh.add_argument('--size', '-s', help='Maximum size of elasticsearch query',
+                            metavar='size',
+                            nargs=1,
+                            default=[1000],
+                            )
+
+    parser_term.add_argument('term', help='Search term',
+                             metavar='term',
+                             nargs=1,
+                             default='cali'
+                             )
+
+    parser_run.set_defaults(func=tdm)
+    parser_lsh.set_defaults(func=lsh)
+    parser_term.set_defaults(func=specific_term)
+
 
     return parser.parse_args()
 
-def main():
-    args = command_line()
+def tdm(args):
 
     with SetLogging(CRITICAL):
 
@@ -158,9 +187,8 @@ def main():
 
         # print(tdm.term2doc())
 
-def lsh(threshold=0.7):
-    args       = command_line()
-
+def lsh(args):
+    threshold = 0.7
     with SetLogging(CRITICAL):
 
         results    = get_results(args.query[0], int(args.size[0]), True)
@@ -190,6 +218,7 @@ def lsh(threshold=0.7):
                 if j != i:
                     print('', results[j]['text'], sep='\t')
 
+
 def unique_features(feature, data):
     features = set()
     for v in data.values():
@@ -204,9 +233,9 @@ def unique_features(feature, data):
 
     return features
 
-def specific_term():
+def specific_term(args):
 
-    query    = sys.argv[1]
+    query = args.term[0]
     results  = get_results(query, 1000, True)
     phone    = unique_features("phone", results)
     posttime = unique_features("posttime", results)
@@ -240,7 +269,10 @@ def specific_term():
             )
         )
 
+def main():
+    args = command_line()
+    print(args)
+    args.func(args)
+
 if __name__ == '__main__':
-    # sys.exit(main())
-    # sys.exit(lsh())
-    sys.exit(specific_term())
+    sys.exit(main())

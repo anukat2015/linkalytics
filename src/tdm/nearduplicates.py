@@ -135,7 +135,7 @@ def run_getminhash(node):
     Compute minhash signatures for raw text.
     This functions takes a document and documentID as input and returns, the documentID and the corresponding minhash signature.
     The minhash signature is a set of NUM_PERM positiv integer values created with NUM_PERM hash functions.
-    The minhash signature allows for a fast Jaccard similariy estimation of two documents. 
+    The minhash signature allows for a fast Jaccard similariy estimation of two documents.
     input:
         node: dictionary with id,text
     output:
@@ -147,7 +147,7 @@ def run_getminhash(node):
     hashvalues = np.empty(NUM_PERM)
     hashvalues.fill(MAX_HASH)
 
-    for token in node['text'].lower().split(): 
+    for token in node['text'].lower().split():
         hashvalues = np.minimum(get_permuted_hashes(token.encode('utf-8', 'ignore')), hashvalues)
 
     output_node['hashv'] = hashvalues
