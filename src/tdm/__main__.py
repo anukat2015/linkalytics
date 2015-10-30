@@ -208,11 +208,16 @@ def specific_term():
     phone    = unique_features("phone", results)
     posttime = unique_features("posttime", results)
 
-    print("We found " + str(len(phone)) + " phone numbers containing the phrase '" + query + "', which appear between " + str(min(posttime)) + " and " + str(max(posttime)))
-
+    print("We found {total} phone numbers containing the phrase {query} which appear between {initial} and {final}".format(
+            total=len(phone),
+            query=query,
+            initial=min(posttime),
+            final=max(posttime)
+        )
+    )
     for i in phone:
-        phone_res = phone_hits(i, 1000)
-        both_res  = both_hits(query, i)
+        phone_res  = phone_hits(i, 1000)
+        both_res   = both_hits(query, i)
         date_phone = set()
         for v in phone_res.values():
             try:
@@ -220,7 +225,15 @@ def specific_term():
             except:
                 pass
 
-        print(i,"--" + str(phone_res["total"]) + " (" + str(both_res["total"]) + ") results (with " + query + ")", "date range: " + str(min(date_phone)) + "--" + str(max(date_phone)))
+        print("{id} -- {phone:^5} {both:^5} results (with {query}) date range: {initial}:{final}".format(
+                id=i,
+                phone=phone_res['total'],
+                both=both_res['total'],
+                query=query,
+                initial=min(date_phone),
+                final=max(date_phone),
+            )
+        )
 
 if __name__ == '__main__':
     # sys.exit(main())
