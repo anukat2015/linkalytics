@@ -177,30 +177,20 @@ def unique_features(feature, data):
 
     return features
 
-
-def phone_hits(phone, size, es, phrase=True):
-    match_type = 'match_phrase' if phrase else 'match'
+@search(es)
+def phone_hits(phone, size):
     payload = {
         "size": size,
         "query" : {
-            match_type : {
+            "match_phrase": {
                 "phone" : phone
             }
         }
     }
-    results = es.search(body=payload)
-    output = {}
-    output["total"] = results['hits']['total']
-    for hit in results['hits']['hits']:
-        try:
-            output[hit['_id']] = hit["_source"]
-        except KeyError:
-            pass
-    return output
-
+    return payload
 
 @search(es)
-def both_hits(search_term, phone, size, phrase=True):
+def both_hits(search_term, phone):
     query =  {
         "bool": {
             "must": [
@@ -209,30 +199,28 @@ def both_hits(search_term, phone, size, phrase=True):
             ]
         }
     }
-    payload = { "size": 500, "query" : query }
-    return payload
+    return { "size": 500, "query" : query }
 
 def specific_term():
 
-    with SetLogging(CRITICAL):
-        query    = sys.argv[1]
-        results  = get_results(query, 1000, True)
-        phone    = unique_features("phone", results)
-        posttime = unique_features("posttime", results)
+    query    = sys.argv[1]
+    results  = get_results(query, 1000, True)
+    phone    = unique_features("phone", results)
+    posttime = unique_features("posttime", results)
 
-        print("We found " + str(len(phone)) + " phone numbers containing the phrase '" + query + "', which appear between " + str(min(posttime)) + " and " + str(max(posttime)))
+    print("We found " + str(len(phone)) + " phone numbers containing the phrase '" + query + "', which appear between " + str(min(posttime)) + " and " + str(max(posttime)))
 
-        for i in phone:
-            phone_res = phone_hits(i, 1000, es, True)
-            both_res  = both_hits(query, i, 1000, True)
-            date_phone = set()
-            for v in phone_res.values():
-                try:
-                    date_phone.add(v["posttime"])
-                except:
-                    pass
+    for i in phone:
+        phone_res = phone_hits(i, 1000)
+        both_res  = both_hits(query, i)
+        date_phone = set()
+        for v in phone_res.values():
+            try:
+                date_phone.add(v["posttime"])
+            except:
+                pass
 
-            print(i,"--" + str(phone_res["total"]) + " (" + str(both_res["total"]) + ") results (with " + query + ")", "date range: " + str(min(date_phone)) + "--" + str(max(date_phone)))
+        print(i,"--" + str(phone_res["total"]) + " (" + str(both_res["total"]) + ") results (with " + query + ")", "date range: " + str(min(date_phone)) + "--" + str(max(date_phone)))
 
 if __name__ == '__main__':
     # sys.exit(main())
