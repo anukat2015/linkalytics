@@ -160,5 +160,5 @@ def lsh(threshold=0.7):
 
 
 if __name__ == '__main__':
-    # sys.exit(main())
-    sys.exit(lsh())
+    sys.exit(main())
+    # sys.exit(lsh())

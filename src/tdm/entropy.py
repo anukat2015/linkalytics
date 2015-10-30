@@ -341,7 +341,18 @@ def get_connected_components_jaccard_similarity(documents, jaccard_threshold=.2,
 
     return connected_components
 
+def list_features(documents, field_type="text"):
+    feature = set()
+    for v in documents.values():
+        try:
+            if feature.add(str(v[field_type]))
+        except:
+            pass
+    return feature
+
+
 def similarity_to_csv(output):
+    print(output)
     with open(os.getcwd() + '/results.tsv', 'w') as g:
         cc_text = {}
         cc_phone = {}
@@ -354,9 +365,9 @@ def similarity_to_csv(output):
                     g.write(k + "\t")
                     g.write(str(len(cc_text[k])) + "\t")
                     g.write(",".join(str(x) for x in list(cc_text[k])) + "\t")
-                    cc_phone[k] = get_connected_components_jaccard_similarity(v, 0, "phone")
+                    cc_phone[k] = list_features(v, "phone")
                     g.write(str(len(cc_phone[k])) + "\t")
-                    g.write(",".join(str(x) for x in list(cc_phone[k])) + "\n")
+                    g.write(", ".join(cc_phone[k]) + "\n")
 
     g.close()
 
