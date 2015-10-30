@@ -23,7 +23,7 @@ from .  entropy     import filter_ngrams
 from .  entropy     import get_connected_components_jaccard_similarity
 from .  entropy     import similarity_to_csv
 
-from .  nearduplicates import run_getminhash
+from .  import nearduplicates
 
 url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
 es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
@@ -142,13 +142,34 @@ def main():
         # print(tdm.term2doc())
 
 def lsh():
-    with SetLogging(CRITICAL):
-        hashes = {}
-        for key, values in get_results('cali', 1000).items():
-            if 'text' in values:
-                minhashes = run_getminhash({'id': key, 'text': values['text']})
-                hashes[minhashes['id']] = minhashes['hashv']
-    print(pd.DataFrame.from_dict(hashes))
+    args       = command_line()
+    results    = get_results(args.query[0], int(args.size[0]), True)
+    threshold  = 0.7
+
+    hashcorpus = [
+        nearduplicates.run_getminhash({'id': key, 'text': value['text']})
+            for key, value in results.items() if 'text' in value
+    ]
+
+    doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold':threshold, 'data':hashcorpus})
+
+    hashdict = {
+        obj['id']: obj['hashv'] for obj in hashcorpus
+    }
+
+    for i in results.keys():
+        print('Near Duplicates For:', results[i]['text'], sep='\t')
+        docs = {
+            'seed'      : i,
+            'hashcorp'  : hashdict,
+            'doc_to_lsh': doc_to_lsh,
+            'lsh_dict'  : lsh_dict,
+            'threshold' : threshold
+        }
+        cluster = nearduplicates.run_near_duplicates(docs)
+        for j in cluster:
+            if j != i:
+                print('', results[j]['text'], sep='\t')
 
 
 if __name__ == '__main__':
