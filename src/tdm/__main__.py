@@ -6,9 +6,10 @@ import sys
 import functools
 import urllib3
 
-from elasticsearch  import Elasticsearch
-from logging        import CRITICAL
-from argparse       import ArgumentParser
+from dateutil.parser import parse
+from elasticsearch   import Elasticsearch
+from logging         import CRITICAL
+from argparse        import ArgumentParser
 
 from .. __version__ import __version__, __build__
 from .. environment import cfg
@@ -211,10 +212,11 @@ def specific_term():
     print("We found {total} phone numbers containing the phrase {query} which appear between {initial} and {final}".format(
             total=len(phone),
             query=query,
-            initial=min(posttime),
-            final=max(posttime)
+            initial=parse(min(posttime)),
+            final=parse(max(posttime)),
         )
     )
+    print("ID         Phone Both  Start              End")
     for i in phone:
         phone_res  = phone_hits(i, 1000)
         both_res   = both_hits(query, i)
@@ -225,13 +227,13 @@ def specific_term():
             except:
                 pass
 
-        print("{id} -- {phone:^5} {both:^5} results (with {query}) date range: {initial}:{final}".format(
+        print("{id} {phone:<5} {both:<5} {initial:%Y-%m-%d %H:%M} : {final:%Y-%m-%d %H:%M}".format(
                 id=i,
                 phone=phone_res['total'],
                 both=both_res['total'],
                 query=query,
-                initial=min(date_phone),
-                final=max(date_phone),
+                initial=parse(min(date_phone)),
+                final=parse(max(date_phone)),
             )
         )
 
