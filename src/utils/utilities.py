@@ -44,6 +44,7 @@ def search(es):
 
             results = es.search(body=payload)
 
+            output["total"] = results['hits']['total']
             for hit in results['hits']['hits']:
                 try:
                     output[int(hit['_id'])] = hit["_source"]

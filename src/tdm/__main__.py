@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import sys
 import functools
+import urllib3
 
 from elasticsearch  import Elasticsearch
 from logging        import CRITICAL
@@ -20,6 +21,8 @@ from .  entropy     import filter_ngrams
 from .  entropy     import similarity_to_csv
 
 from .  import nearduplicates
+
+urllib3.disable_warnings()
 
 url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
 es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
@@ -160,7 +163,78 @@ def lsh(threshold=0.7):
                 if j != i:
                     print('', results[j]['text'], sep='\t')
 
+def unique_features(feature, data):
+    features = set()
+    for v in data.values():
+        try:
+            if isinstance(v[feature], str):
+                features.add(v[feature])
+            elif isinstance(v[feature], list):
+                for i in v:
+                    features.add(v[feature])
+        except:
+            pass
+
+    return features
+
+
+def phone_hits(phone, size, es, phrase=True):
+    match_type = 'match_phrase' if phrase else 'match'
+    payload = {
+        "size": size,
+        "query" : {
+            match_type : {
+                "phone" : phone
+            }
+        }
+    }
+    results = es.search(body=payload)
+    output = {}
+    output["total"] = results['hits']['total']
+    for hit in results['hits']['hits']:
+        try:
+            output[hit['_id']] = hit["_source"]
+        except KeyError:
+            pass
+    return output
+
+
+@search(es)
+def both_hits(search_term, phone, size, phrase=True):
+    query =  {
+        "bool": {
+            "must": [
+                { "match_phrase": { "_all": search_term } },
+                { "match": { "phone": phone } }
+            ]
+        }
+    }
+    payload = { "size": 500, "query" : query }
+    return payload
+
+def specific_term():
+
+    with SetLogging(CRITICAL):
+        query    = sys.argv[1]
+        results  = get_results(query, 1000, True)
+        phone    = unique_features("phone", results)
+        posttime = unique_features("posttime", results)
+
+        print("We found " + str(len(phone)) + " phone numbers containing the phrase '" + query + "', which appear between " + str(min(posttime)) + " and " + str(max(posttime)))
+
+        for i in phone:
+            phone_res = phone_hits(i, 1000, es, True)
+            both_res  = both_hits(query, i, 1000, True)
+            date_phone = set()
+            for v in phone_res.values():
+                try:
+                    date_phone.add(v["posttime"])
+                except:
+                    pass
+
+            print(i,"--" + str(phone_res["total"]) + " (" + str(both_res["total"]) + ") results (with " + query + ")", "date range: " + str(min(date_phone)) + "--" + str(max(date_phone)))
 
 if __name__ == '__main__':
-    sys.exit(main())
+    # sys.exit(main())
     # sys.exit(lsh())
+    sys.exit(specific_term())

@@ -345,7 +345,7 @@ def list_features(documents, field_type="text"):
     feature = set()
     for v in documents.values():
         try:
-            if feature.add(str(v[field_type]))
+            feature.add(str(v[field_type]))
         except:
             pass
     return feature
