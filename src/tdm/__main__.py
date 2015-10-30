@@ -85,7 +85,9 @@ def query_ad_ids(tdm, value="text"):
     We use a boolean Elastic query rather than phrase match
     because we may be working with a subset of the Elastic instance
     """
-    phrases, filtered, output = tdm.term2doc(), filter_ngrams(phrases, True, True), {}
+    phrases  = tdm.term2doc()
+    filtered = filter_ngrams(phrases, True, True)
+    output   = {}
 
     for k, v in filtered.items():
         results   = query_ads(k, v, value)
