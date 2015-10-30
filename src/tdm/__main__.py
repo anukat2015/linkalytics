@@ -10,10 +10,10 @@ from logging        import CRITICAL
 from argparse       import ArgumentParser
 
 from .. __version__ import __version__, __build__
+from .. environment import cfg
 from .. utils       import SetLogging
 from .. utils       import timer
 from .. utils       import search
-from .. environment import cfg
 from .  entropy     import n_grams
 from .  entropy     import TermDocumentMatrix
 from .  entropy     import filter_ngrams
@@ -40,14 +40,16 @@ def get_results(search_term, size, phrase=True):
 def query_ad_ids(tdm, value="text"):
     """
     Query ads containing the n-gram
-    We use a boolean Elastic query rather than phrase match because we may be working with a subset of the Elastic instance
+
+    We use a boolean Elastic query rather than phrase match
+    because we may be working with a subset of the Elastic instance
     """
-    phrases = tdm.term2doc()
-    filtered_phrases = filter_ngrams(phrases, True, True)
-    output = {}
-    for k, v in filtered_phrases.items():
-        results = query_ads(k, v, value)
+    phrases, filtered, output = tdm.term2doc(), filter_ngrams(phrases, True, True), {}
+
+    for k, v in filtered.items():
+        results   = query_ads(k, v, value)
         output[k] = results
+
     return output
 
 @search(es)
@@ -138,7 +140,7 @@ def lsh(threshold=0.7):
                 for key, value in results.items() if 'text' in value
         ]
 
-        doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold':threshold, 'data':hashcorpus})
+        doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold': threshold, 'data': hashcorpus})
 
         hashdict = {
             obj['id']: obj['hashv'] for obj in hashcorpus
