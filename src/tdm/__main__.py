@@ -252,8 +252,8 @@ def specific_term(args):
     print()
     print("Phrase:        {phrase}".format(phrase=query))
     print("Total Numbers: {total}".format(total=len(phone)))
-    print("Initial Date:  {date:%Y-%m-%d %H:%M}".format(date=parsetime(min(posttime))))
-    print("Final   Date:  {date:%Y-%m-%d %H:%M}".format(date=parsetime(max(posttime))))
+    print("Initial Date:  {date:%Y-%m-%d}".format(date=parsetime(min(posttime))))
+    print("Final   Date:  {date:%Y-%m-%d}".format(date=parsetime(max(posttime))))
     print()
 
     print("ID         Phone Both  Start              End")
