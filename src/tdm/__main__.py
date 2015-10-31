@@ -8,10 +8,10 @@ import warnings
 
 warnings.simplefilter('ignore')
 
-from dateutil.parser import parse
 from elasticsearch   import Elasticsearch
 from logging         import CRITICAL
 from argparse        import ArgumentParser
+from datetime        import datetime
 
 from .. __version__ import __version__, __build__
 from .. environment import cfg
@@ -242,16 +242,18 @@ def unique_features(feature, data):
 
 def specific_term(args):
 
-    query = args.query[0]
-    results  = get_results(query, args.size[0], True)
-    phone    = unique_features("phone", results)
-    posttime = unique_features("posttime", results)
+    query     = args.query[0]
+    results   = get_results(query, args.size[0], True)
+    phone     = unique_features("phone", results)
+    posttime  = unique_features("posttime", results)
+
+    parsetime = lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S')
 
     print()
     print("Phrase:        {phrase}".format(phrase=query))
     print("Total Numbers: {total}".format(total=len(phone)))
-    print("Initial Date:  {date:%Y-%m-%d %H:%M}".format(date=parse(min(posttime))))
-    print("Final   Date:  {date:%Y-%m-%d %H:%M}".format(date=parse(max(posttime))))
+    print("Initial Date:  {date:%Y-%m-%d %H:%M}".format(date=parsetime(min(posttime))))
+    print("Final   Date:  {date:%Y-%m-%d %H:%M}".format(date=parsetime(max(posttime))))
     print()
 
     print("ID         Phone Both  Start              End")
@@ -271,8 +273,8 @@ def specific_term(args):
                 phone=phone_res['total'],
                 both=both_res['total'],
                 query=query,
-                initial=parse(min(date_phone)),
-                final=parse(max(date_phone)),
+                initial=parsetime(min(date_phone)),
+                final=parsetime(max(date_phone)),
             )
         )
 
