@@ -143,11 +143,16 @@ def command_line():
                             nargs=1,
                             default=[1000],
                             )
-    parser_term.add_argument('term', help='Search term',
-                             metavar='term',
+    parser_term.add_argument('--query', '-q', help='Elasticsearch query string',
+                             metavar='query',
                              nargs=1,
-                             default='cali'
+                             default=['bouncy']
                              )
+    parser_term.add_argument('--size', '-s', help='Maximum size of elasticsearch query',
+                            metavar='size',
+                            nargs=1,
+                            default=[1000],
+                            )
 
     parser_run.set_defaults(func=tdm)
     parser_lsh.set_defaults(func=lsh)
@@ -237,8 +242,8 @@ def unique_features(feature, data):
 
 def specific_term(args):
 
-    query = args.term[0]
-    results  = get_results(query, 1000, True)
+    query = args.query[0]
+    results  = get_results(query, args.size[0], True)
     phone    = unique_features("phone", results)
     posttime = unique_features("posttime", results)
 
