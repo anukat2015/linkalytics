@@ -186,34 +186,35 @@ def tdm(args):
 
 def lsh(args):
     threshold = 0.7
-    with SetLogging(CRITICAL):
+    results    = get_results(args.query[0], int(args.size[0]), True)
 
-        results    = get_results(args.query[0], int(args.size[0]), True)
+    if 'total' in results:
+        del results['total']
 
-        hashcorpus = [
-            nearduplicates.run_getminhash({'id': key, 'text': value['text']})
-                for key, value in results.items() if 'text' in value
-        ]
+    hashcorpus = [
+        nearduplicates.run_getminhash({'id': key, 'text': value['text']})
+            for key, value in results.items() if 'text' in value
+    ]
 
-        doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold': threshold, 'data': hashcorpus})
+    doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold': threshold, 'data': hashcorpus})
 
-        hashdict = {
-            obj['id']: obj['hashv'] for obj in hashcorpus
+    hashdict = {
+        obj['id']: obj['hashv'] for obj in hashcorpus
+    }
+
+    for k, v in results.items():
+        print('Near Duplicates For:', v.get('text', None), sep='\t')
+        docs = {
+            'seed'      : k,
+            'hashcorp'  : hashdict,
+            'doc_to_lsh': doc_to_lsh,
+            'lsh_dict'  : lsh_dict,
+            'threshold' : threshold
         }
-
-        for i in results.keys():
-            print('Near Duplicates For:', results[i]['text'], sep='\t')
-            docs = {
-                'seed'      : i,
-                'hashcorp'  : hashdict,
-                'doc_to_lsh': doc_to_lsh,
-                'lsh_dict'  : lsh_dict,
-                'threshold' : threshold
-            }
-            cluster = nearduplicates.run_near_duplicates(docs)
-            for j in cluster:
-                if j != i:
-                    print('', results[j]['text'], sep='\t')
+        cluster = nearduplicates.run_near_duplicates(docs)
+        for j in cluster:
+            if j != k:
+                print('', results[j]['text'], sep='\t')
 
 
 def unique_features(feature, data):
