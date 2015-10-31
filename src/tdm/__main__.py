@@ -153,6 +153,9 @@ def command_line():
     parser_lsh.set_defaults(func=lsh)
     parser_term.set_defaults(func=specific_term)
 
+    if not len(sys.argv) - 1:
+        parser.print_help()
+        sys.exit(1)
 
     return parser.parse_args()
 
