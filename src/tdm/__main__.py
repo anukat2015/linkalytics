@@ -247,16 +247,16 @@ def specific_term(args):
     phone     = unique_features("phone", results)
     posttime  = unique_features("posttime", results)
 
-    parsetime = lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S')
+    parsetime = lambda t: datetime.strptime(t, '%Y-%m-%dT%H:%M:%S')
 
     print()
     print("Phrase:        {phrase}".format(phrase=query))
     print("Total Numbers: {total}".format(total=len(phone)))
-    print("Initial Date:  {date:%Y-%m-%d}".format(date=parsetime(min(posttime))))
-    print("Final   Date:  {date:%Y-%m-%d}".format(date=parsetime(max(posttime))))
+    print("Initial Date:  {date:%Y/%m/%d}".format(date=parsetime(min(posttime))))
+    print("Final   Date:  {date:%Y/%m/%d}".format(date=parsetime(max(posttime))))
     print()
 
-    print("ID         Phone Both  Start              End")
+    print("ID         Phone Both  Start       End")
 
     for i in phone:
         phone_res  = phone_hits(i, 1000)
@@ -268,7 +268,7 @@ def specific_term(args):
             except:
                 pass
 
-        print("{id} {phone:<5} {both:<5} {initial:%Y-%m-%d %H:%M} : {final:%Y-%m-%d %H:%M}".format(
+        print("{id} {phone:<5} {both:<5} {initial:%Y/%m/%d}  {final:%Y/%m/%d}".format(
                 id=i,
                 phone=phone_res['total'],
                 both=both_res['total'],
