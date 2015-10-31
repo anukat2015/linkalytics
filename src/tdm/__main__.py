@@ -4,7 +4,9 @@ from __future__ import print_function
 
 import sys
 import functools
-import urllib3
+import warnings
+
+warnings.simplefilter('ignore')
 
 from dateutil.parser import parse
 from elasticsearch   import Elasticsearch
@@ -23,10 +25,9 @@ from .  entropy     import similarity_to_csv
 
 from .  import nearduplicates
 
-urllib3.disable_warnings()
-
-url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
-es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
+with warnings.catch_warnings():
+    url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
+    es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
 
 @search(es)
 def get_results(search_term, size, phrase=True):
