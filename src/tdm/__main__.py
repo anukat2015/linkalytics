@@ -25,9 +25,8 @@ from .  entropy     import similarity_to_csv
 
 from .  import nearduplicates
 
-with warnings.catch_warnings():
-    url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
-    es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
+url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
+es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
 
 @search(es)
 def get_results(search_term, size, phrase=True):
@@ -243,7 +242,7 @@ def unique_features(feature, data):
 def specific_term(args):
 
     query     = args.query[0]
-    results   = get_results(query, args.size[0], True)
+    results   = get_results(query, int(args.size[0]), True)
     phone     = unique_features("phone", results)
     posttime  = unique_features("posttime", results)
 
@@ -259,7 +258,7 @@ def specific_term(args):
     print("ID         Phone Both  Start       End")
 
     for i in phone:
-        phone_res  = phone_hits(i, 1000)
+        phone_res  = phone_hits(i, int(args.size[0]))
         both_res   = both_hits(query, i)
         date_phone = set()
         for v in phone_res.values():
@@ -280,7 +279,6 @@ def specific_term(args):
 
 def main():
     args = command_line()
-    print(args)
     args.func(args)
 
 if __name__ == '__main__':
