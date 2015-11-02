@@ -356,7 +356,7 @@ def similarity_to_csv(output):
     with open(os.getcwd() + '/results.tsv', 'w') as g:
         cc_text = {}
         cc_phone = {}
-        g.write("phrase\ttext_connected_components\ttext_ad_ids\tphone_connected_components\tphone_ad_ids\n")
+        g.write("phrase\ttext_connected_components\ttext_ad_ids\tunique_phones\tphone_numbers\n")
         for k, v in output.items():
                     print("_______")
                     print(k)
