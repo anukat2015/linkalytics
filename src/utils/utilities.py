@@ -47,7 +47,7 @@ def search(es):
             output["total"] = results['hits']['total']
             for hit in results['hits']['hits']:
                 try:
-                    output[int(hit['_id'])] = hit["_source"]
+                    output[hit['_id']] = hit["_source"]
                 except KeyError:
                     pass
 
