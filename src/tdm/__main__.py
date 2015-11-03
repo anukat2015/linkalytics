@@ -194,8 +194,7 @@ def tdm(args):
 
         # print(tdm.term2doc())
 
-def lsh(args):
-    threshold = 0.7
+def lsh(args, threshold=0.7):
     results    = get_results(args.query[0], int(args.size[0]), True)
 
     if 'total' in results:
@@ -217,10 +216,11 @@ def lsh(args):
         obj['id']: obj['hashv'] for obj in hashcorpus
     }
 
-    for k, v in results.items():
-        print('Near Duplicates For:', v.get('text', None), sep='\t')
+    output = {}
+
+    for i in results:
         docs = {
-            'seed'      : k,
+            'seed'      : i,
             'hashcorp'  : hashdict,
             'doc_to_lsh': doc_to_lsh,
             'lsh_dict'  : lsh_dict,
@@ -228,8 +228,23 @@ def lsh(args):
         }
         cluster = nearduplicates.run_near_duplicates(docs)
         for j in cluster:
-            if j != k:
+            if j != i:
                 print('', results[j]['text'], sep='\t')
+                if not output.get(i, None):
+                    output[i] = [{j: results[j]['text']}]
+                else:
+                    output[i].append({j: results[j]['text']})
+
+    for k, v in results.items():
+        docs = {
+            'seed'      : k,
+            'hashcorp'  : hashdict,
+            'doc_to_lsh': doc_to_lsh,
+            'lsh_dict'  : lsh_dict,
+            'threshold' : threshold
+        }
+
+        return output
 
 
 def unique_features(feature, data):

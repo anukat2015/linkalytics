@@ -1,6 +1,5 @@
 networkx
 distance
-pyenchant
 tweepy
 python-instagram
 google-api-python-client
@@ -18,3 +17,6 @@ pytoml
 Flask-BasicAuth
 Flask-RESTful
 Flask-Script
+pyenchant
+gunicorn
+tornado

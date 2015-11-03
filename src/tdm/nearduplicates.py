@@ -110,23 +110,30 @@ def run_near_duplicates(obj):
     :rtype:  set
     '''
 
-    cluster = set([obj['seed']])
+    seed = obj['seed']
+    hashcorp = obj['hashcorp']
+    lshdict = obj['lsh_dict']
+    doc2lsh = obj['doc_to_lsh']
+    t= obj['threshold']
+    cluster=set([seed])
+    #get candidates and flatten list
 
-    # Get candidates and flatten list
-    iterable   = [obj['lsh_dict'][sig] for sig in obj['doc_to_lsh'][obj['seed']]]
-    candidates = set(itertools.chain.from_iterable(iterable))
+    candidates = set()
 
-    m1 = obj['hashcorp'][obj['seed']]
+    try:
+        for sig in doc2lsh[seed]:
+                for c in lshdict[sig]:
+                    candidates.add(c)
+        m1=hashcorp[seed]
+        for cand in candidates:
+            if cand in cluster:continue#don't check if we've already added this
+            m2=hashcorp[cand]
+            if jaccard(m2,m1) >=t:
+                cluster.add(cand)
+        #all candidates have been checked
 
-    for cand in candidates:
-
-        if cand in cluster:
-            continue
-
-        m2 = obj['hashcorp'][cand]
-
-        if jaccard(m2, m1) >= obj['threshold']:
-            cluster.add(cand)
+    except KeyError:
+        pass
 
     return cluster
 
