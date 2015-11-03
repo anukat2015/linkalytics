@@ -25,7 +25,7 @@ from flask.ext.restful   import Api
 from . task_mux       import TaskMux
 from . environment    import cfg
 
-from . import termdocumentmatrix
+from . import ngrams
 
 app  = Flask(__name__)
 
@@ -217,11 +217,11 @@ def enhance(endpoint):
     results = mux.retrieve(jobid)
     return jsonify(results=results, endpoint=endpoint, **record)
 
-@app.route('/{version}/termdocumentmatrix'.format(version=version), methods=['POST'])
+@app.route('/{version}/ngrams'.format(version=version), methods=['POST'])
 @basic_auth.required
-def run_tdm():
+def run_ngrams():
     record = request.get_json()
-    results = termdocumentmatrix.run(record)
+    results = ngrams.run(record)
     return jsonify(**results)
 
 def test_doc_to_group(search):
