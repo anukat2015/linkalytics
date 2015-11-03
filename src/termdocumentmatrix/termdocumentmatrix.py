@@ -304,5 +304,5 @@ def run(node):
 
     tdm.load_dict(results, n=node.get('ngrams', 2), remove_duplicates=True)
 
-    return {'termdocumentmatrix': [tdm.term2doc()]}
+    return {"results": tdm.term2doc()}
 
