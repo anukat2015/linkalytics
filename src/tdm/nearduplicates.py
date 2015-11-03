@@ -13,7 +13,7 @@ NUM_PERM = 100
 # We truncate sha1 for now
 # We should probably replace this with a proper hash function.
 M_PRIME  = (1 << 89) - 1
-MAX_HASH = (1 << 64) - 1 
+MAX_HASH = np.uint64(-1)
 
 random.seed(427)
 
