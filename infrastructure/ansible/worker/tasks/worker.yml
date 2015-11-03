@@ -5,9 +5,6 @@
 - name: Copy requirements
   copy: src=../../requirements.txt dest=/home/ansible/requirements.txt
 
-- name: Copy dowork
-  copy: src=../../dowork.py dest=/home/ansible/dowork.py
-
 - name: Copy worker
   synchronize: src=../../src/ dest=/home/ansible/src/
   notify:

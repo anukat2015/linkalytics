@@ -1,7 +1,5 @@
 networkx
 distance
-pandas
-scipy
 pyenchant
 tweepy
 python-instagram
@@ -13,10 +11,10 @@ flask-cors
 phonenumbers
 nose
 nltk
-numpy
 geopy
 reverse_geocoder
 pytoml
 -e git+https://github.com/ryansb/disq.git#egg=disq
 Flask-BasicAuth
 Flask-RESTful
+Flask-Script

@@ -99,6 +99,12 @@ def command_line():
     """
     Parse command line arguments using Python arparse
     """
+
+    # Ensure a subparser is selected
+    if not len(sys.argv) - 1:
+        parser.print_help()
+        sys.exit(1)
+
     description = 'Backend analytics to link together disparate data'
     parser      = ArgumentParser(prog='linkalytics', description=description)
 
@@ -113,7 +119,7 @@ def command_line():
     parser_lsh   = subparsers.add_parser('lsh')
     parser_term  = subparsers.add_parser('term')
 
-    parser_run.add_argument('--ngrams', '-n', help='Amount of ngrams to seperate query',
+    parser_run.add_argument('--ngrams', '-n', help='Amount of n-grams to separate query',
                             metavar='n',
                             nargs=1,
                             default=[2],
@@ -156,10 +162,6 @@ def command_line():
     parser_run.set_defaults(func=tdm)
     parser_lsh.set_defaults(func=lsh)
     parser_term.set_defaults(func=specific_term)
-
-    if not len(sys.argv) - 1:
-        parser.print_help()
-        sys.exit(1)
 
     return parser.parse_args()
 
@@ -204,7 +206,12 @@ def lsh(args):
             for key, value in results.items() if 'text' in value
     ]
 
-    doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch({'threshold': threshold, 'data': hashcorpus})
+    doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch(
+        {
+            'threshold': threshold,
+            'data'     : hashcorpus
+        }
+    )
 
     hashdict = {
         obj['id']: obj['hashv'] for obj in hashcorpus

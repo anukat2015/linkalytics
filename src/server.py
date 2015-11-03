@@ -16,17 +16,25 @@ import time
 import pymysql
 
 from elasticsearch  import Elasticsearch
-from environment    import cfg
 from flask          import Flask, request, jsonify
 from flask.ext.cors import CORS
-from task_mux       import TaskMux
 
 from flask.ext.basicauth import BasicAuth
 from flask.ext.restful   import Api
 
+from . task_mux       import TaskMux
+from . environment    import cfg
+
+from . import termdocumentmatrix
+
 app  = Flask(__name__)
-cors = CORS(app, resources={r"/enhance/*": {"origins": "*"}, r"/search":    {'origins': '*'}})
+
+# By default this sets CORS access to resource endpoints to `*`
+cors = CORS(app)
+
 api  = Api(app)
+
+version = cfg['api']['version']
 
 app.config['BASIC_AUTH_USERNAME'] = cfg['api']['username']
 app.config['BASIC_AUTH_PASSWORD'] = cfg['api']['password']
@@ -35,6 +43,19 @@ basic_auth = BasicAuth(app)
 
 mux = TaskMux(host=cfg["disque"]["host"])
 
+es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
+es_cdr    = Elasticsearch(cfg["cdr_elastic_search"]["hosts"],    verify_certs=False)
+
+mirror_elastic_index = cfg["mirror_elastic_search"]["index"]
+cdr_elastic_index    = cfg["cdr_elastic_search"]["index"]
+
+try:
+    es_mirror.indices.create(index=cfg.MIRROR_ELS.DB)
+    time.sleep(1)
+    print("You've created a new index")
+
+except:
+    print("You're currently working on a pre-existing index")
 
 def query_docs(search_term, host_index, es, size, ids_only, cdr):
     """
@@ -145,7 +166,7 @@ def post_new(groups, mirror_host, mirror_es, cdr_host, cdr_es):
         print("Posted successfully")
 
 
-@app.route("/search", methods=['POST'])
+@app.route("/{version}/search".format(version=version), methods=['POST'])
 @basic_auth.required
 def doc_to_group():
     """
@@ -184,7 +205,7 @@ def doc_to_group():
     else:
         return jsonify({'message': 'no results'})
 
-@app.route('/enhance/<path:endpoint>', methods=['POST'])
+@app.route('/{version}/enhance/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def enhance(endpoint):
     record = request.get_json()
@@ -195,6 +216,13 @@ def enhance(endpoint):
     jobid = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
     return jsonify(results=results, endpoint=endpoint, **record)
+
+@app.route('/{version}/termdocumentmatrix'.format(version=version), methods=['POST'])
+@basic_auth.required
+def run_tdm():
+    record = request.get_json()
+    results = termdocumentmatrix.run(record)
+    return jsonify(**results)
 
 def test_doc_to_group(search):
     """
@@ -241,20 +269,6 @@ def after_request(response):
   return response
 
 if __name__ == '__main__':
-    es_mirror = Elasticsearch(cfg["mirror_elastic_search"]["hosts"], verify_certs=False)
-    es_cdr    = Elasticsearch(cfg["cdr_elastic_search"]["hosts"],    verify_certs=False)
-
-    mirror_elastic_index = cfg["mirror_elastic_search"]["index"]
-    cdr_elastic_index    = cfg["cdr_elastic_search"]["index"]
-
-    try:
-        es_mirror.indices.create(index=cfg.MIRROR_ELS.DB)
-        time.sleep(1)
-        print("You've created a new index")
-
-    except:
-        print("You're currently working on a pre-existing index")
 
     app.run(debug=True, host="0.0.0.0", port=8080)
-
 

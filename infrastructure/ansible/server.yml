@@ -33,6 +33,9 @@
     - name: Install pip3
       apt: pkg=python3-pip state=installed update_cache=true
 
+    - name: Install pandas
+      apt: pkg=python3-pandas state=installed update_cache=true
+
     - name: Install scipy
       apt: pkg=python3-scipy state=installed update_cache=true
 
@@ -55,6 +58,9 @@
 
     - name: Copy requirements
       copy: src=../../requirements.txt dest=/home/ansible/app/requirements.txt
+
+    - name: Copy manager
+      copy: src=../../manage.py dest=/home/ansible/manage.py
 
     - name: Copy server
       synchronize: src=../../src/ dest=/home/ansible/app/
