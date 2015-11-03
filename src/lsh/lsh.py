@@ -1,6 +1,6 @@
 from .. tdm import lsh
 
-class Arguments():
+class Arguments:
 
     def __init__(self, query, size):
         self.query = [query]
