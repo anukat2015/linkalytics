@@ -284,18 +284,14 @@ definitions:
     properties:
       final_date:
         type: string
-        description: "Last datetime entry"
         format: date
       initial_date:
         type: string
-        description: "Initial datetime entry"
         format: date
       phrase:
         type: string
-        description: "Search query string"
       results:
         type: object
-        desciption:  "Object containing results"
         $ref: '#/definitions/CoincidenceResults'
   CoincidenceResults:
     type: object
