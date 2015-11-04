@@ -7,8 +7,14 @@ info:
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  contact:
+    name: Sang Han
+    email: sang@qadium.com
+    url: 'https://github.com/qadium-memex/linkalytics'
 
-host: 'localhost:8080'
+host: '104.154.83.107:8080'
+
+basePath: /v1
 
 schemes:
   - http
@@ -20,16 +26,57 @@ produces:
 consumes:
   - application/json
 
+securityDefinitions:
+  Authentication:
+    type: basic
+    description: 'Will send `Authenticated` if authentication is succesful, otherwise it will send `Unauthorized`'
+
+pathswagger: '2.0'
+
+info:
+  title: Linkalytics API
+  description: Backend analytics to link together disparate data
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  contact:
+    name: Sang Han
+    email: sang@qadium.com
+    url: 'https://github.com/qadium-memex/linkalytics'
+
+host: '104.154.83.107:8080'
+
+basePath: /v1
+
+schemes:
+  - http
+  - https
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+securityDefinitions:
+  Authentication:
+    type: basic
+    description: 'Will send `Authenticated` if authentication is succesful, otherwise it will send `Unauthorized`'
+
 paths:
+
   /search:
     post:
+      security:
+        - Authentication: []
       summary: Search API
       description: |
         Search through the entity lists.
       parameters:
         - name: query
           in: body
-          description: 'Search Query'
+          description: Search Query
           required: true
           schema:
             $ref: '#/definitions/SearchQuery'
@@ -46,27 +93,84 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /ngrams:
+    post:
+      security:
+        - Authentication: []
+      summary: n-gram distribution over documents
+      description: |
+        Create a Term Document Matrix containing n-grams
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/NgramQuery'
+      tags:
+        - Search
+        - N-Grams
+      responses:
+        '200':
+          description: Response from elastic search
+          schema:
+            type: object
+            $ref: '#/definitions/NgramResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /lsh:
+    post:
+      security:
+        - Authentication: []
+      summary: Locality Sensitive Hashing
+      description: |
+        Perform nearest neighbor search over documents
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/LSHQuery'
+      tags:
+        - Search
+        - Locality Sensitive Hashing
+      responses:
+        '200':
+          description: Response from elastic search
+          schema:
+            type: object
+            $ref: '#/definitions/LSHResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /enhance/{api}:
     post:
       summary: Enhance API Endpoint
+      security:
+        - Authentication: []
       tags:
         - Enhance
       parameters:
         - name: api
           in: path
           required: true
-          description: >
+          description: |
             An API endpoint defined in `[twitter, youtube, phone, instagram]`
           type: string
         - name: text
           in: body
           required: true
-          description: >
+          description: |
             Text to send to the enhance API endpoint
           schema:
             $ref: '#/definitions/Enhance'
       responses:
-        200:
+        '200':
           description: Expected response to a valid request
           schema:
             $ref: '#/definitions/SearchResults'
@@ -76,34 +180,38 @@ paths:
             $ref: '#/definitions/Error'
 
 definitions:
+
   SearchQuery:
     type: object
     properties:
       search:
         type: string
-        description: 'Query string parameter'
+        description: Query string parameter
+    title: SearchQuery
 
   SearchResults:
     type: object
     properties:
       results:
         type: array
-        description: 'Result array'
+        description: Result array
         items:
           $ref: '#/definitions/SearchItems'
+    title: SearchResults
 
   SearchItems:
     type: object
     properties:
       _id:
         type: string
-        description: 'Unique identifier representing a group of entities'
+        description: Unique identifier representing a group of entities
       _index:
         type: string
       _source:
         $ref: '#/definitions/SearchSource'
       _type:
         type: string
+    title: Search Items
 
   SearchSource:
     type: object
@@ -112,24 +220,94 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/SearchDocs'
+    title: Search Source
 
   SearchDocs:
     type: object
     properties:
       _id:
         type: string
-        description: 'Unique identifier representing an entity'
+        description: Unique identifier representing an entity
       _index:
         type: string
       _source:
         type: object
-  
+    title: SearchDocs
+
+  NgramQuery:
+    type: object
+    properties:
+      text:
+        type: string
+        description: Elasticsearch query string
+      size:
+        type: integer
+        description: Maximum size of the elasticsearch query
+      ngrams:
+        type: integer
+        description: Amount of n-grams to separate query
+    title: Ngram Query
+
+  NgramResponse:
+    type: object
+    properties:
+      results:
+        type: object
+        description: Response from querying ngrams
+        $ref: '#/definitions/NgramResults'
+    title: Ngram Response
+
+  NgramResults:
+    type: object
+    properties:
+      ngram:
+        type: array
+        description: A list of all ngrams containing this result
+        $ref: '#/definitions/NgramDocs'
+    title: Ngram Results
+
+  NgramDocs:
+    type: string
+    description: Document ID's cooresponding to linked ngrams
+
+  LSHQuery:
+    type: object
+    properties:
+      text:
+        type: string
+        description: Elasticsearch query string
+      size:
+        type: integer
+        description: Maximum size of the elasticsearch query
+    title: LSH Query
+
+  LSHResponse:
+    type: object
+    properties:
+      doc_id:
+        type: array
+        description: Document ID's cooresponding to nearest neighbors
+        $ref: '#/definitions/LSHResults'
+
+  LSHResults:
+    type: array
+    items:
+      $ref: '#/definitions/LSHItems'
+
+  LSHItems:
+    type: object
+    properties:
+      doc_id:
+        type: string
+        description: Body string from the document
+
   Enhance:
     type: object
     properties:
       text:
         type: string
-        description: 'Text to send to the enhance api endpoint'
+        description: Text to send to the enhance api endpoint
+    title: Enhance
 
   Error:
     type: object
@@ -141,3 +319,260 @@ definitions:
         type: string
       fields:
         type: string
+    title: Error
+
+
+  /search:
+    post:
+      security:
+        - Authentication: []
+      summary: Search API
+      description: |
+        Search through the entity lists.
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/SearchQuery'
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Response from elastic search
+          schema:
+            type: object
+            $ref: '#/definitions/SearchResults'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /ngrams:
+    post:
+      security:
+        - Authentication: []
+      summary: n-gram distribution over documents
+      description: |
+        Create a Term Document Matrix containing n-grams
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/NgramQuery'
+      tags:
+        - Search
+        - N-Grams
+      responses:
+        '200':
+          description: Response from elastic search
+          schema:
+            type: object
+            $ref: '#/definitions/NgramResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /lsh:
+    post:
+      security:
+        - Authentication: []
+      summary: Locality Sensitive Hashing
+      description: |
+        Perform nearest neighbor search over documents
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/LSHQuery'
+      tags:
+        - Search
+        - Locality Sensitive Hashing
+      responses:
+        '200':
+          description: Response from elastic search
+          schema:
+            type: object
+            $ref: '#/definitions/LSHResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /enhance/{api}:
+    post:
+      summary: Enhance API Endpoint
+      security:
+        - Authentication: []
+      tags:
+        - Enhance
+      parameters:
+        - name: api
+          in: path
+          required: true
+          description: |
+            An API endpoint defined in `[twitter, youtube, phone, instagram]`
+          type: string
+        - name: text
+          in: body
+          required: true
+          description: |
+            Text to send to the enhance API endpoint
+          schema:
+            $ref: '#/definitions/Enhance'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/SearchResults'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+
+  SearchQuery:
+    type: object
+    properties:
+      search:
+        type: string
+        description: Query string parameter
+    title: SearchQuery
+
+  SearchResults:
+    type: object
+    properties:
+      results:
+        type: array
+        description: Result array
+        items:
+          $ref: '#/definitions/SearchItems'
+    title: SearchResults
+
+  SearchItems:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: Unique identifier representing a group of entities
+      _index:
+        type: string
+      _source:
+        $ref: '#/definitions/SearchSource'
+      _type:
+        type: string
+    title: Search Items
+
+  SearchSource:
+    type: object
+    properties:
+      docs:
+        type: array
+        items:
+          $ref: '#/definitions/SearchDocs'
+    title: Search Source
+
+  SearchDocs:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: Unique identifier representing an entity
+      _index:
+        type: string
+      _source:
+        type: object
+    title: SearchDocs
+
+  NgramQuery:
+    type: object
+    properties:
+      text:
+        type: string
+        description: Elasticsearch query string
+      size:
+        type: integer
+        description: Maximum size of the elasticsearch query
+      ngrams:
+        type: integer
+        description: Amount of n-grams to separate query
+    title: Ngram Query
+
+  NgramResponse:
+    type: object
+    properties:
+      results:
+        type: object
+        description: Response from querying ngrams
+        $ref: '#/definitions/NgramResults'
+    title: Ngram Response
+
+  NgramResults:
+    type: object
+    properties:
+      ngram:
+        type: array
+        description: A list of all ngrams containing this result
+        $ref: '#/definitions/NgramDocs'
+    title: Ngram Results
+
+  NgramDocs:
+    type: string
+    description: Document ID's cooresponding to linked ngrams
+
+  LSHQuery:
+    type: object
+    properties:
+      text:
+        type: string
+        description: Elasticsearch query string
+      size:
+        type: integer
+        description: Maximum size of the elasticsearch query
+    title: LSH Query
+
+  LSHResponse:
+    type: object
+    properties:
+      doc_id:
+        type: array
+        description: Document ID's cooresponding to nearest neighbors
+        $ref: '#/definitions/LSHResults'
+
+  LSHResults:
+    type: array
+    items:
+      $ref: '#/definitions/LSHItems'
+
+  LSHItems:
+    type: object
+    properties:
+      doc_id:
+        type: string
+        description: Body string from the document
+
+  Enhance:
+    type: object
+    properties:
+      text:
+        type: string
+        description: Text to send to the enhance api endpoint
+    title: Enhance
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
+    title: Error

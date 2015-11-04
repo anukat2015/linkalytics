@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import itertools
 import random
 import math
 
@@ -21,8 +20,7 @@ A, B = np.array([(random.randint(1, M_PRIME), random.randint(0, M_PRIME)) for _ 
 
 def get_permuted_hashes(token):
     """
-    Get a hash value
-    Abusing sha1 and truncating to 12 digit number
+    Get a hash value. Abusing sha1 and truncating to 12 digit number
     """
     hv = int(sha1(token).hexdigest(), 16) % (10 ** 12)
 
@@ -88,7 +86,7 @@ def run_jaccard_array(obj):
     return jaccard(x1, x2)
 
 def run_near_duplicates(obj):
-    '''
+    """
     Get near duplicates for a seed
 
     Input Dictionary
@@ -108,7 +106,7 @@ def run_near_duplicates(obj):
     ------
     :return: Document ID's
     :rtype:  set
-    '''
+    """
 
     seed = obj['seed']
     hashcorp = obj['hashcorp']
@@ -138,7 +136,7 @@ def run_near_duplicates(obj):
     return cluster
 
 def run_getminhash(node):
-    '''
+    """
     Compute minhash signatures for raw text.
     This functions takes a document and documentID as input and returns, the documentID and the corresponding minhash signature.
     The minhash signature is a set of NUM_PERM positiv integer values created with NUM_PERM hash functions.
@@ -147,7 +145,7 @@ def run_getminhash(node):
         node: dictionary with id,text
     output:
         node: dicionary with id,hashvalues (id,hashv)
-    '''
+    """
     output_node = { 'id': node['id'], 'hashv' : None }
 
     # Compute minhash signature
