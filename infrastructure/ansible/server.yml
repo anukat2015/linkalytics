@@ -76,5 +76,8 @@
     - name: Install dependencies
       pip: requirements=/home/ansible/app/requirements.txt executable=pip3
 
+    - name: Install English stopwords via nltk
+      command: sudo python3 -m nltk.downloader -d /usr/local/share/nltk_data stopwords
+
     - name: Start server
       supervisorctl: name=server state=started

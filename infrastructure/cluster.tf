@@ -1,7 +1,7 @@
 resource "google_compute_instance" "linkalytics" {
   name          = "linkalytics"
   description   = "The VM hosting our API"
-  machine_type  = "n1-standard-1"
+  machine_type  = "n1-highmem-2"
   zone          = "us-central1-b"
   tags          = ["memex", "linkalytics", "api-server"]
 

@@ -27,6 +27,7 @@ from . environment    import cfg
 
 from . import ngrams
 from . import lsh
+from . import coincidence
 
 app  = Flask(__name__)
 
@@ -221,7 +222,7 @@ def enhance(endpoint):
 @app.route('/{version}/ngrams'.format(version=version), methods=['POST'])
 @basic_auth.required
 def run_ngrams():
-    record = request.get_json()
+    record  = request.get_json()
     results = ngrams.run(record)
     return jsonify(**results)
 
@@ -229,8 +230,16 @@ def run_ngrams():
 @app.route('/{version}/lsh'.format(version=version), methods=['POST'])
 @basic_auth.required
 def run_lsh():
-    record = request.get_json()
+    record  = request.get_json()
     results = lsh.run(record)
+    return jsonify(**results)
+
+
+@app.route('/{version}/coincidence'.format(version=version), methods=['POST'])
+@basic_auth.required
+def run_coincidence():
+    record  = request.get_json()
+    results = coincidence.run(record)
     return jsonify(**results)
 
 def test_doc_to_group(search):
