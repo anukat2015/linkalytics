@@ -37,13 +37,18 @@ def specific_term(args):
             except:
                 pass
         results = {
-            'phone': phone_res['total'],
-            'both': both_res['total'],
-            'query': query,
-            'initial': parsetime(min(date_phone)),
-            'final': parsetime(max(date_phone)),
+            'results':{
+                'phone': phone_res['total'],
+                'both' : both_res['total'],
+            },
+            'date': {
+                'initial': parsetime(min(date_phone)),
+                'final'  : parsetime(max(date_phone)),
+            }
         }
+
         output['results'][i] = results
+
     return output
 
 def run(node):

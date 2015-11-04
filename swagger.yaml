@@ -10,7 +10,7 @@ info:
     name: Sang Han
     email: sang@qadium.com
     url: 'https://github.com/qadium-memex/linkalytics'
-host: '104.154.83.107:8080'
+host: '146.148.54.137:8080'
 basePath: /v1
 schemes:
   - http
@@ -100,6 +100,33 @@ paths:
           schema:
             type: object
             $ref: '#/definitions/LSHResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /coincidence:
+    post:
+      security:
+        - Authentication: []
+      summary: Check coincidences of phone number and post text
+      description: |
+        Provides justifications for inductive reasoning
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/CoincidenceQuery'
+      tags:
+        - Search
+        - Linking
+      responses:
+        '200':
+          description: Response linking phone numbers to post text
+          schema:
+            type: object
+            $ref: '#/definitions/CoincidenceResponse'
         default:
           description: Unexpected error
           schema:
@@ -242,6 +269,72 @@ definitions:
       doc_id:
         type: string
         description: Body string from the document
+  CoincidenceQuery:
+    type: object
+    properties:
+      text:
+        type: string
+        description: Elasticsearch query string
+      size:
+        type: integer
+        description: Maximum size of the elasticsearch query
+    title: Coincidence Query
+  CoincidenceResponse:
+    type: object
+    properties:
+      final_date:
+        type: string
+        description: "Last datetime entry"
+        format: date
+      initial_date:
+        type: string
+        description: "Initial datetime entry"
+        format: date
+      phrase:
+        type: string
+        description: "Search query string"
+      results:
+        type: object
+        desciption:  "Object containing results"
+        $ref: '#/definitions/CoincidenceResults'
+  CoincidenceResults:
+    type: object
+    properties:
+      doc_id:
+        type: object
+        description: "Document ID"
+        $ref: '#/definitions/CoincidenceDoc'
+  CoincidenceDoc:
+    type: object
+    properties:
+      date:
+        type: object
+        description: "Dates of entry"
+        $ref: '#/definitions/CoincidenceDates'
+      results:
+        type: object
+        description: "Coincidence matches"
+        $ref: '#/definitions/CoincidenceItems'
+  CoincidenceDates:
+    type: object
+    properties:
+      initial:
+        type: string
+        description: "Initial Date"
+        format: date
+      final:
+        type: string
+        description: "Final Date"
+        format: date
+  CoincidenceItems:
+    type: object
+    properties:
+      phone:
+        type: integer
+        description: "Phone numbers from this query"
+      both:
+        type: integer
+        description: "Entries matching both same text and same phone number"
   Enhance:
     type: object
     properties:

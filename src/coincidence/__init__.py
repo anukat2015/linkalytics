@@ -1,1 +1,1 @@
-from .coincidence import run
+from . coincidence import run
