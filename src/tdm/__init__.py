@@ -6,3 +6,9 @@ from . __main__ import unique_features
 from . __main__ import phone_hits
 from . __main__ import both_hits
 
+class Arguments:
+
+    def __init__(self, query, size):
+        self.query = [query]
+        self.size  = [size]
+

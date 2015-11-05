@@ -4,12 +4,7 @@ from .. tdm import get_results
 from .. tdm import unique_features
 from .. tdm import phone_hits
 from .. tdm import both_hits
-
-class Arguments:
-
-    def __init__(self, query, size):
-        self.query = [query]
-        self.size  = [size]
+from .. tdm import Arguments
 
 def specific_term(args):
 
@@ -27,27 +22,26 @@ def specific_term(args):
         'final_date'  : parsetime(max(posttime)),
         'results'     : {},
     }
-    for i in phone:
-        phone_res  = phone_hits(i, int(args.size[0]))
-        both_res   = both_hits(query, i)
+    for pid in phone:
+        phone_res  = phone_hits(pid, int(args.size[0]))
+        both_res   = both_hits(query, pid)
         date_phone = set()
         for v in phone_res.values():
             try:
                 date_phone.add(v["posttime"])
             except:
                 pass
-        results = {
+
+        output['results'][pid] = {
             'results':{
-                'phone': phone_res['total'],
-                'both' : both_res['total'],
+                'phone'  : phone_res['total'],
+                'both'   : both_res['total'],
             },
             'date': {
                 'initial': parsetime(min(date_phone)),
                 'final'  : parsetime(max(date_phone)),
             }
         }
-
-        output['results'][i] = results
 
     return output
 

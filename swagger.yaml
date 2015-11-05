@@ -168,6 +168,9 @@ definitions:
       search:
         type: string
         description: Query string parameter
+      size:
+        type: integer
+        description: Size of elasticsearch query
     title: SearchQuery
   SearchResults:
     type: object

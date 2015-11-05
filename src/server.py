@@ -182,7 +182,8 @@ def doc_to_group():
     Step 5 -- Query newly updated Mirror Elastic
     """
     # search_term = search["text"]
-    search_term = request.get_json(force=True)["search"]
+    record = request.get_json()
+    search_term, size = record.get('search', 'cali'), int(record.get('size', 100))
     # print("You searched for: " + search_term)
     # doc_ids = query_docs(search_term, cfg["mirror_elastic_search"]["index"], es_mirror, 50, True, False)
 
@@ -199,7 +200,7 @@ def doc_to_group():
 
     # else:
     #     print("No new groups")
-    results = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, 100, False, True)
+    results = query_docs(search_term, cfg["cdr_elastic_search"]["index"], es_cdr, size, False, True)
     print("Results: " + str(len(results)))
 
     if results:
