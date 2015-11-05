@@ -5,6 +5,6 @@ worker_class = 'tornado'
 
 max_requests = 1000
 timeout = 120
-keep_alive = 30
+keep_alive = 60
 
 preload = True

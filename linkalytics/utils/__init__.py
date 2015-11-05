@@ -5,4 +5,3 @@ from . unique    import uniq_lod
 from . utilities import memoize
 from . utilities import timer
 from . utilities import SetLogging
-from . utilities import search

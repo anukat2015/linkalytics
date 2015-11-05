@@ -56,25 +56,25 @@
     - name: Start supervisord
       service: name=supervisor state=started
 
-    - name: Assure existence of app directory
-      file: path=/home/ansible/app/ state=directory
+    - name: Assure existence of linkalytics directory
+      file: path=/home/ansible/linkalytics/ state=directory
 
     - name: Copy requirements
-      copy: src=../../requirements.txt dest=/home/ansible/app/requirements.txt
+      copy: src=../../requirements.txt dest=/home/ansible/linkalytics/requirements.txt
 
     - name: Copy server config
-      copy: src=../../gunicorn.conf.py dest=/home/ansible/app/gunicorn.conf.py
+      copy: src=../../gunicorn.conf.py dest=/home/ansible/linkalytics/gunicorn.conf.py
 
     - name: Copy manager
       copy: src=../../manage.py dest=/home/ansible/manage.py
 
     - name: Copy server
-      synchronize: src=../../src/ dest=/home/ansible/app/
+      synchronize: src=../../linkalytics/ dest=/home/ansible/linkalytics/
       notify:
         - Restart server
 
     - name: Install dependencies
-      pip: requirements=/home/ansible/app/requirements.txt executable=pip3
+      pip: requirements=/home/ansible/linkalytics/requirements.txt executable=pip3
 
     - name: Install English stopwords via nltk
       command: sudo python3 -m nltk.downloader -d /usr/local/share/nltk_data stopwords

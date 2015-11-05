@@ -1,10 +1,22 @@
 from datetime import datetime
 
-from .. tdm import get_results
-from .. tdm import unique_features
-from .. tdm import phone_hits
-from .. tdm import both_hits
-from .. tdm import Arguments
+from .. search import get_results, phone_hits, both_hits
+from .. run import Arguments
+
+def unique_features(feature, data):
+    features = set()
+    for v in data.values():
+        try:
+            if isinstance(v[feature], str):
+                features.add(v[feature])
+            elif isinstance(v[feature], list):
+                for i in v:
+                    features.add(v[feature])
+        except:
+            pass
+
+    return features
+
 
 def specific_term(args):
 

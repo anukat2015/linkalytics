@@ -17,7 +17,7 @@ import networkx as nx
 from scipy import sparse
 from enchant.checker import SpellChecker
 
-def n_grams(document, n, normalize=True, numbers=True):
+def ngrams(document, n, normalize=True, numbers=True):
     numbers = 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
     table   = dict((ord(char), None) for char in string.punctuation)
     raw     = re.sub('<[^<]+?>', '', document).lower().translate(table)
@@ -34,32 +34,12 @@ def n_grams(document, n, normalize=True, numbers=True):
     ]
     return [' '.join(i) for i in zip(*grams)]
 
-def high_entropy_featurizing(document):
-    """
-    Function to identify attributes of a string to determine whether it may
-    be a unique identifier... WORK IN PROGRESS
-    """
-
-    words = document.split()
-    unique = set()
-    for word in words:
-        n_character = len(word)
-        n_numeric = sum(1 for c in word if c.isnumeric())
-        # n_alpha = sum(1 for c in word if c.isalpha())
-        # n_uppercase = sum(1 for c in word if c.isupper())
-        # n_lowercase = sum(1 for c in word if c.isupper())
-        if (n_character > 8) & (n_character == n_numeric):
-            unique.add(word)
-        # if (...)
-    print(unique)
-
-
 class TermDocumentMatrix:
     """
     Efficiently create a term-document matrix.
     """
 
-    def __init__(self, cutoff=2, tokenizer=n_grams):
+    def __init__(self, cutoff=2, tokenizer=ngrams):
         """
         :param cutoff: int
             Specifies only words which appear in minimum documents to be
