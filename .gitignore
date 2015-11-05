@@ -71,7 +71,7 @@ docs/_build/
 target/
 
 # Random
-src/disq
+linkalytics/disq
 
 # OS generated files/folders
 .DS_Store
