@@ -12,14 +12,3 @@ class Arguments:
         self.query = [query]
         self.size  = [size]
 
-    def __repr__(self):
-        return '{classname}{arguments}'.format(
-            classname=self.__class__.__name__,
-            arguments=str(tuple(([i[0] for i in self.__dict__.values()])))
-        )
-
-class NGramArguments(Arguments):
-
-    def __init__(self, query, size, ngrams):
-        self.ngrams = [ngrams]
-        super().__init__(query, size)
