@@ -3,5 +3,5 @@ dependencies:
   - { role: supervisor,
       service: dqworker,
       service_conf: worker.conf,
-      queues: twitter instagram youtube phone geocode
+      queues: twitter instagram youtube phone geocode termdocumentmatrix
     }

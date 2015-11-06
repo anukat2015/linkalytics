@@ -1,15 +1,12 @@
 ---
-- name: Assure existence of src directory
-  file: path=/home/ansible/src/ state=directory
+- name: Assure existence of linkalytics directory
+  file: path=/home/ansible/linkalytics/ state=directory
 
 - name: Copy requirements
   copy: src=../../requirements.txt dest=/home/ansible/requirements.txt
 
-- name: Copy dowork
-  copy: src=../../dowork.py dest=/home/ansible/dowork.py
-
 - name: Copy worker
-  synchronize: src=../../src/ dest=/home/ansible/src/
+  synchronize: src=../../linkalytics/ dest=/home/ansible/linkalytics/
   notify:
     - Restart dqworker
 

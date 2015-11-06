@@ -5,7 +5,7 @@ import logging
 
 from multiprocessing import cpu_count
 from .environment import cfg
-from .task_mux import TaskMux
+from .tasks import TaskMux
 from . import instagrammer
 from . import phonenumber
 from . import twitter
@@ -21,7 +21,7 @@ RUNNERS = {
     'youtube': youtube.run
 }
 
-logging.getLogger('').setLevel(logging.DEBUG)
+logging.getLogger('').setLevel(logging.INFO)
 
 def process_record(q):
     qname, jobid, job = mux.get(q)

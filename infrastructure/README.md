@@ -27,7 +27,7 @@ Once you create those files, you can create infrastructure that mirrors ours.
 ## Ansible
 [Ansible][] is a tool to provision VMs via SSH. It uses SSH to log into machines and runs shell scripts (or other kinds of programs) to install dependencies or binaries to bring a fresh VM into a known state.
 
-    ansible-playbook -i terraform.py -s -u ansible --private-key=`pwd`/keys/gce ansible/disque.yml
+    ansible-playbook -i terraform.py -s -u ansible --private-key=`pwd`/keys/gce ansible/server.yml
 
 In order to know which machines to SSH into, Ansible uses an *inventory*. This inventory can be static (listed by hand) or dynamic; the file `terraform.py` allows Ansible to use information from Terraform in its inventory. This is the argument to the `-i` flag.
 

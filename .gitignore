@@ -5,6 +5,10 @@ production.cfg
 account.json
 keys/
 
+#data
+elastic.json
+results.tsv
+
 # tfstate files
 *.tfstate*
 
@@ -67,7 +71,7 @@ docs/_build/
 target/
 
 # Random
-src/disq
+linkalytics/disq/**
 
 # OS generated files/folders
 .DS_Store
@@ -78,3 +82,10 @@ src/disq
 ehthumbs.db
 Thumbs.db
 Icon*
+.idea**
+output.*
+venv
+elastic.json
+.ipynb_checkpoints
+.idea
+data.json

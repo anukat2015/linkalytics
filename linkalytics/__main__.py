@@ -1,4 +1,4 @@
-from . worker import main
+from . import worker
 
 if __name__ == '__main__':
-    main()
+    worker.main()
