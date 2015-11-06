@@ -39,7 +39,6 @@ class SetLogging:
     """
     ContextManager for setting logging until block completes.
     By default will disable logging.
-
     Example Use
     -----------
     # Sets logging to INFO
