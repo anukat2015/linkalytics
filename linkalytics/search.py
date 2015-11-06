@@ -8,9 +8,9 @@ from . environment import cfg
 warnings.simplefilter('ignore')
 
 url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
-es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160)
+es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160, timeout=160)
 
-def search(es):
+def search(es, total=True):
     """
     Elasticsearch Decorator
     -----------------------
@@ -50,7 +50,9 @@ def search(es):
 
             results = es.search(body=payload)
 
-            output["total"] = results['hits']['total']
+            if total:
+                output["total"] = results['hits']['total']
+
             for hit in results['hits']['hits']:
                 try:
                     output[hit['_id']] = hit["_source"]
@@ -63,7 +65,7 @@ def search(es):
 
     return wrap
 
-@search(es)
+@search(es, total=False)
 def get_results(search_term, size, phrase=True):
     match_type = 'match_phrase' if phrase else 'match'
     payload = {
@@ -76,7 +78,7 @@ def get_results(search_term, size, phrase=True):
     }
     return payload
 
-@search(es)
+@search(es, total=False)
 def query_ads(k, v, value='text'):
 
     ad_ids = []
@@ -89,7 +91,7 @@ def query_ads(k, v, value='text'):
 
     return payload
 
-@search(es)
+@search(es, total=True)
 def phone_hits(phone, size):
     payload = {
         "size": size,
@@ -101,7 +103,7 @@ def phone_hits(phone, size):
     }
     return payload
 
-@search(es)
+@search(es, total=True)
 def both_hits(search_term, phone):
     query =  {
         "bool": {
