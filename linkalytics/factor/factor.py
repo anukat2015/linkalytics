@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import collections
 
 class FactorLookupDidNotReturnList(Exception):
     def __init__(self, values):
@@ -78,20 +79,22 @@ class Factor(metaclass=ABCMeta):
         field_values = self.lookup(ad_id)
         suggestions = {
             ad_id : {
-                self.field:{}
+                self.field: collections.defaultdict(list)
             }
         }
         if isinstance(field_values, list):
             for field_value in field_values:
-                ads = self.reverse_lookup(field_value)
+                ads = set(self.reverse_lookup(field_value))
                 try:
-                    ads = set(ads).remove(ad_id)
+                    ads.remove(ad_id)
                 except KeyError:    # a KeyError means that the reverse_lookup failed to find the originating ad itself.
                     raise FactorReverseLookupFailedToFindSelf(ad_id, ads)
-                suggestions[ad_id][self.field].update({x: field_value for x in ads})
+                for x in ads:
+                    suggestions[ad_id][self.field][x].append(field_value)
                 if debug:
                     for x in ads:
                         assert field_value == self.lookup(x)
+                return suggestions
         else:
             raise FactorLookupDidNotReturnList(field_values)
 
