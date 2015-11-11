@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import imgmeta
+
+def main():
+    parser = argparse.ArgumentParser(description="Find related ads via requested factors.")
+    parser.add_argument("ad_ids", type=int, nargs="+")
+    parser.add_argument("--with-model", "-m", dest="model", action="store_true", default=False, help="Whether to include the camera model factor.")
+    parser.add_argument("--with-time", "-t", dest="time", nargs="?", type=int, default=None, const=1200, help="Whether to include the time factor (in seconds), defaults to 20 minutes. Ads are related if there are a sequence of photos taken no more than TIME apart.")
+    parser.add_argument("--with-serial", "-s", dest="serial", action="store_true", default=False, help="Whether to include the camera serial number factor.")
+    parser.add_argument("--with-all", "-a", dest="all", action="store_true", default=False, help="Whether to use all factors. To change the TIME range, user --with-time TIME also.")
+    parser.add_argument("--depth", "-d", type=int, default=1, help="Number of recursive calls to make to expand the factors.")
+    parser.add_argument("--use-intersect", "-i", dest="intersect", action="store_true", help="Whether to use the intersection or union of the factors.")
+
+    args = parser.parse_args()
+    # if nothing is set, turn them on
+    if not (args.model or args.all or args.serial or args.time):
+        args.all=True
+
+    # if all args are set, set the model and serial flags
+    if args.all:
+        args.model=True
+        args.serial=True
+        if not args.time:
+            args.time=1200
+
+    print(json.dumps(imgmeta.suggest_to_depth(args.ad_ids, args.depth, args.model, args.time, args.serial, args.intersect)))
+
+if __name__=="__main__":
+    main()
