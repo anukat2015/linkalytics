@@ -25,7 +25,15 @@ def main():
         if not args.time:
             args.time=1200
 
-    print(json.dumps(imgmeta.suggest_to_depth(args.ad_ids, args.depth, args.model, args.time, args.serial, args.intersect)))
+    suggestions = imgmeta.suggest_to_depth(args.ad_ids, args.depth, args.model, args.time, args.serial, args.intersect)
+
+    print(json.dumps(suggestions))
+    suggested = set()
+    for k1 in suggestions:
+        for k2 in suggestions[k1]:
+            for k3 in suggestions[k1][k2]:
+                suggested.add(k3)
+    print(list(suggested.difference(set(args.ad_ids))))
 
 if __name__=="__main__":
     main()
