@@ -1,0 +1,8 @@
+ # Install Redis instance
+
+---
+- name: Install redis
+  apt: pkg=redis-server state=present
+
+- name: Synchronize configuration `redis.conf`
+  synchronize: src=redis/templates/redis.conf dest=/etc/redis/redis.conf

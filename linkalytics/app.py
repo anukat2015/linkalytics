@@ -21,6 +21,7 @@ from . import ngrams
 from . import lsh
 from . import coincidence
 from . import search
+from . import imgmeta
 
 from . environment import cfg
 from . tasks       import TaskMux
@@ -77,19 +78,26 @@ def run_coincidence():
     results = coincidence.run(record)
     return jsonify(**results)
 
+@app.route('/{version}/imgmeta'.format(version=version), methods=['POST'])
+@basic_auth.required
+def run_imgmeta():
+    record  = request.get_json()
+    results = imgmeta.run(record)
+    return jsonify(**results)
+
 
 @app.route('/{version}/enhance/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def enhance(endpoint):
     record = request.get_json()
-    if endpoint not in set(cfg["queues"]["endpoints"]):
-        response = jsonify(results={"message": "endpoint not found"}, endpoint=endpoint, **record)
-        response.status = 404
-        return response
-    jobid = mux.put(endpoint, record)
-    results = mux.retrieve(jobid)
-    return jsonify(results=results, endpoint=endpoint, **record)
 
+    if endpoint not in set(cfg["queues"]["endpoints"]):
+        return jsonify(results={"message": "endpoint not found"}, endpoint=endpoint, **record), 404
+
+    jobid   = mux.put(endpoint, record)
+    results = mux.retrieve(jobid)
+
+    return jsonify(results=results, endpoint=endpoint, **record)
 
 @app.after_request
 def after_request(response):

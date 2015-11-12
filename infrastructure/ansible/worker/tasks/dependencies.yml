@@ -8,5 +8,8 @@
 - name: Install pip3
   apt: pkg=python3-pip state=installed update_cache=true
 
-# - name: Install scipy
-#   apt: pkg=python3-scipy state=installed update_cache=true
+- name: Install scipy
+  apt: pkg=python3-scipy state=installed update_cache=true
+
+- name: Install pandas
+  apt: pkg=python3-pandas state=installed update_cache=true

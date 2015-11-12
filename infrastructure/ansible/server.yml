@@ -19,6 +19,10 @@
   roles:
     - worker
 
+- hosts: redis-0
+  roles:
+    - redis
+
 - hosts: linkalytics
   handlers:
     - name: Restart server
@@ -38,9 +42,6 @@
 
     - name: Install scipy
       apt: pkg=python3-scipy state=installed update_cache=true
-
-    - name: Install Enchant Dictionaries
-      apt: pkg=libenchant1c2a state=installed update_cache=true
 
     - name: Install supervisord
       apt: pkg=supervisor state=installed update_cache=true

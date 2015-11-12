@@ -1,7 +1,9 @@
 import redis
 import datetime
 
-conn = redis.Redis()
+from .. environment import cfg
+
+conn = redis.Redis(host=cfg['redis']['host'])
 
 def bytes_to_timestamp(b):
     timestamp = float(b)

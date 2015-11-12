@@ -10,8 +10,17 @@
   notify:
     - Restart dqworker
 
+- name: Install Enchant Dictionaries
+  apt: pkg=libenchant1c2a state=installed update_cache=true
+
+- name: Install pandas
+  apt: pkg=python3-pandas state=installed update_cache=true
+
+- name: Install scipy
+  apt: pkg=python3-scipy state=installed update_cache=true
+
 - name: Install dependencies
   pip: requirements=/home/ansible/requirements.txt executable=pip3
 
 - name: Install English stopwords via nltk
-  command: python3 -m nltk.downloader stopwords
+  command: sudo python3 -m nltk.downloader -d /usr/local/share/nltk_data stopwords

@@ -4,8 +4,10 @@ import argparse
 import logging
 
 from multiprocessing import cpu_count
-from .environment import cfg
-from .tasks import TaskMux
+
+from . environment import cfg
+from . tasks import TaskMux
+
 from . import instagrammer
 from . import phonenumber
 from . import twitter
@@ -13,6 +15,7 @@ from . import geocoder
 from . import youtube
 
 mux = TaskMux(host=cfg['disque']['host'])
+
 RUNNERS = {
     'instagram': instagrammer.run,
     'phone': phonenumber.run,
@@ -45,6 +48,7 @@ def main():
 
     args = parser.parse_args()
     max_workers = max(cpu_count(), len(args.queues))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = executor.map(handle, args.queues)
         concurrent.futures.wait(futures)
