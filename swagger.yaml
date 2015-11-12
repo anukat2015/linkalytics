@@ -131,6 +131,33 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /imgmeta:
+    post:
+      security:
+        - Authentication: []
+      summary: 'Search through camera by id'
+      description: |
+        'Search through camera by id'
+      parameters:
+        - name: query
+          in: body
+          description: Search Query
+          required: true
+          schema:
+            $ref: '#/definitions/ImageQuery'
+      tags:
+        - Search
+        - Images
+      responses:
+        '200':
+          description: Response linking similarities between images
+          schema:
+            type: object
+            $ref: '#/definitions/ImageResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
   '/enhance/{api}':
     post:
       summary: Enhance API Endpoint
@@ -301,39 +328,47 @@ definitions:
     properties:
       doc_id:
         type: object
-        description: "Document ID"
+        description: Document ID
         $ref: '#/definitions/CoincidenceDoc'
   CoincidenceDoc:
     type: object
     properties:
       date:
         type: object
-        description: "Dates of entry"
+        description: Dates of entry
         $ref: '#/definitions/CoincidenceDates'
       results:
         type: object
-        description: "Coincidence matches"
+        description: Coincidence matches
         $ref: '#/definitions/CoincidenceItems'
   CoincidenceDates:
     type: object
     properties:
       initial:
         type: string
-        description: "Initial Date"
+        description: Initial Date
         format: date
       final:
         type: string
-        description: "Final Date"
+        description: Final Date
         format: date
   CoincidenceItems:
     type: object
     properties:
       phone:
         type: integer
-        description: "Phone numbers from this query"
+        description: Phone numbers from this query
       both:
         type: integer
-        description: "Entries matching both same text and same phone number"
+        description: Entries matching both same text and same phone number
+  ImageQuery:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Model ID number
+  ImageResponse:
+    type: object
   Enhance:
     type: object
     properties:
