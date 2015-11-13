@@ -10,6 +10,10 @@ warnings.simplefilter('ignore')
 url = cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"]
 es  = Elasticsearch(url, port=443, verify_certs=False, use_ssl=False, request_timeout=160, timeout=160)
 
+def run(node):
+    search_term, size = node.get('search', 'cali'), int(node.get('size', 100))
+    return get_results(search_term, size)
+
 def search(es, total=True):
     """
     Elasticsearch Decorator

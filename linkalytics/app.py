@@ -17,8 +17,6 @@ from flask.ext.cors      import CORS
 from flask.ext.basicauth import BasicAuth
 from flask.ext.restful   import Api
 
-from . import search
-
 from . environment import cfg
 from . tasks       import TaskMux
 
@@ -36,52 +34,11 @@ version = cfg['api']['version']
 
 mux = TaskMux(host=cfg["disque"]["host"])
 
-@app.route("/{version}/search".format(version=version), methods=['POST'])
+@app.route('/{version}/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
-def run_search():
-    """
-    Here's a server that takes a search term as an input
-    and provides a list of grouped documents as an output
-    """
-    record = request.get_json()
-    search_term, size = record.get('search', 'cali'), int(record.get('size', 100))
-
-    results = search.get_results(search_term, size)
-
-    return jsonify(**results)
-
-
-@app.route('/{version}/ngrams'.format(version=version), methods=['POST'])
-@basic_auth.required
-def run_ngrams():
+def run_api(endpoint):
     record  = request.get_json()
-    jobid   = mux.put('ngrams', record)
-    results = mux.retrieve(jobid)
-    return jsonify(**results)
-
-
-@app.route('/{version}/lsh'.format(version=version), methods=['POST'])
-@basic_auth.required
-def run_lsh():
-    record  = request.get_json()
-    jobid   = mux.put('lsh', record)
-    results = mux.retrieve(jobid)
-    return jsonify(**results)
-
-
-@app.route('/{version}/coincidence'.format(version=version), methods=['POST'])
-@basic_auth.required
-def run_coincidence():
-    record  = request.get_json()
-    jobid   = mux.put('coincidence', record)
-    results = mux.retrieve(jobid)
-    return jsonify(**results)
-
-@app.route('/{version}/imgmeta'.format(version=version), methods=['POST'])
-@basic_auth.required
-def run_imgmeta():
-    record  = request.get_json()
-    jobid   = mux.put('imgmeta', record)
+    jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
     return jsonify(**results)
 

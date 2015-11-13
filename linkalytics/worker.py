@@ -15,6 +15,7 @@ from . import ngrams
 from . import lsh
 from . import coincidence
 from . import imgmeta
+from . import search
 
 mux = TaskMux(host=cfg['disque']['host'])
 
@@ -28,6 +29,7 @@ RUNNERS = {
     'lsh'        : lsh.run,
     'coincidence': coincidence.run,
     'imgmeta'    : imgmeta.run,
+    'search'     : search.run
 }
 
 logging.getLogger('').setLevel(logging.INFO)
