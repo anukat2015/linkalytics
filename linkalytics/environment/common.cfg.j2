@@ -16,9 +16,6 @@ developer_key       = "{{ credstash('youtube_common_key') }}"
 hosts               = "{{ credstash('elastic_cdr_url') }}"
 index               = "memex_ht"
 
-[queues]
-endpoints           = ["twitter", "instagram", "youtube", "phone", "geocode"]
-
 [api]
 username           = "{{ credstash('flask_api_username') }}"
 password           = "{{ credstash('flask_api_password') }}"

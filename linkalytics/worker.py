@@ -1,8 +1,6 @@
 import json
-import argparse
 import logging
 
-from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from . environment import cfg
@@ -13,15 +11,23 @@ from . import phonenumber
 from . import twitter
 from . import geocoder
 from . import youtube
+from . import ngrams
+from . import lsh
+from . import coincidence
+from . import imgmeta
 
 mux = TaskMux(host=cfg['disque']['host'])
 
 RUNNERS = {
-    'instagram': instagrammer.run,
-    'phone': phonenumber.run,
-    'twitter': twitter.run,
-    'geocode': geocoder.run,
-    'youtube': youtube.run
+    'instagram'  : instagrammer.run,
+    'phone'      : phonenumber.run,
+    'twitter'    : twitter.run,
+    'geocode'    : geocoder.run,
+    'youtube'    : youtube.run,
+    'ngrams'     : ngrams.run,
+    'lsh'        : lsh.run,
+    'coincidence': coincidence.run,
+    'imgmeta'    : imgmeta.run,
 }
 
 logging.getLogger('').setLevel(logging.INFO)
@@ -44,12 +50,9 @@ def handle(q):
         process_record(q)
 
 def main():
-    parser = argparse.ArgumentParser(description="Do work from queue.")
-    parser.add_argument('queues', nargs='+')
-
-    args = parser.parse_args()
-    max_workers = max(cpu_count(), len(args.queues))
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = executor.map(handle, args.queues)
+    """
+    Run a thread pool to handle where one thread handles one work queue.
+    """
+    with ThreadPoolExecutor(max_workers=len(RUNNERS)) as executor:
+        futures = executor.map(handle, RUNNERS)
         wait(futures)
