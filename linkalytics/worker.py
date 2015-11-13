@@ -1,9 +1,9 @@
 import json
-import concurrent.futures
 import argparse
 import logging
 
 from multiprocessing import cpu_count
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from . environment import cfg
 from . tasks import TaskMux
@@ -35,6 +35,7 @@ def process_record(q):
         raise e
     finally:
         mux.conn.addjob(jobid, json.dumps(result))
+
     mux.conn.fastack(jobid)
 
 def handle(q):
@@ -49,6 +50,6 @@ def main():
     args = parser.parse_args()
     max_workers = max(cpu_count(), len(args.queues))
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = executor.map(handle, args.queues)
-        concurrent.futures.wait(futures)
+        wait(futures)

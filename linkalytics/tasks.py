@@ -80,7 +80,7 @@ class TaskMux:
         if job:
             qname, job_id, data = job
             self.__logger.debug("Got data '{}'".format(data))
-            return (qname, job_id, deserializer(data))
+            return qname, job_id, deserializer(data)
         return job
 
     def report_exception(self, job_id):
