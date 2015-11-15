@@ -6,7 +6,7 @@ sudo: true
 install:
     - pip install -r requirements.txt
     - sudo pip2 install git+https://github.com/qadium/credstmpl.git
-    - sudo python3 -m nltk.downloader -d /usr/local/share/nltk_data stopwords
+    - python -m nltk.downloader stopwords
     - credstmpl linkalytics/environment/*.j2
 script: nosetests
 env:
