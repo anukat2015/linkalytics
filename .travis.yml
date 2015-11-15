@@ -5,6 +5,7 @@ python:
 sudo: true
 install:
     - pip install -r requirements.txt
+    - pip install pandas scipy
     - sudo pip2 install git+https://github.com/qadium/credstmpl.git
     - python -m nltk.downloader stopwords
     - credstmpl linkalytics/environment/*.j2
