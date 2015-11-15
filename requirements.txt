@@ -20,3 +20,4 @@ Flask-Script
 pyenchant
 gunicorn
 tornado
+coverage

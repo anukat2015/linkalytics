@@ -1,8 +1,8 @@
 Linkalytics
 ===========
 
-[![GitHub version](https://badge.fury.io/gh/qadium-memex%2Flinkalytics.svg)](https://badge.fury.io/gh/qadium-memex%2Flinkalytics) [![Build Status](https://travis-ci.org/qadium-memex/linkalytics.svg?branch=master)](https://travis-ci.org/qadium-memex/linkalytics)
 
+[![GitHub license](https://img.shields.io/pypi/l/coverage.svg)](https://github.com/qadium-memex/linkalytics/blob/master/LICENSE) [![GitHub version](https://badge.fury.io/gh/qadium-memex%2Flinkalytics.svg)](https://badge.fury.io/gh/qadium-memex%2Flinkalytics) [![Build Status](https://travis-ci.org/qadium-memex/linkalytics.svg?branch=master)](https://travis-ci.org/qadium-memex/linkalytics)
 Backend analytics to link together disparate data
 
 Getting Started with Linkalytics

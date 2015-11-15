@@ -6,12 +6,9 @@ from .. search import get_results
 def lsh(args, threshold=0.7):
     results    = get_results(args.query[0], int(args.size[0]), True)
 
-    if 'total' in results:
-        del results['total']
-
     hashcorpus = [
         nearduplicates.run_getminhash({'id': key, 'text': value['text']})
-        for key, value in results.items() if 'text' in value
+            for key, value in results.items() if 'text' in value
         ]
 
     doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch(
@@ -23,7 +20,7 @@ def lsh(args, threshold=0.7):
 
     hashdict = {
         obj['id']: obj['hashv'] for obj in hashcorpus
-        }
+    }
 
     output = {}
 
