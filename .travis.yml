@@ -4,7 +4,7 @@ python:
     - '3.5'
 install:
     - pip install -r requirements.txt
-    - pip install git+https://github.com/qadium/credstmpl.git
+    - pip2 install git+https://github.com/qadium/credstmpl.git
     - credstmpl linkalytics/environment/common.cfg.j2
     - credstmpl linkalytics/environment/devlop.cfg.j2
 script: nosetests
