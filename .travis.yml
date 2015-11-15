@@ -1,11 +1,26 @@
 language: python
+sudo: true
 python:
     - '3.4'
     - '3.5'
-sudo: true
+notifications:
+  email: false
+cache: apt
+addons:
+  apt:
+    packages:
+    - libatlas-dev
+    - libatlas-base-dev
+    - liblapack-dev
+    - gfortran
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda update --yes conda
 install:
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
     - pip install -r requirements.txt
-    - pip install pandas scipy
     - sudo pip2 install git+https://github.com/qadium/credstmpl.git
     - python -m nltk.downloader stopwords
     - credstmpl linkalytics/environment/*.j2
