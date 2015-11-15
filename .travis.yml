@@ -18,7 +18,8 @@ before_install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes conda
-    - pip2 --user install git+https://github.com/qadium/credstmpl.git
+    - pip install --upgrade pip
+    - pip2 install --user --upgrade git+https://github.com/qadium/credstmpl.git
     - python -m nltk.downloader stopwords
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
