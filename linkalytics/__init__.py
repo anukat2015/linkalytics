@@ -7,7 +7,3 @@ from .__version__ import __build__
 
 __title__     = 'linkalytics'
 __license__   = 'Apache Software License Version 2.0'
-
-from .app import app
-
-

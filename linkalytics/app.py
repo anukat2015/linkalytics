@@ -40,7 +40,7 @@ def run_api(endpoint):
     record  = request.get_json()
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
-    return jsonify(endpoint=endpoint, **results)
+    return jsonify(**results)
 
 
 @app.route('/{version}/enhance/<path:endpoint>'.format(version=version), methods=['POST'])

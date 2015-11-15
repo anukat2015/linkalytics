@@ -89,3 +89,6 @@ elastic.json
 .ipynb_checkpoints
 .idea
 data.json
+clusters/**
+src/**
+nodes.conf

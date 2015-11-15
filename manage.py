@@ -2,7 +2,7 @@
 
 from flask.ext.script import Manager, Server
 
-from linkalytics import app
+from linkalytics.app import app
 
 
 server  = Server(host="0.0.0.0", port=8080)
