@@ -3,7 +3,6 @@ import functools
 from .. search import get_results
 from .  entropy import TermDocumentMatrix, ngrams
 
-
 def run(node):
     tokenizer = functools.partial(ngrams, numbers=True, normalize=True)
     tdm       = TermDocumentMatrix(cutoff=1, tokenizer=tokenizer)
