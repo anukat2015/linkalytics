@@ -2,7 +2,7 @@ language: python
 os:
     - osx
 virtualenv:
-  system_site_packages: true
+  system_site_packages: false
 python:
     - '3.5'
     - '3.4'
