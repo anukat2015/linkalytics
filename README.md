@@ -1,5 +1,8 @@
 Linkalytics
 ===========
+
+[![GitHub version](https://badge.fury.io/gh/qadium-memex%2Flinkalytics.svg)](https://badge.fury.io/gh/qadium-memex%2Flinkalytics) [![Build Status](https://travis-ci.org/qadium-memex/linkalytics.svg?branch=master)](https://travis-ci.org/qadium-memex/linkalytics)
+
 Backend analytics to link together disparate data
 
 Getting Started with Linkalytics
@@ -42,7 +45,11 @@ In the second, type
 $ python3 dowork.py instagram twitter phone
 ```
 
-## [Documentation](https://swaggerhub.com/api/jjangsangy/linkalytics)
+
+[Documentation](https://swaggerhub.com/api/jjangsangy/linkalytics)
+------------------------------------------------------------------
+
+[![Swagger Badge](http://online.swagger.io/validator/?url=https://raw.githubusercontent.com/qadium-memex/linkalytics/master/swagger.yaml)](https://swaggerhub.com/api/jjangsangy/linkalytics)
 
 Interactive documentation for the Linkalytics API can be found [here](https://swaggerhub.com/api/jjangsangy/linkalytics).
 
