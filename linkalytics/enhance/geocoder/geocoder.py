@@ -2,7 +2,7 @@ import functools
 
 from geopy.geocoders import GoogleV3
 
-from .. utils import memoize
+from utils import memoize
 
 @memoize
 def get_lat_long(geocoder, query):

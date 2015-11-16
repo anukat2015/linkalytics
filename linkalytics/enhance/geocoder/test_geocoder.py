@@ -1,5 +1,5 @@
 import nose
-from .. utils import with_test
+from utils import with_test
 from . geocoder import run
 
 @with_test(run, 'city')

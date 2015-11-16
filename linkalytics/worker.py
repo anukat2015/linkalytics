@@ -2,7 +2,7 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from enhance import youtube
+from enhance import youtube, twitter, geocoder, instagrammer, phonenumber
 from . import coincidence
 from . import geocoder
 from . import imgmeta

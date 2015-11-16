@@ -3,8 +3,8 @@ import logging
 import re
 import requests
 
-from .. environment import cfg
-from .. utils import sanitize, uniq_lod
+from environment import cfg
+from utils import sanitize, uniq_lod
 
 logging.basicConfig()
 log = logging.getLogger("linkalytics.instagram")
