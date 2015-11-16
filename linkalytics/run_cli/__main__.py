@@ -4,17 +4,17 @@ from __future__ import print_function
 
 import json
 import sys
-from argparse        import ArgumentParser
-from logging         import CRITICAL
-
-from .. coincidence import specific_term
-
 import functools
-from factor.lsh import lsh
-from factor.ngrams import TermDocumentMatrix, ngrams, filter_ngrams
-from .. __version__ import __version__, __build__
-from .. search      import query_ads, get_results
-from .. utils       import SetLogging, timer
+
+from argparse  import ArgumentParser
+from logging   import CRITICAL
+
+from .. factor_validator import coincidence
+from .. factor.lsh       import lsh
+from .. factor.ngrams    import TermDocumentMatrix, ngrams, filter_ngrams
+from .. __version__      import __version__, __build__
+from .. search           import query_ads, get_results
+from .. utils            import SetLogging, timer
 
 def query_ad_ids(tdm, value="text"):
     """
@@ -56,7 +56,7 @@ def tdm(args):
 
 def term(args):
 
-    output = specific_term(args)
+    output = coincidence.specific_term(args)
 
     print()
     print("Phrase:        {phrase}".format(phrase=output['phrase']))
