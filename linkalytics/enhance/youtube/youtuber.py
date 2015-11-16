@@ -2,8 +2,8 @@ from apiclient.discovery import build
 import re
 import logging
 
-from environment import cfg
-from utils import uniq_lod, sanitize
+from ... environment import cfg
+from ... utils import sanitize
 
 logging.basicConfig()
 log = logging.getLogger("linkalytics.youtube")

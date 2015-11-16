@@ -1,6 +1,7 @@
 import phonenumbers
 from phonenumbers import geocoder, carrier, timezone
-from utils import uniq_lod
+
+from ... utils import uniq_lod
 
 def run(node):
     """ This returns any US phone numbers in the text.
