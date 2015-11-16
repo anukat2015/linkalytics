@@ -1,6 +1,6 @@
 import functools
 
-from .. search import get_results
+from ... search import get_results
 from .  entropy import TermDocumentMatrix, ngrams
 
 def run(node):

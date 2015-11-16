@@ -14,9 +14,9 @@ class TestNearDuplicates(TestCase):
     def test_duplicates(self):
 
         hashcorpus = [
-            nearduplicates.run_getminhash({'id': i,'text': x})
-                for i, x in enumerate(corpus)
-        ]
+            nearduplicates.run_getminhash({'id': i, 'text': x})
+            for i, x in enumerate(corpus)
+            ]
         doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch(
             {
                 'threshold': 0.7,

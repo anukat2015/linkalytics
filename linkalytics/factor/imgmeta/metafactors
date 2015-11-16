@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import json
-import imgmeta
+
+from factor import imgmeta
+
 
 def main():
     parser = argparse.ArgumentParser(description="Find related ads via requested factors.")

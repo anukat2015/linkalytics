@@ -2,21 +2,19 @@
 
 from __future__ import print_function
 
+import json
 import sys
+from argparse        import ArgumentParser
+from logging         import CRITICAL
+
+from .. coincidence import specific_term
 
 import functools
-import json
-
-from logging         import CRITICAL
-from argparse        import ArgumentParser
-
+from factor.lsh import lsh
+from factor.ngrams import TermDocumentMatrix, ngrams, filter_ngrams
 from .. __version__ import __version__, __build__
-from .. utils       import SetLogging, timer
 from .. search      import query_ads, get_results
-
-from .. ngrams      import TermDocumentMatrix, ngrams, filter_ngrams
-from .. lsh         import lsh
-from .. coincidence import specific_term
+from .. utils       import SetLogging, timer
 
 def query_ad_ids(tdm, value="text"):
     """

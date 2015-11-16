@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from .. search import get_results, phone_hits, both_hits
-from .. run import Arguments
+from ... search import get_results, phone_hits, both_hits
+
+from ... run_cli import Arguments
 
 from multiprocessing.dummy import Pool as ThreadPool
 

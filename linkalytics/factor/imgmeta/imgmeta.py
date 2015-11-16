@@ -1,7 +1,7 @@
 import redis
 import datetime
 
-from .. environment import cfg
+from ... environment import cfg
 
 conn = redis.Redis(host=cfg['redis']['host'])
 

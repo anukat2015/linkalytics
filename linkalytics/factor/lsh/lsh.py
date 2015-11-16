@@ -1,14 +1,15 @@
-from . import nearduplicates
+from __future__ import print_function
 
-from .. run    import Arguments
-from .. search import get_results
+from ... run_cli import Arguments
+from ... search import get_results
+from . import nearduplicates
 
 def lsh(args, threshold=0.7):
     results    = get_results(args.query[0], int(args.size[0]), True)
 
     hashcorpus = [
         nearduplicates.run_getminhash({'id': key, 'text': value['text']})
-            for key, value in results.items() if 'text' in value
+        for key, value in results.items() if 'text' in value
         ]
 
     doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch(
