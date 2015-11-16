@@ -1,5 +1,4 @@
-import nose
-from utils import with_test
+from ... utils import with_test
 from . instagrammer import run
 
 @with_test(run, 'instagram')

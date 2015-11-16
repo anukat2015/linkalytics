@@ -1,4 +1,4 @@
-from utils import with_test
+from ... utils import with_test
 
 from . twitter import run
 
