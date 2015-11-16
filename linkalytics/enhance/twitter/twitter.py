@@ -1,8 +1,10 @@
 import tweepy
 import logging
 import re
-from environment import cfg
-from utils import retry, sanitize, uniq_lod
+
+from ... environment import cfg
+
+from ... utils import retry, sanitize, uniq_lod
 
 logging.basicConfig()
 log = logging.getLogger("linkalytics.twitter")
