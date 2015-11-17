@@ -4,9 +4,14 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from . enhance import youtube, twitter, geocoder, instagrammer, phonenumber
+from . factor  import ngrams, lsh, imgmeta
 
 from . environment import cfg
-from . tasks import TaskMux
+from . tasks       import TaskMux
+
+from . import search
+
+from . factor_validator import coincidence
 
 mux = TaskMux(host=cfg['disque']['host'])
 
