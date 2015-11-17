@@ -3,7 +3,7 @@ Linkalytics
 
 [![License][License Badge]][License] [![Version][Version Badge]][Version] [![Travis][Travis Badge]][Travis]
 
-Backend analytics to link together disparate data
+Analytics to link data
 
 Getting Started with Linkalytics
 --------------------------------
