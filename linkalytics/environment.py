@@ -8,15 +8,22 @@ This is a Python file, so you can customize its behavior as you see fit.
 
 To use these configurations, you can use, for instance
 
->>> import environment as env
->>> print(env.cfg['twitter']['access_token'])
 """
+from __future__ import print_function
+
 import os
+import logging
+import sys
 import pytoml as toml
 
-prod_env = os.getenv('PRODUCTION', False)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('environment')
 
-
+__all__ = (
+    'load_config',
+    'get_config',
+    'cfg'
+)
 
 def load_config(name):
 
@@ -30,15 +37,18 @@ def load_config(name):
             config = toml.load(fin)
         return config
     except:
-        print("ERROR: Did you remember to generate config files with credstmpl? Check out credstmpl at https://github.com/qadium/credstmpl -- you'll need to run `credstmpl filename.extension.j2`")
+        print("ERROR: Did you remember to generate config files with credstmpl?", file=sys.stderr)
+        print("Check out credstmpl at https://github.com/qadium/credstmpl", file=sys.stderr)
+        print("you'll need to run `credstmpl filename.extension.j2`", file=sys.stderr)
 
-config = {}
-if prod_env:
-    print("Using production environment.")
-    config = load_config("production")
-else:
-    print("Using development environment.")
-    config = load_config("develop")
+def get_config():
+    env = os.getenv('PRODUCTION', None)
+    cfg = load_config('production') if env else load_config('develop')
 
-cfg = load_config("common")
-cfg.update(config)
+    cfg.update(load_config("common"))
+
+    logger.debug("Using {env} environment.".format(env=env))
+
+    return cfg
+
+cfg = get_config()

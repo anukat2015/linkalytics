@@ -1,9 +1,45 @@
 import functools
 import time
 import logging
+import requests
 
-from contextlib import contextmanager
+from requests          import Request
+from requests.adapters import HTTPAdapter
+from contextlib        import contextmanager
+from urllib.parse      import urljoin
 
+__all__ = ['get_session', 'push_url', 'memoize', 'timer', 'SetLogging']
+
+def get_session(proxy=None, max_retries=3):
+    session = requests.session()
+    session.mount('http://',  HTTPAdapter(max_retries=max_retries))
+    session.mount('https://', HTTPAdapter(max_retries=max_retries))
+    session.proxies = { 'https': proxy, 'http':  proxy } if proxy else {}
+    return session
+
+def push_url(resource, proxy=None):
+
+    def wrapper(interface):
+
+        @functools.wraps(interface)
+        def connection(*args, **kwargs):
+            session = get_session(proxy=proxy)
+
+            params  = interface(*args, **kwargs)
+
+            if resource not in params['url']:
+                params['url'] = urljoin(resource, params['url'])
+
+            request = Request(method='GET',
+                              headers={'Content-Type': 'application/json'},
+                              **params
+                              )
+            response = session.send(request.prepare(), verify=False)
+            return response.json()
+
+        return connection
+
+    return wrapper
 
 
 def memoize(func):
