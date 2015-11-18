@@ -42,7 +42,6 @@ def run_api(endpoint):
     results = mux.retrieve(jobid)
     return jsonify(**results)
 
-
 @app.route('/{version}/enhance/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def enhance(endpoint):
