@@ -18,9 +18,9 @@ addons:
     - libenchant-dev
     - tcl8.5
 before_install:
+    - export PATH=$HOME/miniconda/bin:$PATH
     - ./scripts/build_conda.sh
     - ./scripts/build_disque.sh
-    - export PATH=$HOME/miniconda/bin:$PATH
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
     - pip install -r requirements.txt
