@@ -4,7 +4,7 @@ import re
 import requests
 
 from ... environment import cfg
-from ... utils import sanitize, uniq_lod
+from ... utils import sanitize, uniq_lod, push_url
 
 logging.basicConfig()
 log = logging.getLogger("linkalytics.instagram")
@@ -16,24 +16,37 @@ api = instagram.client.InstagramAPI(
 )
 instagram_regex = re.compile('instagram\s*-?@?:?;?(\.com\/)?_?\.?\s*([^\s^\/]*)',re.IGNORECASE)
 
-def get_instagram_id(username):
-	#It seems difficult to find the id from a username using instagramAPI - figure out if this is possible later
-	instagram_request = requests.get('https://api.instagram.com/v1/users/search?access_token={}&q={}'.format(cfg['instagram']['access_token'], username))
-	id_num = instagram_request.json()['data'][0]['id']
-	return id_num
+def get_user_id(username):
+    return get_instagram('users/search', q=username)['data'][0]['id']
 
-def get_user(user_id):
-	return api.user(user_id)
+def get_user(uid):
+    return get_instagram('users/{uid}'.format(uid=uid))['data']
+
+def get_recent_posts(uid):
+    return get_instagram('users/{uid}/media/recent'.format(uid=uid))['data']
+
+@push_url('https://api.instagram.com/v1/')
+def get_instagram(endpoint, **kwargs):
+    query = {
+		'url': endpoint,
+		'params': {
+			'access_token': cfg['instagram']['access_token']
+		}
+	}
+    query['params'].update(kwargs)
+    return query
 
 def run(node):
-	results = []
-	text = sanitize(node['text'])
-	for identity in re.finditer(instagram_regex, text):
-		username = identity.group(2).lower()  # username is always the second group in the regex match
-		instagram_id = get_instagram_id(username)
-		output_node = {
-			'id'			: instagram_id,
-			'username'		: username
-		}
-		results.append(output_node)
-	return {'instagram': uniq_lod(results, 'id')}
+    results = []
+    text = sanitize(node['text'])
+
+    for identity in re.finditer(instagram_regex, text):
+        username = identity.group(2).lower()  # username is always the second group in the regex match
+        uid = get_user_id(username)
+
+        user, posts = get_user(uid), get_recent_posts(uid)
+        user['posts'] = posts
+
+        results.append(user)
+
+    return {'instagram': uniq_lod(results, 'id')}
