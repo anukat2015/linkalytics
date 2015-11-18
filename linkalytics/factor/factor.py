@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import collections
+import re
 
 class FactorLookupDidNotReturnList(Exception):
     def __init__(self, values):
@@ -58,7 +59,14 @@ class Factor(metaclass=ABCMeta):
     def __init__(self, field_name):
         self.field = field_name
 
-    def suggest(self, ad_id, debug=False):
+    def twitter(self, field_value):
+        twitter_regex = re.compile('twitter\s*-*@*:*;*(\.com\/)?_*\.*\s*([^\s^\/]*)', re.IGNORECASE)
+        twitter_id = []
+        for identity in re.finditer(twitter_regex, field_value):
+            twitter_id.append(identity.group(2).lower())
+        return twitter_id
+
+    def suggest(self, ad_id, social_media=False, debug=False):
         """ The suggest function suggests other ad_ids that share this
             field with the input ad_id.
 
@@ -84,6 +92,13 @@ class Factor(metaclass=ABCMeta):
         }
         if isinstance(field_values, list):
             for field_value in field_values:
+                if social_media is True:
+                    try:
+                        field_value = self.twitter(field_value)[0]
+                        print("social media:", field_value)
+                    except IndexError:
+                        print("No Social Media")
+                        pass
                 ads = set(self.reverse_lookup(field_value))
                 try:
                     ads.remove(ad_id)
