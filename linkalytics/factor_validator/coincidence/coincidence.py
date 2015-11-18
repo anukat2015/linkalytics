@@ -6,7 +6,7 @@ from ... run_cli import Arguments
 
 from multiprocessing.dummy import Pool as ThreadPool
 
-pool = ThreadPool(8)
+pool = ThreadPool(4)
 
 def unique_features(feature, data):
     features = set()
