@@ -5,6 +5,9 @@ python:
 notifications:
   email: false
 cache: apt
+services:
+  - redis-server
+  - elasticsearch
 addons:
   apt:
     packages:
@@ -13,11 +16,11 @@ addons:
     - liblapack-dev
     - gfortran
     - libenchant-dev
+    - tcl8.5
+env:
+    PATH="$HOME/miniconda/bin:$PATH"
 before_install:
-    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-    - bash miniconda.sh -b -p $HOME/miniconda
-    - export PATH="$HOME/miniconda/bin:$PATH"
-    - conda update --yes conda
+    - ./scripts/build_conda.sh
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
     - pip install -r requirements.txt
