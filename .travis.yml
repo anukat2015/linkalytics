@@ -30,5 +30,5 @@ script: nosetests --with-coverage --cover-package=linkalytics
 env:
   global:
     - secure: fdeHssa67O8nIATh6Ik8zjaqY6BvrWgc3eJU9i9dzOCbETx72Ih+v7zTnm2ba/gR2+DVe1yhvxS7uRd4Kwng6GX9Bq4OZijBbLKaSxHXM7IPWB4jFwB5PXx5tKX1Jrg7dKZI6O6p+tJDVgyt0YBKzniMuQQCq7rFSZCNH1soBZCC8btbtV+acKA8hFQwJxh3xq2qYQmdUfOe2EdfpYhnGlwnZ95uLJV8gFleeuB6bHdXGd6QN93jj5aZsWz7MJa9ZAQqIiFWolqZ/uiUtqQs2PKmpSo+X8ShQOOFj+d43FJOUO9N114bHLBq+CPbXqmZIKEd7LTOLXWZ8y7iyWrbzcw59dvIax7TQJOZY4m7Ykpzy1pg4E+o1gaBSs8SXROP9thNN3pu0KZRu+aCceLLP1iFFvF0ypfrRLhJdepkMS9J7iDiMlKAZfL+SYBsfJybQLn5ACJ0bcDNfEGiVYNF44xtp0k9CVngU2Ip1NE9Qk48zJqW8FFejeb0N704C2pHyPhAWHfiTIHO7kAlg3X5JWQSSvwgib/8If3L+hi3xaGfULrp7d0HSQ4LXsi65pOUK0ikt6kfGdhhmiP6TKmZBubMRVi3zfZW0I7/IMkd+LYfnjPzo7jllhkjhpEWYLi+oZH7xfhI1sHEn39Egl2RYmIwl/d9wXTsboilIC57jqE=
-    - PATH=$HOME/miniconda/bin
+    - PATH=$HOME/miniconda/bin:$PATH
 
