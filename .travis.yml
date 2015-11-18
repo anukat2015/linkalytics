@@ -19,7 +19,7 @@ addons:
     - tcl8.5
 before_install:
     - ./scripts/build_conda.sh
-    - export PATH="$HOME/miniconda/bin:$PATH"
+    - ./scripts/build_disque.sh
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
     - pip install -r requirements.txt
