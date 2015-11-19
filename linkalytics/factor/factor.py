@@ -95,9 +95,9 @@ class Factor(metaclass=ABCMeta):
                 if social_media is True:
                     try:
                         field_value = self.twitter(field_value)[0]
-                        print("social media:", field_value)
+                        # print("social media:", field_value)
                     except IndexError:
-                        print("No Social Media")
+                        # print("No Social Media")
                         pass
                 ads = set(self.reverse_lookup(field_value))
                 try:
@@ -105,7 +105,7 @@ class Factor(metaclass=ABCMeta):
                 except KeyError:    # a KeyError means that the reverse_lookup failed to find the originating ad itself.
                     raise FactorReverseLookupFailedToFindSelf(ad_id, ads)
                 for x in ads:
-                    suggestions[ad_id][self.field][x].append(field_value)
+                    suggestions[ad_id][self.field][field_value].append(x)
                 if debug:
                     for x in ads:
                         assert field_value == self.lookup(x)
