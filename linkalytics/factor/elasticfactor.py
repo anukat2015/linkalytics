@@ -9,8 +9,6 @@ es_log = logging.getLogger("elasticsearch")
 es_log.setLevel(logging.CRITICAL)
 urllib3_log = logging.getLogger("urllib3")
 urllib3_log.setLevel(logging.CRITICAL)
-
-
 urllib3.disable_warnings()
 
 
@@ -133,36 +131,48 @@ def factor_constructor(seed, url, factors):
     return combo
 
 
-def extend(seed, url, factors1, item, factors2):
+def extend(data, url, item, factors2, degree):
     """
-    extend iterates on factor_constructor and adds data to your original dictionary based on related items
+    extend iterates the original dictionary and adds the original based on hits; the seed refers to the input ad_id, the url is for Elastic Search, the factors1 is for the initial factors, the item is what you iterate on, and factors2 is the second list of factors for iterating
     """
-    original = factor_constructor(seed, url, factors1)
-    x = {}
-    x["original"] = original
-    x["extended"] = {}
+    existing_data = set()
+    for i in data:
+        existing_data.add(i)
+    print("************", "\n", existing_data)
+    data[degree] = {}
     ad_ids_2 = set()
-    for k1 in original[seed]:
-        for k, v in original[seed][k1].items():
-            if (k == item) or (item == "all"):
-                for i in original[seed][k1][k]:
-                    ad_ids_2.add(i)
+    for k1, v1 in data["original"].items():
+        for k2, v2 in v1.items():
+            if (k2 == item) or (item == "all"):
+                for v3 in v2.values():
+                    for i in v3:
+                        ad_ids_2.add(i)
     for ad_id in ad_ids_2:
         addition = factor_constructor(ad_id, url, factors2)
         print(".")
-        for k1 in addition:
-            if k1 not in original:
-                x["extended"][k1] = {}
-                for k2 in addition[k1]:
-                    for k3 in addition[k1][k2]:
-                        if original[seed][k2][k3]:
-                            x["extended"][k1] = {}
-                        else:
-                            x["extended"][k1][k2] = {}
-                            x["extended"][k1][k2][k3] = addition[k1][k2][k3]
-    return x
+        try:
+            for k1 in addition:
+                if k1 not in data["original"]:
+                    for k2 in addition[k1]:
+                        for k3 in addition[k1][k2]:
+                            for j in existing_data:
+                                check = {}
+                                for key in data[j].keys():
+                                    try:
+                                        if data[j][key][k2][k3]:
+                                            check.add(1)
+                                    except:
+                                        pass
+                            if len(check) == 0:
+                                pass
+                            else:
+                                data[degree][k1] = {}
+                                data[degree][k1][k2] = {}
+                                data[degree][k1][k2][k3] = addition[k1][k2][k3]
+        except TypeError:
+            pass
 
-
+    return data
 
 
 def main():
@@ -172,10 +182,23 @@ def main():
     # ad_id = "31318107"
     # ad_id2 = "62442471"
     """
-    Use...
+    Here's an example using the factors and the factor constructor
     """
     a = factor_constructor(ad_id, url, ["phone", "email", "text", "title"])
-    print(json.dumps(a))
-    print("_________")
-    b = extend(ad_id, url, ["phone", "email", "text", "title"], "5023030050", ["phone"])
+    x = {}
+    x["original"] = a
+    print(json.dumps(x))
+    b = extend(x, url, "all", ["phone", "email", "text", "title"], "ext2")
     print(json.dumps(b))
+    c = extend(b, url, "all", ["phone"], "ext3")
+    print(json.dumps(c))
+
+    ad_ids_extended = set()
+    for k1 in b:
+        for k2 in b[k1]:
+            for k3 in b[k1][k2]:
+                for k4 in b[k1][k2][k3]:
+                    for k5 in b[k1][k2][k3][k4]:
+                        ad_ids_extended.add(k5)
+    print("____+_+____")
+    print(ad_ids_extended)
