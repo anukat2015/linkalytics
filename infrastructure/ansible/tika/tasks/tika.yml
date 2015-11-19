@@ -1,0 +1,44 @@
+ # Install Tika
+
+---
+- name: Add the webupd8 APT repository key
+  tags:
+    - java
+    - java-webupd8
+  apt_key: data="{{ lookup('file', 'webupd8.key.asc') }}" state=present
+  # Use a static file because right now using just an ID fails
+
+- name: Add the webupd8 APT repository
+  tags:
+    - java
+    - java-webupd8
+  apt_repository: repo="deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" state=present
+
+- name: Automatically select the Oracle License
+  tags: java
+  shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+  changed_when: false
+
+- name: Install Oracle Java
+  tags: java
+  apt: pkg={{ item }} update-cache=yes state=latest
+  when: item|search("^oracle")
+  with_items: java_versions
+
+- name: Install add-apt-repostory
+  apt: name=software-properties-common state=latest
+
+- name: Accept Java 8 Licence
+  shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | tee /etc/oracle-java-8-licence-acceptance | /usr/bin/debconf-set-selections
+  args:
+    creates: /etc/oracle-java-8-licence-acceptance
+
+- name: Install Oracle Java 8
+  apt: name={{item}} state=latest
+  with_items:
+    - oracle-java8-installer
+    - ca-certificates
+    - oracle-java8-set-default
+
+- name: Download Tika
+  command: wget ftp://apache.cs.utah.edu/apache.org/tika/tika-server-1.11.jar -O tika-server.jar

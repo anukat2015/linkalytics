@@ -23,6 +23,10 @@
   roles:
     - redis
 
+- hosts: tika-0
+  roles:
+    - tika
+
 - hosts: linkalytics
   handlers:
     - name: Restart server

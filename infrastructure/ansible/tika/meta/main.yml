@@ -1,0 +1,3 @@
+---
+dependencies:
+  - { role: supervisor, service: tika-server, service_conf: tika.conf }
