@@ -92,13 +92,13 @@ class Factor(metaclass=ABCMeta):
         }
         if isinstance(field_values, list):
             for field_value in field_values:
-                if social_media is True:
-                    try:
-                        field_value = self.twitter(field_value)[0]
-                        # print("social media:", field_value)
-                    except IndexError:
-                        # print("No Social Media")
-                        pass
+                # if social_media is True:
+                #     try:
+                #         field_value = self.twitter(field_value)[0]
+                #         # print("social media:", field_value)
+                #     except IndexError:
+                #         # print("No Social Media")
+                #         pass
                 ads = set(self.reverse_lookup(field_value))
                 try:
                     ads.remove(ad_id)
