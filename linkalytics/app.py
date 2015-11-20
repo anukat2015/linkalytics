@@ -20,6 +20,8 @@ from flask.ext.restful   import Api
 from . environment import cfg
 from . tasks       import TaskMux
 
+from . factor import tika
+
 app = Flask(__name__)
 
 # By default this sets CORS access to resource endpoints to `*`
@@ -45,10 +47,17 @@ def run_api(endpoint):
 @app.route('/{version}/enhance/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def enhance(endpoint):
-    record = request.get_json()
+    record  = request.get_json()
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
     return jsonify(results=results, endpoint=endpoint, **record)
+
+@app.route('/{version}/metadata'.format(version=version), methods=['POST'])
+@basic_auth.required
+def metadata():
+    record  = request.get_json()
+    results = tika.run(record)
+    return jsonify(**results)
 
 @app.after_request
 def after_request(response):
