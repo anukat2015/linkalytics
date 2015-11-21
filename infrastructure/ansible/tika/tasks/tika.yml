@@ -5,8 +5,7 @@
   tags:
     - java
     - java-webupd8
-  apt_key: data="{{ lookup('file', 'webupd8.key.asc') }}" state=present
-  # Use a static file because right now using just an ID fails
+  apt_key: state=present data="{{ lookup('file', 'webupd8.key.asc') }}"
 
 - name: Add the webupd8 APT repository
   tags:
@@ -40,5 +39,5 @@
     - ca-certificates
     - oracle-java8-set-default
 
-- name: Download Tika
-  command: wget ftp://apache.cs.utah.edu/apache.org/tika/tika-server-1.11.jar -O tika-server.jar
+- name: Upload Tika
+  synchronize: src=tika-server.jar dest=/home/ansible/tika-server.jar

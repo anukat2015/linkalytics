@@ -4,7 +4,22 @@ import json
 
 from urllib.parse import urlparse
 
-__all__ = 'common_crawl', 'filter_docs'
+__all__ = 'common_crawl', 'filter_docs', 'get_domain'
+
+def get_domain(url):
+    """
+    :params url: str
+        Input url string, which can be a fully qualified domain
+
+    :returns: parsed domain url
+    :rtype  : list
+    """
+    parsed = urlparse(url).netloc.split('.')
+
+    if 'www' in parsed:
+        parsed.remove('www')
+
+    return parsed
 
 def common_crawl(url):
     """
@@ -16,11 +31,7 @@ def common_crawl(url):
     :return: docs
     :rtype:  list
     """
-    parse = list(reversed(urlparse(url).netloc.split('.')))
-    if 'www' in parse:
-        parse.remove('www')
-
-    domain = '.'.join(parse)
+    domain = '.'.join(reversed(get_domain(url)))
     resp   = requests.get('http://urlsearch.commoncrawl.org/download?q={domain}'.format(domain=domain))
 
     return [json.loads(i.decode('utf-8')).get('url') for i in resp.iter_lines()]
