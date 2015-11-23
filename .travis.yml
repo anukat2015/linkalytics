@@ -29,6 +29,7 @@ install:
     - credstmpl linkalytics/environment/*.j2
 before_script:
     - sleep 10
+    - find . -type f -name '*disque*'
 script: nosetests --with-coverage --cover-package=linkalytics
 env:
   global:
