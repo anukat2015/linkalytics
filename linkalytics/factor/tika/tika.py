@@ -19,7 +19,19 @@ __all__ = 'extract_metadata', 'get_metadata', 'run', 'redis_key', 'json_deserial
 
 r = redis.Redis(host=cfg['redis']['host'])
 
+def json_deserializer(b):
+    """
+    :param b: bytes
+        Bytes of unencoded strings
+
+    :return: output
+        Encoded as UTF-8
+    :rtype:  str
+    """
+    return json.loads(b.decode('utf-8'))
+
 def extract_metadata(document, host='localhost', port=9998):
+
     tika_url = 'http://{host}:{port}/meta'.format(host=host, port=port)
     headers  = {
         'Accept': 'application/json'
@@ -36,7 +48,17 @@ def extract_metadata(document, host='localhost', port=9998):
     return metadata.json()
 
 def get_metadata(url):
-    metadata, tempdir = None,  tempfile.mkdtemp()
+    """
+    Manually goes to URL endpoint, and downloads file to temporary directory.
+    Then tries to extract the metadata from a Tika Server.
+
+    :param url: str
+        Fully qualified url endpoint leading to a file
+
+    :return: filename, None or filename, metadata
+    :rtype: tuple
+    """
+    tempdir, metadata = tempfile.mkdtemp(), None
 
     filename = url.split('/')[-1]
     filepath = os.sep.join([tempdir, filename])
@@ -50,17 +72,15 @@ def get_metadata(url):
 
     return filename, metadata
 
-def json_deserializer(b):
-    return json.loads(b.decode('utf-8'))
-
 def redis_load(url, redis_instance):
     """
     :param url:
         A fully qualified url to a document
-    :param redis_instance:
+    :param redis_instance: Redis<Instance>
         A redis client instance
 
     :return: redis_value
+        Serialized values retried from redis
     :rtype:  dict
     """
     redis_value = redis_instance.get(url)
@@ -77,6 +97,19 @@ def redis_load(url, redis_instance):
     return (url, json_deserializer(redis_value)) if redis_value else (url, {})
 
 def redis_docs(url, redis_instance):
+    """
+    A proxy which queries a redis instance for a cached copy of document urls.
+    If docs do not exist, dispatches to common-crawl to retrieve the list of documents.
+
+    :param url: str
+        URL to a particular domain.
+    :param redis_instance: <Redis>
+        A redis client instance
+
+    :return: docs
+        List of document URL's
+    :rtype:  list
+    """
     key = 'crawl:{domain}'.format(domain='.'.join(get_domain(url)))
     if redis_instance.llen(key):
         docs = [i.decode('utf-8') for i in redis_instance.lrange(key, 0, redis_instance.llen(key))]
@@ -87,6 +120,21 @@ def redis_docs(url, redis_instance):
 
 
 def run(node):
+    """
+    Primary entry-point for running this module.
+
+    :param node: dict
+    {
+        "url": "https://some-site.com"
+    }
+
+    :return:
+    {
+        document_url: metadata,
+        ...
+    }
+    :rtype:  dict
+    """
     mapper    = lambda x: redis_load(x, r)
     url       = node.get('url', 'https://google.com')
     pool      = ThreadPool(32)
