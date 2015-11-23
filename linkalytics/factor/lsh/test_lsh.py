@@ -42,3 +42,4 @@ class TestNearDuplicates(TestCase):
 
 
             self.assertEqual(corpus[dup], corpus[-(i-1)])
+

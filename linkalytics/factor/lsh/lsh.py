@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from ... run_cli import Arguments
 from ... search import get_results
+
 from . import nearduplicates
 
 def lsh(args, threshold=0.7):

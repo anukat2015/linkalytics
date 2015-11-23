@@ -16,5 +16,6 @@ class TestExtract(TestCase):
 
 class TestTika(TestCase):
 
-    def test_redis_load(self):
+    def test_redis_save(self):
         self.assertTrue(any(tika.redis_load('http://toysrus.com', redis_instance)))
+

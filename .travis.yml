@@ -27,6 +27,8 @@ install:
     - python -m nltk.downloader stopwords
     - pip install git+https://github.com/qadium/credstmpl.git
     - credstmpl linkalytics/environment/*.j2
+before_script:
+    - sleep 10
 script: nosetests --with-coverage --cover-package=linkalytics
 env:
   global:
