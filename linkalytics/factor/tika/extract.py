@@ -14,12 +14,17 @@ def get_domain(url):
     :returns: parsed domain url
     :rtype  : list
     """
-    parsed = urlparse(url).netloc.split('.')
+    parsed = urlparse(url)
 
-    if 'www' in parsed:
-        parsed.remove('www')
+    if not parsed.scheme:
+        return get_domain('http://' + url)
 
-    return parsed
+    domain = parsed.netloc.split('.')
+
+    if 'www' in domain:
+        domain.remove('www')
+
+    return domain
 
 def common_crawl(url):
     """

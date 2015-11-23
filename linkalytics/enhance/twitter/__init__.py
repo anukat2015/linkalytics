@@ -1,1 +1,1 @@
-from . piscina_twitter import run
+from . twitter import run
