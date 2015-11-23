@@ -30,6 +30,7 @@ install:
 before_script:
     - sleep 10
     - ./disque/src/disque-server &
+    - java -version
 script: nosetests --with-coverage --cover-package=linkalytics
 env:
   global:
