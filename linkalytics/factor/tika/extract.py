@@ -3,6 +3,7 @@ import requests
 import json
 
 from urllib.parse import urlparse
+from operator     import methodcaller
 
 __all__ = 'common_crawl', 'filter_docs', 'get_domain'
 
@@ -36,10 +37,12 @@ def common_crawl(url):
     :return: docs
     :rtype:  list
     """
+    decoder, getter = methodcaller('decode', 'utf-8'), methodcaller('get', 'url')
+
     domain = '.'.join(reversed(get_domain(url).split('.')))
     resp   = requests.get('http://urlsearch.commoncrawl.org/download?q={domain}'.format(domain=domain))
 
-    return [json.loads(i.decode('utf-8')).get('url') for i in resp.iter_lines()]
+    return list(map(getter, map(json.loads, map(decoder, resp.iter_lines()))))
 
 def filter_docs(docs, url=None):
     """

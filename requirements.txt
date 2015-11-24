@@ -21,3 +21,5 @@ pyenchant
 gunicorn
 tornado
 coverage
+redis
+hiredis

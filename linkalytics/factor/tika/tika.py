@@ -2,6 +2,7 @@
 
 import requests
 import tempfile
+import operator
 import shutil
 import redis
 import json
@@ -28,7 +29,7 @@ def json_deserializer(b):
         Encoded as UTF-8
     :rtype:  str
     """
-    return json.loads(b.decode('utf-8'))
+    return json.loads(b.decode('utf-8')) if b else None
 
 def extract_metadata(document, host='localhost', port=9998):
 
@@ -110,9 +111,11 @@ def redis_docs(url, redis_instance):
         List of document URL's
     :rtype:  list
     """
-    key = 'crawl:{domain}'.format(domain=get_domain(url))
+    decoder = operator.methodcaller('decode', 'utf-8')
+    key     = 'crawl:{domain}'.format(domain=get_domain(url))
+
     if redis_instance.llen(key):
-        docs = [i.decode('utf-8') for i in redis_instance.lrange(key, 0, redis_instance.llen(key))]
+        docs = list(map(decoder, redis_instance.lrange(key, 0, -1)))
     else:
         docs = filter_docs(common_crawl(url), get_domain(url))
         redis_instance.lpush(key, *docs)
