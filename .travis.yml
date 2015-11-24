@@ -30,7 +30,7 @@ install:
 before_script:
     - sleep 10
     - ./disque/src/disque-server &
-    - java -jar ./infrastructure/ansible/tika/files/tika-server.jar -h 0.0.0.0 &
+    - java -jar infrastructure/ansible/tika/files/tika-server.jar -h 0.0.0.0 &
     - python -m linkalytics &
     - python manage.py runserver &
 script: nosetests --with-coverage --cover-package=linkalytics
