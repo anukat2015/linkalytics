@@ -92,3 +92,4 @@ data.json
 clusters/**
 src/**
 nodes.conf
+*.pid
