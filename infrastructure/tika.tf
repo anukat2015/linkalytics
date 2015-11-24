@@ -1,7 +1,7 @@
 resource "google_compute_instance" "tika-server" {
   name          = "tika-${count.index}"
   description   = "The VM hosting a tika server"
-  machine_type  = "n1-standard-1"
+  machine_type  = "n1-highmem-2"
   zone          = "us-central1-b"
   tags          = ["memex", "linkalytics", "tika", "server"]
 

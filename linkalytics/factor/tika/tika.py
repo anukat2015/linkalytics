@@ -110,11 +110,11 @@ def redis_docs(url, redis_instance):
         List of document URL's
     :rtype:  list
     """
-    key = 'crawl:{domain}'.format(domain='.'.join(get_domain(url)))
+    key = 'crawl:{domain}'.format(domain=get_domain(url))
     if redis_instance.llen(key):
         docs = [i.decode('utf-8') for i in redis_instance.lrange(key, 0, redis_instance.llen(key))]
     else:
-        docs = filter_docs(common_crawl(url), '.'.join(get_domain(url)))
+        docs = filter_docs(common_crawl(url), get_domain(url))
         redis_instance.lpush(key, *docs)
     return docs
 

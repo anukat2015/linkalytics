@@ -12,7 +12,7 @@ def get_domain(url):
         Input url string, which can be a fully qualified domain
 
     :returns: parsed domain url
-    :rtype  : list
+    :rtype  : str
     """
     parsed = urlparse(url)
 
@@ -24,7 +24,7 @@ def get_domain(url):
     if 'www' in domain:
         domain.remove('www')
 
-    return domain
+    return '.'.join(domain)
 
 def common_crawl(url):
     """
@@ -36,7 +36,7 @@ def common_crawl(url):
     :return: docs
     :rtype:  list
     """
-    domain = '.'.join(reversed(get_domain(url)))
+    domain = '.'.join(reversed(get_domain(url).split('.')))
     resp   = requests.get('http://urlsearch.commoncrawl.org/download?q={domain}'.format(domain=domain))
 
     return [json.loads(i.decode('utf-8')).get('url') for i in resp.iter_lines()]
@@ -46,6 +46,7 @@ def filter_docs(docs, url=None):
     Filters out downloadable content from a group of urls.
 
     :param docs: list
+    :param url:  str
 
     :return: documents
     :rtype:  list
@@ -54,7 +55,7 @@ def filter_docs(docs, url=None):
     filetypes = 'pdf', 'doc', 'xls', 'ppt', 'odp', 'ods', 'docx', 'xlsx', 'pptx'
     for doc in docs:
         if any(doc.lower().endswith(types) for types in filetypes):
-            domain = '.'.join(get_domain(doc))
+            domain = get_domain(doc)
             if not url or url in domain:
                 documents.append(doc)
     return documents
