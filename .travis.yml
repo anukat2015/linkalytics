@@ -20,19 +20,12 @@ addons:
 before_install:
     - export PATH=$HOME/miniconda/bin:$PATH
     - ./scripts/build_conda.sh
-    - ./scripts/build_disque.sh
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
     - pip install -r requirements.txt
     - python -m nltk.downloader stopwords
     - pip install git+https://github.com/qadium/credstmpl.git
     - credstmpl linkalytics/environment/*.j2
-before_script:
-    - sleep 10
-    - ./disque/src/disque-server &
-    - java -jar infrastructure/ansible/tika/files/tika-server.jar -h 0.0.0.0 &
-    - python -m linkalytics &
-    - python manage.py runserver &
 script: nosetests --with-coverage --cover-package=linkalytics
 env:
   global:
