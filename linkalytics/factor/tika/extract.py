@@ -41,7 +41,7 @@ def common_crawl(url):
 
     return [json.loads(i.decode('utf-8')).get('url') for i in resp.iter_lines()]
 
-def filter_docs(docs):
+def filter_docs(docs, url=None):
     """
     Filters out downloadable content from a group of urls.
 
@@ -50,9 +50,11 @@ def filter_docs(docs):
     :return: documents
     :rtype:  list
     """
+    documents = []
     filetypes = 'pdf', 'doc', 'xls', 'ppt', 'odp', 'ods', 'docx', 'xlsx', 'pptx'
-    documents = [
-        doc for doc in docs
-            if any(doc.lower().endswith(types) for types in filetypes)
-    ]
+    for doc in docs:
+        if any(doc.lower().endswith(types) for types in filetypes):
+            domain = '.'.join(get_domain(doc))
+            if not url or url in domain:
+                documents.append(doc)
     return documents

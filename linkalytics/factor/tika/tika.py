@@ -114,7 +114,7 @@ def redis_docs(url, redis_instance):
     if redis_instance.llen(key):
         docs = [i.decode('utf-8') for i in redis_instance.lrange(key, 0, redis_instance.llen(key))]
     else:
-        docs = filter_docs(common_crawl(url))
+        docs = filter_docs(common_crawl(url), '.'.join(get_domain(url)))
         redis_instance.lpush(key, *docs)
     return docs
 
