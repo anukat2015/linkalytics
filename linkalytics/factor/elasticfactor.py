@@ -14,22 +14,27 @@ urllib3.disable_warnings()
 
 class ESFactor(factor.Factor):
     """
-    ESFactor is a class to build exact match factors on the fly with Elastic Search. This includes: phone, e-mail, social media username, title, and text.
+    ESFactor is a class to build exact match factors on the fly with Elastic Search.
+    This includes: phone, e-mail, social media username, title, and text.
     """
 
     def __init__(self, name, url, size=500):
         super(ESFactor, self).__init__(name)
         self.size = size
-        self.es = Elasticsearch(
-                    [url],
-                    port=443,
-                    use_ssl=False,
-                    verify_certs=False
-                    )
+        self.es   = Elasticsearch([url], port=443, use_ssl=False, verify_certs=False)
+
+
+    def _flatten(self, nested):
+        return (
+            [x for l in nested for x in self._flatten(l)]
+                if isinstance(nested, list) else
+            [nested]
+        )
 
     def lookup(self, ad_id):
         """
         Get data from ad_id
+
         :param ad_id: str
             String to be queried
         """
@@ -42,19 +47,16 @@ class ESFactor(factor.Factor):
             }
         }
         results = self.es.search(body=payload)
-        field_vals = []
-        for hit in results['hits']['hits']:
-            if self.field in hit["_source"]:
-                if isinstance(hit["_source"][self.field], list):
-                    for item in hit["_source"][self.field]:
-                        field_vals.append(item)
-                else:
-                    field_vals.append(hit["_source"][self.field])
-        return field_vals
+
+        return self._flatten([
+            i['_source'][self.field] for i in results['hits']['hits']
+                    if self.field in i['_source']
+        ])
 
     def reverse_lookup(self, field_value):
         """
         Get ad_id from a specific field and search term
+
         :param field_value: str
             String to be queried
         """
@@ -67,7 +69,10 @@ class ESFactor(factor.Factor):
                 }
             }
         results = self.es.search(body=payload)
-        if results['hits']['total']==0: #If the Elastic Search returns 0 results, then change the search field from self.field to all and search again. This solves the problem or poor indexing where a term like missblakebanks shows up in "_all" but not in "text"
+
+        # If the Elastic Search returns 0 results,
+        # then change the search field from `self.field` to all and search again.
+        if not results['hits']['total']:
             payload = {
                 "size": self.size,
                 "query": {
@@ -77,10 +82,8 @@ class ESFactor(factor.Factor):
                 }
             }
             results = self.es.search(body=payload)
-        ids = []
-        for hit in results['hits']['hits']:
-            ids.append(hit["_id"])
-        return ids
+
+        return [hit['_id'] for hit in results['hits']['hits']]
 
 
 def combine_two_factors(original, addition):
