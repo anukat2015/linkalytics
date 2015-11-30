@@ -25,10 +25,10 @@ echo "Starting Tika Server"
 ) &> /dev/null & tika_server=$!
 
 function cleanup() {
-    printf '\nKilling Processes\n'
+    printf '\n%s\n' "Killing Processes"
     kill "$linkalytics" "$server" $dq_server $tika_server
 }
 
 trap cleanup SIGKILL SIGHUP SIGINT
 
-wait "$linkalytics" "$server" "$dq_server" "$tika_server"
+wait "$linkalytics" "$server" "$dq_server" "$tika_server" "$redis_server"

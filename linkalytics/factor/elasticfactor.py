@@ -1,9 +1,11 @@
-from . import factor
-from elasticsearch import Elasticsearch
 import json
 import urllib3
-from .. environment import cfg
 import logging
+
+from elasticsearch import Elasticsearch
+
+from .  factor      import FactorBase
+from .. environment import cfg
 
 es_log = logging.getLogger("elasticsearch")
 es_log.setLevel(logging.CRITICAL)
@@ -12,26 +14,27 @@ urllib3_log.setLevel(logging.CRITICAL)
 urllib3.disable_warnings()
 
 
-class ESFactor(factor.Factor):
-    """
-    ESFactor is a class to build exact match factors on the fly with Elastic Search.
-    This includes: phone, e-mail, social media username, title, and text.
-    """
+class ElasticFactor(FactorBase):
 
-    def __init__(self, name, url, size=500):
-        super(ESFactor, self).__init__(name)
-        self.size = size
-        self.es   = Elasticsearch([url], port=443, use_ssl=False, verify_certs=False)
+    def __init__(self, url):
+        self.url = url
+        self.es  = Elasticsearch([url], port=443, use_ssl=False, verify_certs=False)
 
+    def __repr__(self):
+        return '{clsname}("{url}", size={size})'.format(
+            clsname=self.__class__.__name__,
+            url='<Elasticsearch URL>',
+            size=self.size,
+        )
 
-    def _flatten(self, nested):
+    def flatten(self, nested):
         return (
-            [x for l in nested for x in self._flatten(l)]
+            [x for l in nested for x in self.flatten(l)]
                 if isinstance(nested, list) else
             [nested]
         )
 
-    def lookup(self, ad_id):
+    def lookup(self, ad_id, field, size=500):
         """
         Get data from ad_id
 
@@ -39,7 +42,7 @@ class ESFactor(factor.Factor):
             String to be queried
         """
         payload = {
-            "size": self.size,
+            "size": size,
             "query": {
                 "ids": {
                     "values": [ad_id]
@@ -48,23 +51,42 @@ class ESFactor(factor.Factor):
         }
         results = self.es.search(body=payload)
 
-        return self._flatten([
-            i['_source'][self.field] for i in results['hits']['hits']
-                    if self.field in i['_source']
+        return self.flatten([
+            i['_source'][field] for i in results['hits']['hits']
+                    if field in i['_source']
         ])
 
-    def reverse_lookup(self, field_value):
+    def combine(self, ad_id, *factors):
+        return {
+            ad_id: {
+                factor: dict(self.suggest(ad_id, factor)[ad_id][factor])
+                    for factor in factors
+            }
+        }
+
+    def reduce(self, ad_id, *factors):
+        union     = lambda x,y: x|y
+        intersect = lambda x,y: x&y
+
+        combined  = self.combine(ad_id, *factors)[ad_id]
+        unioned   = (
+            reduce(union, map(set, combined[factor].values()), set()) for factor in factors
+        )
+        return reduce(intersect, unioned)
+
+    def reverse_lookup(self, field, field_value, size=500):
         """
         Get ad_id from a specific field and search term
 
         :param field_value: str
             String to be queried
         """
+
         payload = {
-                "size": self.size,
+                "size": size,
                 "query": {
                     "match_phrase": {
-                        self.field: field_value
+                        field: field_value
                     }
                 }
             }
@@ -74,7 +96,7 @@ class ESFactor(factor.Factor):
         # then change the search field from `self.field` to all and search again.
         if not results['hits']['total']:
             payload = {
-                "size": self.size,
+                "size": size,
                 "query": {
                     "match_phrase": {
                         "_all": field_value
@@ -86,9 +108,10 @@ class ESFactor(factor.Factor):
         return [hit['_id'] for hit in results['hits']['hits']]
 
 
-def combine_two_factors(original, addition):
+def combine_two_factors(original: dict, addition: dict) -> dict:
     """
     Union two dictionaries
+
     :param original: dict
         Dict to union
     :param addition: dict
@@ -99,23 +122,26 @@ def combine_two_factors(original, addition):
             original[k1] = {}
         for k2 in addition[k1]:
             original[k1][k2] = addition[k1][k2]
+
     return original
 
 
-def combine_multi_factors(factors):
+def combine_multi_factors(factors: list) -> dict:
     """
     Union multiple dictionaries
+
     :param factors: list of dicts
         List of dicts to union
     """
     original = factors[0]
-    for i in factors[1:len(factors)]:
+    for i in factors[1:]:
         if i:
             original = combine_two_factors(original, i)
+
     return original
 
 
-def suggest(ad_id, factor_label, url):
+def suggest(ad_id: str, factor_label: str, url: str):
     """
     :param ad_id: str
         Str of number
@@ -125,8 +151,8 @@ def suggest(ad_id, factor_label, url):
         Str for Elastic Search instance
     """
     try:
-        factor = ESFactor(factor_label, url)
-        suggestions = factor.suggest(ad_id)
+        factor = ElasticFactor(url)
+        suggestions = factor.suggest(ad_id, factor_label)
         # print(factor_type, len(suggestions[ad_id][factor_type]))
         if len(suggestions[ad_id][factor_label]) == 0:
             return None
@@ -137,7 +163,7 @@ def suggest(ad_id, factor_label, url):
         return None
 
 
-def factor_constructor(ad_id, factor_labels, url):
+def factor_constructor(ad_id: str, factor_labels: list, url: str) -> dict:
     """
     :param ad_id: str
         Str of number
@@ -146,14 +172,14 @@ def factor_constructor(ad_id, factor_labels, url):
     :param url: str
         Str for Elastic Search instance
     """
-    suggestions = []
-    for i in factor_labels:
-        suggestions.append(suggest(ad_id, i, url))
-    combo = combine_multi_factors(suggestions)
-    return combo
+    suggestions = [
+        suggest(ad_id, i, url) for i in factor_labels
+    ]
+
+    return combine_multi_factors(suggestions)
 
 
-def flatten(data, level):
+def flatten(data: dict, level: int) -> set:
     """
     :param data: dict
         Dict of suggestions generated by the factor_constructor
@@ -162,24 +188,24 @@ def flatten(data, level):
     """
     results = set()
 
-    def get_ad_ids(subdict, results, recursion):
+    def get_ad_ids(subdict, results, depth):
         """
         :param subdict: dict
             Dict that gets iteratively smaller
         :param results: set
             Set containing the results
-        :param recursion: int
+        :param depth: int
             Int specifying the current recursion level
         """
-        if level <= recursion:
+        if level <= depth:
             for k, v in subdict.items():
                 for i in v:
                     results.add(i)
         else:
             for k, v in subdict.items():
                 if isinstance(v, dict):
-                    recursion = recursion + 1
-                    get_ad_ids(v, results, recursion)
+                    depth = depth + 1
+                    get_ad_ids(v, results, depth)
                 else:
                     for i in v:
                         results.add(i)
@@ -217,7 +243,7 @@ def prune(data, keepers):
     return {}
 
 
-def extend(data, url, factor_values, degree):
+def extend(data: dict, url: str, factor_values: list, degree: str) -> dict:
     """
     :param data: dict
         Dict of suggestions generated by the factor_constructor
@@ -244,6 +270,11 @@ def extend(data, url, factor_values, degree):
         print("new fields:", new_field_values)
         data[degree] = prune(addition, new_field_values)
     return data
+
+def run(node):
+    ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
+    constructor = ElasticFactor(cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"])
+    return constructor.combine(ad_id, *factors)
 
 
 def main():
