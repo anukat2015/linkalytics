@@ -36,7 +36,7 @@ class FactorBase(metaclass=ABCMeta):
             >>> factor.lookup(0, "email")
             ["foo@bar.com"]
             >>> factor.lookup(1, "email")
-            bar@baz.com"]
+            ["bar@baz.com"]
             >>> factor.reverse_lookup("email", "foo@bar.com")
             ["0"]
     """

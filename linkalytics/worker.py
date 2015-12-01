@@ -1,33 +1,32 @@
 import json
 import logging
-
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from . enhance import youtube, twitter, geocoder, instagrammer, phonenumber
-from . factor  import ngrams, lsh, imgmeta, constructor, merge
+from . factor.constructor import merge, constructor
+from . factor_validator   import coincidence
 
+from . enhance     import youtube, twitter, geocoder, instagrammer, phonenumber
 from . environment import cfg
+from . factor      import ngrams, lsh, imgmeta
 from . tasks       import TaskMux
 
 from . import search
 
-from . factor_validator import coincidence
-
 mux = TaskMux(host=cfg['disque']['host'])
 
 RUNNERS = {
-    'instagram'  : instagrammer.run,
-    'phone'      : phonenumber.run,
-    'twitter'    : twitter.run,
-    'geocode'    : geocoder.run,
-    'youtube'    : youtube.run,
-    'ngrams'     : ngrams.run,
-    'lsh'        : lsh.run,
-    'coincidence': coincidence.run,
-    'imgmeta'    : imgmeta.run,
-    'search'     : search.run,
-    'constructor': constructor.run,
-    'merge'      : merge.run,
+    'ngrams'             : ngrams.run,
+    'lsh'                : lsh.run,
+    'coincidence'        : coincidence.run,
+    'imgmeta'            : imgmeta.run,
+    'search'             : search.run,
+    'enhance/instagram'  : instagrammer.run,
+    'enhance/phone'      : phonenumber.run,
+    'enhance/twitter'    : twitter.run,
+    'enhance/geocode'    : geocoder.run,
+    'enhance/youtube'    : youtube.run,
+    'factor/constructor' : constructor.run,
+    'factor/merge'       : merge.run,
 }
 
 logging.getLogger('').setLevel(logging.INFO)

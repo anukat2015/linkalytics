@@ -1,6 +1,6 @@
 from . elasticfactor import ElasticFactor
 
-from .. environment import cfg
+from ... environment import cfg
 
 def run(node):
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])

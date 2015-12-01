@@ -1,9 +1,9 @@
+from ... environment import cfg
+from ... run_cli import Arguments
+
+from .. lsh import lsh
 
 from . elasticfactor import ElasticFactor
-from . lsh           import lsh
-
-from .. environment  import cfg
-from .. run_cli      import Arguments
 
 def run(node):
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])

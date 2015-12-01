@@ -1,12 +1,13 @@
 import json
-import urllib3
 import logging
 
-from functools     import reduce
+import urllib3
 from elasticsearch import Elasticsearch
+from functools     import reduce
 
-from .  factor      import FactorBase
-from .. environment import cfg
+from . factor import FactorBase
+
+from ... environment import cfg
 
 es_log = logging.getLogger("elasticsearch")
 es_log.setLevel(logging.CRITICAL)
@@ -90,10 +91,9 @@ class ElasticFactor(FactorBase):
         intersect = lambda x,y: x&y
 
         combined  = self.combine(ad_id, *factors)[ad_id]
-        unioned   = (
-            reduce(union, map(set, combined[factor].values()), set()) for factor in factors
-        )
-        return reduce(intersect, unioned)
+
+        return reduce(intersect, (reduce(union,
+                    map(set, combined[factor].values()), set()) for factor in factors))
 
     def lookup(self, ad_id, field):
         """

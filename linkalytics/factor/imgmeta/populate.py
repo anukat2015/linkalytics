@@ -26,7 +26,7 @@ __SERIAL_TSV = [
     "hash_serial_number.tsv"
 ]
 
-conn = redis.Redis(host='104.154.83.107', port=6379)
+conn = redis.Redis(host='localhost', port=6379)
 
 def metadata_from(filename):
     """ filename should be a valid TSV file
