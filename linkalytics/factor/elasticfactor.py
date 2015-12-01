@@ -2,10 +2,14 @@ import json
 import urllib3
 import logging
 
+from functools     import reduce
 from elasticsearch import Elasticsearch
 
 from .  factor      import FactorBase
+from .  lsh         import lsh
+
 from .. environment import cfg
+from .. run_cli     import Arguments
 
 es_log = logging.getLogger("elasticsearch")
 es_log.setLevel(logging.CRITICAL)
@@ -16,9 +20,15 @@ urllib3.disable_warnings()
 
 class ElasticFactor(FactorBase):
 
-    def __init__(self, url):
-        self.url = url
-        self.es  = Elasticsearch([url], port=443, use_ssl=False, verify_certs=False)
+    def __init__(self, url, size=500):
+        self.url  = url
+        self.size = size
+        self.es   = Elasticsearch([url],
+                                 port=443,
+                                 use_ssl=False,
+                                 verify_certs=False,
+                                 timeout=160,
+        )
 
     def __repr__(self):
         return '{clsname}("{url}", size={size})'.format(
@@ -34,7 +44,7 @@ class ElasticFactor(FactorBase):
             [nested]
         )
 
-    def lookup(self, ad_id, field, size=500):
+    def lookup(self, ad_id, field):
         """
         Get data from ad_id
 
@@ -42,7 +52,7 @@ class ElasticFactor(FactorBase):
             String to be queried
         """
         payload = {
-            "size": size,
+            "size": self.size,
             "query": {
                 "ids": {
                     "values": [ad_id]
@@ -74,7 +84,7 @@ class ElasticFactor(FactorBase):
         )
         return reduce(intersect, unioned)
 
-    def reverse_lookup(self, field, field_value, size=500):
+    def reverse_lookup(self, field, field_value):
         """
         Get ad_id from a specific field and search term
 
@@ -83,7 +93,7 @@ class ElasticFactor(FactorBase):
         """
 
         payload = {
-                "size": size,
+                "size": self.size,
                 "query": {
                     "match_phrase": {
                         field: field_value
@@ -96,7 +106,7 @@ class ElasticFactor(FactorBase):
         # then change the search field from `self.field` to all and search again.
         if not results['hits']['total']:
             payload = {
-                "size": size,
+                "size": self.size,
                 "query": {
                     "match_phrase": {
                         "_all": field_value

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-pkill disque-server
+set -e
+
+if [ -n "$(pgrep disque-server)" ]; then
+    pkill disque-server
+fi
 
 echo "Starting Disque Server"
 (
@@ -29,6 +33,11 @@ function cleanup() {
     kill "$linkalytics" "$server" $dq_server $tika_server
 }
 
+function error() {
+    echo "Error Starting Service"
+}
+
 trap cleanup SIGKILL SIGHUP SIGINT
+trap error ERR
 
 wait "$linkalytics" "$server" "$dq_server" "$tika_server" "$redis_server"
