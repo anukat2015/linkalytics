@@ -44,6 +44,24 @@ class ElasticFactor(FactorBase):
             [nested]
         )
 
+    def combine(self, ad_id, *factors):
+        return {
+            ad_id: {
+                factor: dict(self.suggest(ad_id, factor)[ad_id][factor])
+                for factor in factors
+                }
+        }
+
+    def reduce(self, ad_id, *factors):
+        union     = lambda x,y: x|y
+        intersect = lambda x,y: x&y
+
+        combined  = self.combine(ad_id, *factors)[ad_id]
+        unioned   = (
+            reduce(union, map(set, combined[factor].values()), set()) for factor in factors
+        )
+        return reduce(intersect, unioned)
+
     def lookup(self, ad_id, field):
         """
         Get data from ad_id
@@ -65,24 +83,6 @@ class ElasticFactor(FactorBase):
             i['_source'][field] for i in results['hits']['hits']
                     if field in i['_source']
         ])
-
-    def combine(self, ad_id, *factors):
-        return {
-            ad_id: {
-                factor: dict(self.suggest(ad_id, factor)[ad_id][factor])
-                    for factor in factors
-            }
-        }
-
-    def reduce(self, ad_id, *factors):
-        union     = lambda x,y: x|y
-        intersect = lambda x,y: x&y
-
-        combined  = self.combine(ad_id, *factors)[ad_id]
-        unioned   = (
-            reduce(union, map(set, combined[factor].values()), set()) for factor in factors
-        )
-        return reduce(intersect, unioned)
 
     def reverse_lookup(self, field, field_value):
         """
