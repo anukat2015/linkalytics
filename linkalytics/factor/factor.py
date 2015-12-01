@@ -2,21 +2,6 @@ from abc import ABCMeta, abstractmethod
 import collections
 import re
 
-class FactorLookupDidNotReturnList(Exception):
-    def __init__(self, values):
-        self.values = values
-
-    def __str__(self):
-        return "Factor: Instead of a list, we got `%s` (type: %s)".format(str(self.values), type(self.values))
-
-class FactorReverseLookupFailedToFindSelf(Exception):
-    def __init__(self, ad_id, ads):
-        self.ad_id = ad_id
-        self.ads = ads
-
-    def __str__(self):
-        return "Factor: reverse_lookup did not return %s in %s".format(self.ad_id, self.ads)
-
 class FactorBase(metaclass=ABCMeta):
     """ Factor defines the abstract functions required for a factor.
 

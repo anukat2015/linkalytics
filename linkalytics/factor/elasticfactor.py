@@ -48,8 +48,8 @@ class ElasticFactor(FactorBase):
         return {
             ad_id: {
                 factor: dict(self.suggest(ad_id, factor)[ad_id][factor])
-                for factor in factors
-                }
+                    for factor in factors
+            }
         }
 
     def reduce(self, ad_id, *factors):
@@ -284,7 +284,15 @@ def extend(data: dict, url: str, factor_values: list, degree: str) -> dict:
 def run(node):
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
     constructor = ElasticFactor(cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"])
-    return constructor.combine(ad_id, *factors)
+    combined    = constructor.combine(ad_id, *factors)
+
+    # If Text Factor is Selected, run LSH to get near duplicates
+    if 'text' in factors and combined[ad_id]['text']:
+        combined[ad_id]['lsh'] = {}
+        for text in combined[ad_id]['text']:
+            combined[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
+
+    return combined
 
 
 def main():
