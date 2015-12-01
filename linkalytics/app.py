@@ -36,9 +36,17 @@ version = cfg['api']['version']
 
 mux = TaskMux(host=cfg["disque"]["host"])
 
-@app.route('/{version}/<path:endpoint>'.format(version=version), methods=['POST'])
+@app.route('/{version}/<path>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def run_api(endpoint):
+    record  = request.get_json()
+    jobid   = mux.put(endpoint, record)
+    results = mux.retrieve(jobid)
+    return jsonify(**results)
+
+@app.route('/{version}/factor/<path:endpoint>'.format(version=version), methods=['POST'])
+@basic_auth.required
+def factor(endpoint):
     record  = request.get_json()
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)

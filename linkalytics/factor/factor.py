@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
+
 import collections
-import re
 
 class FactorBase(metaclass=ABCMeta):
     """ Factor defines the abstract functions required for a factor.
@@ -22,24 +22,23 @@ class FactorBase(metaclass=ABCMeta):
 
         For instance, if a database contains the following records
 
-        id |    email       | phone
+        id | email          | phone
+        -- | -------------- | -----------
         0  | foo@bar.com    | 123 456 789
         1  | bar@baz.com    | 123 456 789
 
-        Then,
+        Example
+        -------
 
-            email = Factor("email")
-            email.lookup("0")
-            # ["foo@bar.com"]
-            email.lookup("1")
-            # ["bar@baz.com"]
-            email.reverse_lookup("foo@bar.com")
-            # ["0"]
-            phone = Factor("phone")
-            phone.reverse_lookup("123 456 789")
-            # ["0", "1"]
-            phone.suggest("0")
-            # {"0": {"phone": {"1": "123 456 789"}}}
+        .. code-block:: python
+
+            >>> factor = Factor()
+            >>> factor.lookup(0, "email")
+            ["foo@bar.com"]
+            >>> factor.lookup(1, "email")
+            bar@baz.com"]
+            >>> factor.reverse_lookup("email", "foo@bar.com")
+            ["0"]
     """
     def suggest(self, ad_id, field, debug=False):
         """ The suggest function suggests other ad_ids that share this
@@ -65,24 +64,22 @@ class FactorBase(metaclass=ABCMeta):
                 field: collections.defaultdict(list)
             }
         }
-        if isinstance(field_values, list):
-            for field_value in field_values:
-                ads = set(self.reverse_lookup(field, field_value))
-                try:
-                    ads.remove(ad_id)
-
-                # Means that the reverse_lookup failed to find the originating ad itself.
-                except KeyError:
-                    raise KeyError("Did not find %s %s" % (ad_id, ads))
-
-                for x in ads:
-                    suggestions[ad_id][field][field_value].append(x)
-
-                if debug:
-                    for x in ads:
-                        assert field_value == self.lookup(x)
-        else:
+        if not isinstance(field_values, list):
             raise KeyError(field_values)
+
+        for field_value in field_values:
+            ads = set(self.reverse_lookup(field, field_value))
+            try:
+                ads.remove(ad_id)
+            # Means that the reverse_lookup failed to find the originating ad itself.
+            except KeyError:
+                continue
+
+            for x in ads:
+                suggestions[ad_id][field][field_value].append(x)
+            if debug:
+                for x in ads:
+                    assert field_value == self.lookup(x)
 
         return suggestions
 
@@ -99,3 +96,4 @@ class FactorBase(metaclass=ABCMeta):
             ad_ids for ads having field_value in self.field.
         """
         pass
+

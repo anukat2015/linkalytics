@@ -6,28 +6,32 @@ from functools     import reduce
 from elasticsearch import Elasticsearch
 
 from .  factor      import FactorBase
-from .  lsh         import lsh
-
 from .. environment import cfg
-from .. run_cli     import Arguments
 
 es_log = logging.getLogger("elasticsearch")
 es_log.setLevel(logging.CRITICAL)
+
 urllib3_log = logging.getLogger("urllib3")
 urllib3_log.setLevel(logging.CRITICAL)
-urllib3.disable_warnings()
 
+urllib3.disable_warnings()
 
 class ElasticFactor(FactorBase):
 
     def __init__(self, url, size=500):
+        """
+        :param url: str
+            Fully qualified url to an elasticsearch instance
+        :param size: int
+            Size limit to set on elasticsearch query
+        """
         self.url  = url
         self.size = size
         self.es   = Elasticsearch([url],
-                                 port=443,
-                                 use_ssl=False,
-                                 verify_certs=False,
-                                 timeout=160,
+                                  port=443,
+                                  use_ssl=False,
+                                  verify_certs=False,
+                                  timeout=160,
         )
 
     def __repr__(self):
@@ -38,6 +42,15 @@ class ElasticFactor(FactorBase):
         )
 
     def flatten(self, nested):
+        """
+        Recursively flatten a nested list data structure
+
+        :param nested: list
+            Nested list
+
+        :return: flattened
+        :rtype:  list
+        """
         return (
             [x for l in nested for x in self.flatten(l)]
                 if isinstance(nested, list) else
@@ -45,6 +58,15 @@ class ElasticFactor(FactorBase):
         )
 
     def combine(self, ad_id, *factors):
+        """
+        :param ad_id: str
+            Unique ad identifier
+        :param factors: sequence
+            Factors to merge on a particular ID
+
+        :return: factors
+        :rtype: dict
+        """
         return {
             ad_id: {
                 factor: dict(self.suggest(ad_id, factor)[ad_id][factor])
@@ -53,6 +75,17 @@ class ElasticFactor(FactorBase):
         }
 
     def reduce(self, ad_id, *factors):
+        """
+        Combine factors together and reduce them to a set with the same `ad_ids`
+
+        :param ad_id: str
+            Unique ad identifier
+        :param factors: sequence
+            Factors to merge on a particular ID
+
+        :return: reduced
+        :rtype : set
+        """
         union     = lambda x,y: x|y
         intersect = lambda x,y: x&y
 
@@ -280,19 +313,6 @@ def extend(data: dict, url: str, factor_values: list, degree: str) -> dict:
         print("new fields:", new_field_values)
         data[degree] = prune(addition, new_field_values)
     return data
-
-def run(node):
-    ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
-    constructor = ElasticFactor(cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"])
-    combined    = constructor.combine(ad_id, *factors)
-
-    # If Text Factor is Selected, run LSH to get near duplicates
-    if 'text' in factors and combined[ad_id]['text']:
-        combined[ad_id]['lsh'] = {}
-        for text in combined[ad_id]['text']:
-            combined[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
-
-    return combined
 
 
 def main():

@@ -5,12 +5,12 @@ from ... search import get_results
 
 from . import nearduplicates
 
-def lsh(args, threshold=0.7):
-    results    = get_results(args.query[0], int(args.size[0]), True)
+def lsh(args, threshold=0.7, get_results=get_results):
+    results = get_results(args.query[0], int(args.size[0]), True)
 
     hashcorpus = [
         nearduplicates.run_getminhash({'id': key, 'text': value['text']})
-        for key, value in results.items() if 'text' in value
+            for key, value in results.items() if 'text' in value
         ]
 
     doc_to_lsh, lsh_dict = nearduplicates.run_lsh_batch(

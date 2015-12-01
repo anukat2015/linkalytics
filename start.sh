@@ -40,4 +40,4 @@ function error() {
 trap cleanup SIGKILL SIGHUP SIGINT
 trap error ERR
 
-wait "$linkalytics" "$server" "$dq_server" "$tika_server" "$redis_server"
+wait "$linkalytics" "$server" "$dq_server" "$tika_server"

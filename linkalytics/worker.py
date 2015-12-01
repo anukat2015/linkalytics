@@ -4,8 +4,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from . enhance import youtube, twitter, geocoder, instagrammer, phonenumber
-from . factor  import ngrams, lsh, imgmeta
-from . factor  import elasticfactor as factor
+from . factor  import ngrams, lsh, imgmeta, constructor, merge
 
 from . environment import cfg
 from . tasks       import TaskMux
@@ -27,7 +26,8 @@ RUNNERS = {
     'coincidence': coincidence.run,
     'imgmeta'    : imgmeta.run,
     'search'     : search.run,
-    'factor'     : factor.run,
+    'constructor': constructor.run,
+    'merge'      : merge.run,
 }
 
 logging.getLogger('').setLevel(logging.INFO)
