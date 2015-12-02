@@ -7,7 +7,7 @@ from . factor_validator   import coincidence
 
 from . enhance     import youtube, twitter, geocoder, instagrammer, phonenumber
 from . environment import cfg
-from . factor      import ngrams, lsh, imgmeta
+from . factor      import ngrams, lsh, imgmeta, tika
 from . tasks       import TaskMux
 
 from . import search
@@ -20,6 +20,7 @@ RUNNERS = {
     'coincidence'        : coincidence.run,
     'imgmeta'            : imgmeta.run,
     'search'             : search.run,
+    'metadata'           : tika.run,
     'enhance/instagram'  : instagrammer.run,
     'enhance/phone'      : phonenumber.run,
     'enhance/twitter'    : twitter.run,
@@ -27,7 +28,7 @@ RUNNERS = {
     'enhance/youtube'    : youtube.run,
     'factor/constructor' : constructor.run,
     'factor/merge'       : merge.run,
-    'factor/available'   : available.run
+    'factor/available'   : available.run,
 }
 
 logging.getLogger('').setLevel(logging.INFO)
