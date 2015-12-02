@@ -12,8 +12,6 @@ from . factor import ngrams, lsh, imgmeta, tika
 from . factor.constructor import merge, constructor, available
 from . factor_validator import coincidence
 
-mux = TaskMux(host=cfg['disque']['host'])
-
 # Endpoint: Function Runner
 RUNNERS = {
     'ngrams'             : ngrams.run,
@@ -34,6 +32,9 @@ RUNNERS = {
 
 logging.getLogger('').setLevel(logging.INFO)
 
+def create_mux():
+    return TaskMux(host=cfg['disque']['host'])
+
 def process_record(q):
     """
     Run by worker instances
@@ -45,6 +46,8 @@ def process_record(q):
     :param q: str
         Queue Name
     """
+    mux = create_mux()
+
     qname, jobid, job = mux.get(q)
     try:
         result = RUNNERS[q](job)
