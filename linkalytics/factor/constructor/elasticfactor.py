@@ -58,6 +58,30 @@ class ElasticFactor(FactorBase):
             [nested]
         )
 
+    def available(self, ad_id):
+        """
+        Get's the available factors for a particular ad
+
+        :param ad_id: str
+            Unique ad identifier
+
+        :return: factors
+        :rtype : list
+        """
+        accumulator = lambda x,y: x|y
+        payload = {
+                "size": self.size,
+                "query": {
+                    "match_phrase": {
+                        "_id": ad_id
+                    }
+                }
+            }
+        results = self.es.search(body=payload)
+        keys    = [set(i['_source'].keys()) for i in results['hits']['hits']]
+
+        return list(reduce(accumulator, keys, set()))
+
     def combine(self, ad_id, *factors):
         """
         :param ad_id: str

@@ -2,7 +2,7 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from . factor.constructor import merge, constructor
+from . factor.constructor import merge, constructor, available
 from . factor_validator   import coincidence
 
 from . enhance     import youtube, twitter, geocoder, instagrammer, phonenumber
@@ -27,6 +27,7 @@ RUNNERS = {
     'enhance/youtube'    : youtube.run,
     'factor/constructor' : constructor.run,
     'factor/merge'       : merge.run,
+    'factor/available'   : available.run
 }
 
 logging.getLogger('').setLevel(logging.INFO)
