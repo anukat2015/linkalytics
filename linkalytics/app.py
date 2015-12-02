@@ -26,12 +26,14 @@ app = Flask(__name__)
 app.config['BASIC_AUTH_USERNAME'] = cfg['api']['username']
 app.config['BASIC_AUTH_PASSWORD'] = cfg['api']['password']
 
+# Enable CORS Configuration and Basic Authentication
 cors       = CORS(app)
 api        = Api(app)
 basic_auth = BasicAuth(app)
 
 version = cfg['api']['version']
 
+# Instantiate Task Multiplexer
 mux = TaskMux(host=cfg["disque"]["host"])
 
 @app.route('/{version}/<path:endpoint>'.format(version=version), methods=['POST'])
@@ -48,6 +50,7 @@ def run_api(endpoint):
     record  = request.get_json()
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
+
     return jsonify(**results)
 
 @app.after_request
@@ -59,4 +62,5 @@ def access_control(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'POST')
+
     return response

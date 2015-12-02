@@ -1,6 +1,7 @@
 import json
 import logging
-from concurrent.futures import ThreadPoolExecutor, wait
+
+from   concurrent.futures import ThreadPoolExecutor, wait
 
 from . factor.constructor import merge, constructor, available
 from . factor_validator   import coincidence
@@ -14,6 +15,7 @@ from . import search
 
 mux = TaskMux(host=cfg['disque']['host'])
 
+# Endpoint: Function Runner
 RUNNERS = {
     'ngrams'             : ngrams.run,
     'lsh'                : lsh.run,
@@ -34,6 +36,16 @@ RUNNERS = {
 logging.getLogger('').setLevel(logging.INFO)
 
 def process_record(q):
+    """
+    Run by worker instances
+
+    NOTE: mux.get()
+        Will block until a job has been placed
+        on the work queue of the name q
+
+    :param q: str
+        Queue Name
+    """
     qname, jobid, job = mux.get(q)
     try:
         result = RUNNERS[q](job)
@@ -46,7 +58,7 @@ def process_record(q):
     mux.conn.fastack(jobid)
 
 def handle(q):
-    print("Listening on '{}'".format(q))
+    print("Listening on '{queue}'".format(queue=q))
     while True:
         process_record(q)
 
@@ -55,5 +67,4 @@ def main():
     Run a thread pool to handle where one thread handles one work queue.
     """
     with ThreadPoolExecutor(max_workers=len(RUNNERS)) as executor:
-        futures = executor.map(handle, RUNNERS)
-        wait(futures)
+        wait(executor.map(handle, RUNNERS))
