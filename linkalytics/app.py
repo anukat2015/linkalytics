@@ -37,13 +37,25 @@ mux = TaskMux(host=cfg["disque"]["host"])
 @app.route('/{version}/<path:endpoint>'.format(version=version), methods=['POST'])
 @basic_auth.required
 def run_api(endpoint):
+    """
+    Main Entrypoint to the API
+
+    :param endpoint: API Endpoint URL
+
+    :return: JSON Response
+    :rtype : str
+    """
     record  = request.get_json()
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
     return jsonify(**results)
 
 @app.after_request
-def after_request(response):
+def access_control(response):
+    """
+    Enables Access-Control headers in a request
+    To allow cross origin POST requests to the server
+    """
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'POST')
