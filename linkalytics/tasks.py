@@ -4,6 +4,18 @@ import logging
 import sys
 import traceback
 
+def json_deserializer(bytes):
+    """ This function deserializes json when the input is a sequence of
+        bytes.
+
+        :params bytes:  The input bytestring to deserialize.
+        :returns:       A Python dictionary
+    """
+    return json.loads(bytes.decode('utf8'))
+
+def create_mux(cfg):
+    return TaskMux(host=cfg["disque"]["host"])
+
 class TaskMux:
     def __init__(self, **kwargs):
         """ Create a high-level task multiplexer on top of Disque.
@@ -121,14 +133,3 @@ class TaskMux:
             self.conn.fastack(result_id)
         return result
 
-def json_deserializer(bytes):
-    """ This function deserializes json when the input is a sequence of
-        bytes.
-
-        :params bytes:  The input bytestring to deserialize.
-        :returns:       A Python dictionary
-    """
-    return json.loads(bytes.decode('utf8'))
-
-def create_mux(cfg):
-    return TaskMux(host=cfg["disque"]["host"])
