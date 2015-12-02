@@ -1,11 +1,11 @@
 from flask import jsonify
 
-def forbidden(message):
-    response = jsonify({'error': 'forbidden', 'message': message})
-    response.status_code = 403
-    return response
-
 def unauthorized(message):
     response = jsonify({'error': 'unauthorized', 'message': message})
     response.status_code = 401
+    return response
+
+def page_not_found(message):
+    response = jsonify({'error': 'not found', 'message': message})
+    response.status_code = 404
     return response

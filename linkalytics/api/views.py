@@ -2,8 +2,10 @@ from flask import jsonify, request
 
 from . import api
 
+from . error        import page_not_found
 from .. tasks       import TaskMux
 from .. environment import cfg
+from .. worker      import RUNNERS
 
 version = cfg['api']['version']
 
@@ -20,6 +22,9 @@ def run_api(endpoint):
     :return: JSON Response
     :rtype : str
     """
+    if endpoint not in RUNNERS:
+        return page_not_found('Endpoint `{}` does not exist'.format(endpoint))
+
     record  = request.get_json()
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
@@ -36,4 +41,9 @@ def access_control(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'POST')
 
+    return response
+
+@api.after_request
+def set_content_type(response):
+    response.headers['Content-Type'] = 'application/json'
     return response
