@@ -2,8 +2,10 @@
 
 from flask.ext.script import Manager, Server
 
-from linkalytics.app import app
+from linkalytics import create_app
+from linkalytics.environment import cfg
 
+app = create_app(cfg)
 
 server  = Server(host="0.0.0.0", port=8080)
 manager = Manager(app)

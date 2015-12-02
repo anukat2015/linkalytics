@@ -14,8 +14,8 @@ geopy
 reverse_geocoder
 pytoml
 -e git+https://github.com/ryansb/disq.git#egg=disq
-Flask-BasicAuth
 Flask-RESTful
+Flask-HTTPAuth
 Flask-Script
 pyenchant
 gunicorn

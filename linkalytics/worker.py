@@ -1,17 +1,16 @@
 import json
 import logging
-
 from   concurrent.futures import ThreadPoolExecutor, wait
 
-from . factor.constructor import merge, constructor, available
-from . factor_validator   import coincidence
-
-from . enhance     import youtube, twitter, geocoder, instagrammer, phonenumber
-from . environment import cfg
-from . factor      import ngrams, lsh, imgmeta, tika
-from . tasks       import TaskMux
+from . tasks import TaskMux
 
 from . import search
+
+from . enhance import youtube, twitter, geocoder, instagrammer, phonenumber
+from . environment import cfg
+from . factor import ngrams, lsh, imgmeta, tika
+from . factor.constructor import merge, constructor, available
+from . factor_validator import coincidence
 
 mux = TaskMux(host=cfg['disque']['host'])
 
