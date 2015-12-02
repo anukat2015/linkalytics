@@ -2,7 +2,7 @@ import json
 import logging
 from   concurrent.futures import ThreadPoolExecutor, wait
 
-from . tasks import TaskMux
+from . tasks import create_mux
 
 from . import search
 
@@ -32,9 +32,6 @@ RUNNERS = {
 
 logging.getLogger('').setLevel(logging.INFO)
 
-def create_mux():
-    return TaskMux(host=cfg['disque']['host'])
-
 def process_record(q):
     """
     Run by worker instances
@@ -46,7 +43,7 @@ def process_record(q):
     :param q: str
         Queue Name
     """
-    mux = create_mux()
+    mux = create_mux(cfg)
 
     qname, jobid, job = mux.get(q)
     try:

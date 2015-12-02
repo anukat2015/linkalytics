@@ -3,14 +3,11 @@ from flask import jsonify, request
 from . import api
 
 from . error        import page_not_found
-from .. tasks       import TaskMux
+from .. tasks       import create_mux
 from .. environment import cfg
 from .. worker      import RUNNERS
 
 version = cfg['api']['version']
-
-# Instantiate Task Multiplexer
-mux = TaskMux(host=cfg["disque"]["host"])
 
 @api.route('/{version}/<path:endpoint>'.format(version=version), methods=['POST'])
 def run_api(endpoint):
@@ -26,6 +23,7 @@ def run_api(endpoint):
         return page_not_found('Endpoint `{}` does not exist'.format(endpoint))
 
     record  = request.get_json()
+    mux     = create_mux(cfg)
     jobid   = mux.put(endpoint, record)
     results = mux.retrieve(jobid)
 
