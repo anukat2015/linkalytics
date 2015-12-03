@@ -139,7 +139,7 @@ def run(node):
     :rtype:  dict
     """
     mapper    = lambda x: redis_load(x, r)
-    url       = node.get('url', 'https://google.com')
+    url       = node.get('url', 'http://www.cic.gc.ca')
     pool      = ThreadPool(32)
     docs      = redis_docs(url, r)
     metadata  = pool.map(mapper, docs)

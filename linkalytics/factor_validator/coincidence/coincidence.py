@@ -6,7 +6,7 @@ from ... run_cli import Arguments
 
 from multiprocessing.dummy import Pool as ThreadPool
 
-pool = ThreadPool(4)
+pool = ThreadPool(32)
 
 def unique_features(feature, data):
     features = set()
@@ -23,7 +23,7 @@ def unique_features(feature, data):
     return features
 
 def parsetime(timestring):
-    return datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S')
+    return datetime.strptime(timestring, '%Y-%m-%dT%H:%M:%S').ctime()
 
 def specific_term(args):
 
@@ -71,5 +71,5 @@ def get_term(pid, args):
     return pid, term
 
 def run(node):
-    args = Arguments(node.get('text', 'bouncy'), node.get('size', 10))
+    args = Arguments(node.get('text', 'bouncy'), node.get('size', 100))
     return specific_term(args)

@@ -2,7 +2,7 @@ from flask import jsonify, request
 
 from . import api
 
-from . error        import page_not_found
+from .  error       import page_not_found
 from .. tasks       import create_mux
 from .. environment import cfg
 from .. worker      import RUNNERS
@@ -29,19 +29,3 @@ def run_api(endpoint):
 
     return jsonify(**results)
 
-@api.after_request
-def access_control(response):
-    """
-    Enables Access-Control headers in a request
-    To allow cross origin POST requests to the server
-    """
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'POST')
-
-    return response
-
-@api.after_request
-def set_content_type(response):
-    response.headers['Content-Type'] = 'application/json'
-    return response

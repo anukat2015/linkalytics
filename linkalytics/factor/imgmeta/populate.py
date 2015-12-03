@@ -27,6 +27,7 @@ __SERIAL_TSV = [
 ]
 
 conn = redis.Redis(host='localhost', port=6379)
+pipe = conn.pipeline()
 
 def metadata_from(filename):
     """ filename should be a valid TSV file

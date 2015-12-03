@@ -16,21 +16,25 @@ from . factor_validator import coincidence
 RUNNERS = {
     'ngrams'             : ngrams.run,
     'lsh'                : lsh.run,
-    'coincidence'        : coincidence.run,
     'imgmeta'            : imgmeta.run,
     'search'             : search.run,
     'metadata'           : tika.run,
     'enhance/instagram'  : instagrammer.run,
+    'enhance/geocoder'   : geocoder.run,
     'enhance/phone'      : phonenumber.run,
     'enhance/twitter'    : twitter.run,
-    'enhance/geocode'    : geocoder.run,
     'enhance/youtube'    : youtube.run,
     'factor/constructor' : constructor.run,
     'factor/merge'       : merge.run,
     'factor/available'   : available.run,
+    'coincidence'        : coincidence.run,
 }
 
-logging.getLogger('').setLevel(logging.INFO)
+logger = logging.getLogger('')
+logger.setLevel(logging.INFO)
+
+def apply(func, job):
+    return func(job)
 
 def process_record(q):
     """
@@ -47,7 +51,7 @@ def process_record(q):
 
     qname, jobid, job = mux.get(q)
     try:
-        result = RUNNERS[q](job)
+        result = apply(RUNNERS[q], job)
     except Exception as e:
         result = mux.report_exception(jobid)
         raise e
@@ -65,5 +69,8 @@ def main():
     """
     Run a thread pool to handle where one thread handles one work queue.
     """
-    with ThreadPoolExecutor(max_workers=len(RUNNERS)) as executor:
+    # Have 4 Listeners one each queue
+    max_workers = len(RUNNERS) * 4
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         wait(executor.map(handle, RUNNERS))

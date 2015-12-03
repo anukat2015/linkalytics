@@ -102,7 +102,7 @@ def suggest_to_depth(ad_ids, depth, model, time, serial, intersect):
     return suggestions
 
 def run(node):
-    result = suggest_to_depth([node['id']], 1, True, 1200, True, False)
+    result = suggest_to_depth([node.get('id', '26609786')], 1, True, 1200, True, False)
     for k in result:
         result[k].update({"id": k})
     return {"imgmeta": [result[k] for k in result]}

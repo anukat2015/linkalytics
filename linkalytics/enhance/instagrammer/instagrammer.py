@@ -41,7 +41,7 @@ def get_recent_posts(uid):
 
 def run(node):
     results = []
-    text = sanitize(node['text'])
+    text = sanitize(node.get('text', 'https://www.instagram.com/barackobama/'))
 
     for identity in re.finditer(instagram_regex, text):
         username = identity.group(2).lower()  # username is always the second group in the regex match

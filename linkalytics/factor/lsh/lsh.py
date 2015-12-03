@@ -56,7 +56,7 @@ def lsh(args, threshold=0.7, get_results=get_results):
 
 
 def run(node):
-    query, size = node.get('text', 'cali'), node.get('size', 1000)
+    query, size = node.get('text', 'cali'), node.get('size', 100)
 
     args = Arguments(query, size)
 
