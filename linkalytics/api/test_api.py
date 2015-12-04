@@ -1,8 +1,8 @@
 import os
 import json
+import socket
 
-from unittest   import TestCase, skipIf, skip
-from subprocess import check_output
+from unittest   import TestCase, skipIf
 from base64     import b64encode
 from flask      import current_app
 
@@ -10,11 +10,9 @@ from .. import create_app
 
 from .. environment import cfg
 
-def get_pid(name):
-    return [
-        int(i.split()[1]) for i in check_output(['ps', 'aux']).decode('utf-8').splitlines()
-            if i.startswith(os.getlogin()) and name in i
-    ]
+def check_port(host, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    return sock.connect_ex((host, port))
 
 class APITest(TestCase):
 
@@ -30,9 +28,8 @@ class APITest(TestCase):
     def test_app_exists(self):
         self.assertFalse(current_app is None)
 
-@skipIf(not(get_pid('disque-server')),  'Requires Disque Server Up')
-@skipIf(not(get_pid('-m linkalytics')), 'No Workers listening on queue')
-@skipIf(os.getenv('TRAVIS'),            'Not able to mock on CI')
+@skipIf(os.getenv('TRAVIS'), 'Not able to mock on CI')
+@skipIf(check_port(cfg['disque']['host'], 7711),  'Requires Disque Server up')
 class FullAPITest(TestCase):
     """
     Full API Test
@@ -98,13 +95,13 @@ class FullAPITest(TestCase):
 
         return response
 
-    @skipIf(not(get_pid('redis-server')), 'Redis Server not available')
-    @skipIf(not(get_pid('tika-server')),  'Tika Server not available')
+    @skipIf(check_port(cfg['redis']['host'], 6379), 'Requires Redis Server up')
+    @skipIf(check_port(cfg['tika']['host'],  9998), 'Requires Tika  Server up')
     def test_metadata(self):
         self.run_endpoint('metadata',
                           url="http://www.cic.gc.ca"
         )
-    @skipIf(not(get_pid('redis-server')),  'Redis Server not available')
+    @skipIf(check_port(cfg['redis']['host'], 6379), 'Requires Redis Server up')
     def test_imgmeta(self):
         self.run_endpoint('imgmeta',
                           id="26609786"
