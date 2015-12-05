@@ -143,6 +143,10 @@ class FullAPITest(TestCase):
         self.run_endpoint('enhance/twitter',
                           text='https://twitter.com/realDonaldTrump'
         )
+    def test_geocode(self):
+        self.run_endpoint('enhance/geocoder',
+                          city=('cali', 'portland')
+        )
     def test_merge(self):
         self.run_endpoint('factor/merge',
                           id="71046685",
