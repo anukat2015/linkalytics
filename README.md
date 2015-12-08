@@ -3,50 +3,137 @@ Linkalytics
 
 [![License][License Badge]][License] [![Version][Version Badge]][Version] [![Travis][Travis Badge]][Travis]
 
-Analytics to link data
+Backend analytics to link together disparate data
 
-Getting Started with Linkalytics
---------------------------------
+Support
+--------
 
-### Get dependencies
+Here’s a list of Python platforms that are officially supported.
+
+- Python 3.5 (Latest)
+- Python 3.4
+
+Quickstart
+==========
+
+Clone Repository
+----------------
 
 ```sh
 $ git clone https://github.com/qadium-memex/linkalytics.git
 ```
 
-Move into the directory and to install requirements run
+### \*_Optional_ `Git LFS`
+
+This repository contains some large filed stored using [Git (Large File System) LFS][LFS Blog].
+
+Git Large File Storage (LFS) replaces large files such as audio samples, videos, datasets,
+and graphics with text pointers inside Git, while storing the file contents on a remote server.
+
+[Instructions for installing Git LFS][LFS]
+
+After installing LFS, to retrieve the text pointers with the actual files runha.
+
+```sh
+$ git lfs pull
+```
+
+Install Python Dependencies
+---------------------------
 
 ```sh
 $ pip3 install -r requirements.txt
 ```
 
-### Instantiate credentials from shared repository using `credstmpl`
+Also it is necessary to install the dependencies `pandas` and `scipy`
 
 ```sh
-$ credstmpl linkalytics/environment/*.j2
+$ pip3 install scipy pandas
 ```
 
+Install Disque
+--------------
+Currently we utilize [Disque][Disque] as a distributed work queue.
+
+To install disque, ensure that you have a proper C Compiler installed and grab the repository
+
+```sh
+$ git clone https://github.com/antirez/disque.git
+```
+
+Make and install binaries
+
+```sh
+make && make install
+```
+
+Or use `sudo` if necessary
+
+```sh
+make && sudo make install
+```
+
+
+Instantiate credentials from shared repository using `credstmpl`
+----------------------------------------------------------------
 See Qadium's [credstmpl github repository](Credstmpl) for installation instructions.
 
 > Also, please note this requires AWS credentials.
 
 
-### Step 2 -- Get going
+```sh
+$ credstmpl linkalytics/environment/*.j2
+```
 
-Open two terminal windows, in the first type
+Run Services (Short Version)
+----------------------------
 
-> Note:
-> Ensure there is a local elasticsearch instance running as well as a worker queue.
-> We use [disque][Disque] as our in-memory, distributed job queue.
+There is a quick and dirty start script that should run all the necessary services required to run linkalytics.
+
+To run in from the root project directory
+
+```sh
+$ ./start.sh
+```
+
+If this doesn't work try the longer version and start each service manually
+
+
+Run Services (Long Version)
+---------------------------
+
+Each of these services should run in it's own terminal window
+
+### Run the disque server
+
+```sh
+$ disque-server
+```
+
+### Start Redis Server
+
+```sh
+$ redis-server infrastructure/ansible/redis/templates/redis.conf
+```
+
+### Start Linkalytics API Server
 
 ```sh
 $ python3 manage.py runserver
 ```
 
-In the second, type
+### Start Workers
 
 ```sh
 $ python3 -m linkalytics
+```
+
+### _[Optional]_ Start Tika Metadata Extraction Server
+
+* _Requires Java Runtime Environment 7+_
+
+```sh
+$ java -jar $(find . -type f -name 'tika-server.jar')
 ```
 
 [Documentation](https://swaggerhub.com/api/jjangsangy/linkalytics)
@@ -73,3 +160,6 @@ For more information about generating a client or server, check out [swagger](ht
 
 [Disque]:    https://github.com/antirez/disque.git
 [Credstmpl]: https://github.com/qadium/credstmpl
+
+[LFS]: https://git-lfs.github.com
+[LFS Blog]: https://github.com/blog/1986-announcing-git-large-file-storage-lfs

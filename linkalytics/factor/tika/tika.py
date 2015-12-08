@@ -75,6 +75,15 @@ def get_metadata(url):
 
 def redis_load(url, redis_instance):
     """
+    Main Business Flow Logic
+    ------------------------
+    if metadata not cached
+        - Extract with Tika
+        - Set to Redis
+        - Retrieve from Redis
+    else
+        - Retrieve from Redis
+
     :param url:
         A fully qualified url to a document
     :param redis_instance: Redis<Instance>

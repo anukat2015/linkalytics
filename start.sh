@@ -6,6 +6,10 @@ if [ -n "$(pgrep disque-server)" ]; then
     pkill disque-server
 fi
 
+if [ -n "$(pgrep redis-server)" ]; then
+    pkill redis-server
+fi
+
 echo "Starting Disque Server"
 (
     disque-server
@@ -28,6 +32,11 @@ echo "Starting Tika Server"
     java -jar $(find . -type f -name 'tika-server.jar')
 ) &> /dev/null & tika_server=$!
 
+echo "Starting Redis Server"
+(
+    redis-server infrastructure/ansible/redis/templates/redis.conf
+) &> /dev/null & redis_server=$!
+
 function cleanup() {
     printf '\n%s\n' "Killing Processes"
     kill "$linkalytics" "$server" $dq_server $tika_server
@@ -35,4 +44,4 @@ function cleanup() {
 
 trap cleanup SIGKILL SIGHUP SIGINT
 
-wait "$linkalytics" "$server" "$dq_server" "$tika_server"
+wait "$linkalytics" "$server" "$dq_server" "$tika_server" "$redis_server"
