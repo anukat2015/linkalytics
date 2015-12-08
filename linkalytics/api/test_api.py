@@ -12,7 +12,7 @@ from .. environment import cfg
 
 def check_port(host, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    return sock.connect_ex((host, port))
+    return False if sock.connect_ex((host, port)) else True
 
 class APITest(TestCase):
 
@@ -29,7 +29,7 @@ class APITest(TestCase):
         self.assertFalse(current_app is None)
 
 @skipIf(os.getenv('TRAVIS'), 'Not able to mock on CI')
-@skipIf(check_port(cfg['disque']['host'], 7711),  'Requires Disque Server up')
+@skipIf(not(check_port(cfg['disque']['host'], 7711)),  'Requires Disque Server up')
 class FullAPITest(TestCase):
     """
     Full API Test
@@ -95,13 +95,13 @@ class FullAPITest(TestCase):
 
         return response
 
-    @skipIf(check_port(cfg['redis']['host'], 6379), 'Requires Redis Server up')
-    @skipIf(check_port(cfg['tika']['host'],  9998), 'Requires Tika  Server up')
+    @skipIf(not(check_port(cfg['redis']['host'], 6379)), 'Requires Redis Server up')
+    @skipIf(not(check_port(cfg['tika']['host'],  9998)), 'Requires Tika  Server up')
     def test_metadata(self):
         self.run_endpoint('metadata',
                           url="http://www.cic.gc.ca"
         )
-    @skipIf(check_port(cfg['redis']['host'], 6379), 'Requires Redis Server up')
+    @skipIf(not(check_port(cfg['redis']['host'], 6379)), 'Requires Redis Server up')
     def test_imgmeta(self):
         self.run_endpoint('imgmeta',
                           id="26609786"

@@ -118,6 +118,8 @@ def redis_docs(url, redis_instance):
         docs = list(map(decoder, redis_instance.lrange(key, 0, -1)))
     else:
         docs = filter_docs(common_crawl(url), get_domain(url))
+        if not docs:
+            docs = 'nil'
         redis_instance.lpush(key, *docs)
     return docs
 

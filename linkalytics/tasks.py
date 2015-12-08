@@ -17,6 +17,7 @@ def create_mux(cfg):
     return TaskMux(host=cfg["disque"]["host"])
 
 class TaskMux:
+
     def __init__(self, **kwargs):
         """ Create a high-level task multiplexer on top of Disque.
 
@@ -26,6 +27,13 @@ class TaskMux:
         """
         self.conn = disq.Disque(**kwargs)
         self.__logger = logging.getLogger(__name__)
+
+    def __repr__(self):
+        config = self.conn.config_get()
+        return '{clsname}(port={port})'.format(
+            clsname=self.__class__.__name__,
+            port=config['port'],
+        )
 
     def inspect_job(self, job_id):
         """ This function inspects the contents of a job.
