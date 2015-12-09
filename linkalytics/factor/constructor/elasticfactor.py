@@ -82,7 +82,7 @@ class ElasticFactor(FactorBase):
 
         return list(reduce(accumulator, keys, set()))
 
-    def combine(self, ad_id, *factors):
+    def initialize(self, ad_id, *factors):
         """
         :param ad_id: str
             Unique ad identifier
@@ -98,6 +98,52 @@ class ElasticFactor(FactorBase):
                     for factor in factors
             }
         }
+
+    def current_status(self, _id):
+        """
+        :param ad_id: str
+            Unique ad identifier
+        :param factors: sequence
+            Factors to merge on a particular ID
+
+        :return: factors
+        :rtype: dict
+        """
+        payload = {
+                    "query": {
+                        "match": {
+                            "_id": _id
+                        }
+                    }
+                }
+        es = Elasticsearch()
+        res = es.search(index="factor_state2015", body=payload)
+        return res['hits']['hits'][0]
+
+    def recurse(self, _id, *tuple_of_factors_and_factor_values):
+        """
+        :param ad_id: str
+            Unique ad identifier
+        :param factors: sequence
+            Factors to merge on a particular ID
+
+        :return: factors
+        :rtype: dict
+        """
+        state = current_status(_id)
+        state_identifiers = []
+        #below code not yet working
+        for tup in tuple_of_factors_and_factor_values:
+            additions = reverse_lookup(tup[0], tup[1]))
+            for ad_id in additions:
+                new = initialize(ad_id, *factors)
+                for v1 in new.values():
+                    for k2 in v1.items():
+                        if k2 not in state_identifiers:
+                            ...
+            state[tup[0] + ":" + tup[1]] = 
+        #above code not yet working
+        return state
 
     def reduce(self, ad_id, *factors):
         """
@@ -234,7 +280,7 @@ def suggest(ad_id: str, factor_label: str, url: str):
         return None
 
 
-def factor_constructor(ad_id: str, factor_labels: list, url: str) -> dict:
+def factor_constructor(ad_id: str, factor_labe3: list, url: str) -> dict:
     """
     :param ad_id: str
         Str of number
