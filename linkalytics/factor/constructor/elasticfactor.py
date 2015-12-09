@@ -99,6 +99,16 @@ class ElasticFactor(FactorBase):
             }
         }
 
+    def get_all(self, ad_id):
+        """
+        :param ad_id: str
+            Unique ad identifier
+
+        :return: factors
+        :rtype:  dict
+        """
+        return self.initialize(ad_id, *self.available(ad_id))
+
     def current_status(self, _id):
         """
         :param ad_id: str
@@ -171,9 +181,6 @@ class ElasticFactor(FactorBase):
 
         return reduce(intersect, (reduce(union,
                     map(set, combined[factor].values()), set()) for factor in factors))
-
-    def extend(self, ad_id, factor, extension):
-        pass
 
 
     def lookup(self, ad_id, field):
