@@ -120,30 +120,35 @@ class ElasticFactor(FactorBase):
         res = es.search(index="factor_state2015", body=payload)
         return res['hits']['hits'][0]
 
-    def recurse(self, _id, *tuple_of_factors_and_factor_values):
+    def recurse(self, _id, factor_fields, factor_values, factors):
         """
         :param ad_id: str
             Unique ad identifier
+        :param factor_fields: sequence
+            Factor_fields to understand type of factor_value
+        :param factor_values: sequence
+            Factor_values -- the specific values of factors
         :param factors: sequence
-            Factors to merge on a particular ID
+            Factors to suggest ad_ids
 
-        :return: factors
         :rtype: dict
         """
-        state = current_status(_id)
+        state = ElasticFactor.current_status(_id)
         state_identifiers = []
-        #below code not yet working
-        for tup in tuple_of_factors_and_factor_values:
-            additions = reverse_lookup(tup[0], tup[1]))
+        print(len(factor_fields))
+        for i in range(0, len(factor_fields)):
+            additions = reverse_lookup(factor_fields[i], factor_values[i])
+            state[factor_fields[i] + "_" + factor_values[i]] = {}
             for ad_id in additions:
-                new = initialize(ad_id, *factors)
-                for v1 in new.values():
-                    for k2 in v1.items():
+                new = initialize(ad_id, factors)
+                for k1, v1 in new.items():
+                    for k2, v2 in v1.items():
                         if k2 not in state_identifiers:
-                            ...
-            state[tup[0] + ":" + tup[1]] = 
-        #above code not yet working
-        return state
+                            state[factor_fields[i] + "_" + factor_values[i]][k1] = {}
+                            state[factor_fields[i] + "_" + factor_values[i]][k1][k2] = v2
+            if state[factor_fields[i] + "_" + factor_values[i]] == {}:
+                state.pop(factor_fields[i] + "_" + factor_values[i])
+        return "state"
 
     def reduce(self, ad_id, *factors):
         """
