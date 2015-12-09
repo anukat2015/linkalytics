@@ -6,6 +6,7 @@ from .. lsh import lsh
 from . elasticfactor import ElasticFactor
 from elasticsearch import Elasticsearch
 import time
+import json
 
 es = Elasticsearch()
 try:
@@ -24,6 +25,7 @@ def run(node):
         initialized[ad_id]['lsh'] = {}
         for text in initialized[ad_id]['text']:
             initialized[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
-
-    res = es.index(index="factor_state2015", id=int(time.time()), doc_type="analysis", body=initialized)
+    index_id = int(time.time())
+    initialized["_id"] = index_id
+    res = es.index(index="factor_state2015", id=index_id, doc_type="analysis", body=initialized)
     return initialized
