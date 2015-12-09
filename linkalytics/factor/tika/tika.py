@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import collections
 import requests
 import tempfile
 import operator
@@ -132,6 +133,23 @@ def redis_docs(url, redis_instance):
         redis_instance.lpush(key, *docs)
     return docs
 
+def metadata_keys(node):
+    counter = collections.Counter()
+    output  = run(node)
+    for values in output.values():
+        counter.update(values.keys())
+    return dict(counter)
+
+def metadata_values(node):
+    counter = collections.Counter()
+    output  = run(node)
+    for values in output.values():
+        items = [
+            i for i in values.values()
+                if not isinstance(i, (list, dict))
+        ]
+        counter.update(items)
+    return dict(counter)
 
 def run(node):
     """

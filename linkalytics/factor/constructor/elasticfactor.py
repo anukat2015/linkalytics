@@ -119,6 +119,10 @@ class ElasticFactor(FactorBase):
         return reduce(intersect, (reduce(union,
                     map(set, combined[factor].values()), set()) for factor in factors))
 
+    def extend(self, ad_id, factor, extension):
+        pass
+
+
     def lookup(self, ad_id, field):
         """
         Get data from ad_id
