@@ -1,5 +1,6 @@
 import json
 import logging
+
 from   concurrent.futures import ThreadPoolExecutor, wait
 
 from . tasks import create_mux
@@ -18,7 +19,6 @@ RUNNERS = {
     'lsh'                : lsh.run,
     'imgmeta'            : imgmeta.run,
     'search'             : search.run,
-    'metadata'           : tika.run,
     'enhance/instagram'  : instagrammer.run,
     'enhance/geocoder'   : geocoder.run,
     'enhance/phone'      : phonenumber.run,
@@ -29,7 +29,10 @@ RUNNERS = {
     'factor/status'      : status.run,
     'factor/recursor'    : recursor.run,
     'factor/available'   : available.run,
-    'coincidence'        : coincidence.run
+    'coincidence'        : coincidence.run,
+    'metadata'           : tika.run,
+    'metadata/keys'      : tika.metadata_keys,
+    'metadata/values'    : tika.metadata_values,
 }
 
 logger = logging.getLogger('')
