@@ -10,20 +10,20 @@ import time
 es = Elasticsearch()
 try:
     es.indices.create(index="factor_state2015")
-    time.sleep(.4)
+    time.sleep(1)
 except:
     pass
 
 def run(node):
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
     constructor = ElasticFactor(cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"])
-    combined    = constructor.combine(ad_id, *factors)
+    initialized    = constructor.initialize(ad_id, *factors)
 
     # If Text Factor is Selected, run LSH to get near duplicates
-    if 'text' in factors and combined[ad_id]['text']:
-        combined[ad_id]['lsh'] = {}
-        for text in combined[ad_id]['text']:
-            combined[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
+    if 'text' in factors and initialized[ad_id]['text']:
+        initialized[ad_id]['lsh'] = {}
+        for text in initialized[ad_id]['text']:
+            initialized[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
 
-    res = es.index(index="factor_state2015", id=1, doc_type="analysis", body=combined)
-    return combined
+    res = es.index(index="factor_state2015", id=int(time.time()), doc_type="analysis", body=initialized)
+    return initialized

@@ -9,7 +9,7 @@ from . import search
 from . enhance import youtube, twitter, geocoder, instagrammer, phonenumber
 from . environment import cfg
 from . factor import ngrams, lsh, imgmeta, tika
-from . factor.constructor import merge, constructor, available
+from . factor.constructor import merge, initialize, available
 from . factor_validator import coincidence
 
 # Endpoint: Function Runner
@@ -24,7 +24,7 @@ RUNNERS = {
     'enhance/phone'      : phonenumber.run,
     'enhance/twitter'    : twitter.run,
     'enhance/youtube'    : youtube.run,
-    'factor/constructor' : constructor.run,
+    'factor/initialize'  : initialize.run,
     'factor/merge'       : merge.run,
     'factor/available'   : available.run,
     'coincidence'        : coincidence.run,

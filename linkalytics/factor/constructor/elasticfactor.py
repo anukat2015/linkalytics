@@ -82,7 +82,7 @@ class ElasticFactor(FactorBase):
 
         return list(reduce(accumulator, keys, set()))
 
-    def combine(self, ad_id, *factors):
+    def initialize(self, ad_id, *factors):
         """
         :param ad_id: str
             Unique ad identifier
@@ -230,7 +230,7 @@ def suggest(ad_id: str, factor_label: str, url: str):
         return None
 
 
-def factor_constructor(ad_id: str, factor_labels: list, url: str) -> dict:
+def factor_constructor(ad_id: str, factor_labe3: list, url: str) -> dict:
     """
     :param ad_id: str
         Str of number
