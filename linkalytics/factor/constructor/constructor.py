@@ -4,6 +4,15 @@ from ... run_cli import Arguments
 from .. lsh import lsh
 
 from . elasticfactor import ElasticFactor
+from elasticsearch import Elasticsearch
+import time
+
+es = Elasticsearch()
+try:
+    es.indices.create(index="factor_state2015")
+    time.sleep(.4)
+except:
+    pass
 
 def run(node):
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
@@ -16,5 +25,5 @@ def run(node):
         for text in combined[ad_id]['text']:
             combined[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
 
+    res = es.index(index="factor_state2015", id=1, doc_type="analysis", body=combined)
     return combined
-
