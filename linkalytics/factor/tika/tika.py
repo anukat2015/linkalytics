@@ -128,7 +128,7 @@ def redis_docs(url, redis_instance):
     else:
         docs = filter_docs(common_crawl(url), get_domain(url))
         if not docs:
-            docs = 'nil'
+            docs = 'null'
         redis_instance.lpush(key, *docs)
     return docs
 

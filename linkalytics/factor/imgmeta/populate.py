@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import redis
-import csv
-import argparse
 import os
-import datetime
 import sys
+
+from ... environment import cfg
 
 # __TIME_TSV is the set of files containing time inforation. Any
 # duplicates are ignored. The order these files are read is also not
@@ -26,7 +25,7 @@ __SERIAL_TSV = [
     "hash_serial_number.tsv"
 ]
 
-conn = redis.Redis(host='localhost', port=6379)
+conn = redis.Redis(host=cfg['redis']['host'], port=6379)
 pipe = conn.pipeline()
 
 def metadata_from(filename):
@@ -62,9 +61,6 @@ def add_to_redis(key, field, value):
         sys.stdout.write('.')
     else:
         sys.stdout.write('*')
-
-    if sys.stdout.tell() % 80 == 0:
-        sys.stdout.write("\n")
 
 
 def handle_time(filename):

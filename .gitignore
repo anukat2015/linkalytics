@@ -93,3 +93,4 @@ clusters/**
 src/**
 nodes.conf
 *.pid
+*dump.rdb
