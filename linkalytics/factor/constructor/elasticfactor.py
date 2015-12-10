@@ -126,41 +126,10 @@ class ElasticFactor(FactorBase):
                         }
                     }
                 }
-        es = Elasticsearch()
-        res = es.search(index="factor_state2015", body=payload)
+        es2 = Elasticsearch()
+        res = es2.search(index="factor_state2015", body=payload)
         return res['hits']['hits'][0]
 
-    def recurse(self, _id, factor_fields, factor_values, *factors):
-        """
-        :param ad_id: str
-            Unique ad identifier
-        :param factor_fields: sequence
-            Factor_fields to understand type of factor_value
-        :param factor_values: sequence
-            Factor_values -- the specific values of factors e.g. (123)
-        :param factors: sequence
-            Factors to suggest ad_ids
-
-        :rtype: dict
-        """
-        state = ElasticFactor.current_status(self, _id)
-        state_identifiers = []
-        """state_identifiers should equal all the phone numbers and emails and titles, etc. in the state object... this needs to be added"""
-        print(len(factor_fields))
-        for i in range(0, len(factor_fields)):
-            additions = ElasticFactor.reverse_lookup(self, factor_fields[i], factor_values[i])
-            state[factor_fields[i] + "_" + factor_values[i]] = {}
-            for ad_id in additions:
-                new = ElasticFactor.initialize(self, ad_id, *factors)
-                """ Line 146 results in TypeError: unhashable type: 'list'\n"""
-                for k1, v1 in new.items():
-                    for k2, v2 in v1.items():
-                        if k2 not in state_identifiers:
-                            state[factor_fields[i] + "_" + factor_values[i]][k1] = {}
-                            state[factor_fields[i] + "_" + factor_values[i]][k1][k2] = v2
-            if state[factor_fields[i] + "_" + factor_values[i]] == {}:
-                state.pop(factor_fields[i] + "_" + factor_values[i])
-        return "state"
 
     def reduce(self, ad_id, *factors):
         """
