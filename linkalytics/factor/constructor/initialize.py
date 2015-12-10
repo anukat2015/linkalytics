@@ -5,17 +5,31 @@ from .. lsh import lsh
 
 from . elasticfactor import ElasticFactor
 from elasticsearch import Elasticsearch
-import time
-import json
 
-es = Elasticsearch()
-try:
-    es.indices.create(index="factor_state2015")
-    time.sleep(1)
-except:
-    pass
+import time
+
+
+def create_index(es, name):
+    """
+    :param es: <Elasticsearch>
+        Elasticsearch Instance
+    :param name: str
+        Name of newly created index
+
+    :return: Acknowledged
+    :rtype:  dict
+    """
+    if not es.indicies.exists(name):
+        return es.indices.create(index=name)
+    else:
+        return {'acknowledged': False}
+
 
 def run(node):
+    es = Elasticsearch()
+
+    create_index(es, 'factor_state2015')
+
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
     constructor = ElasticFactor(cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"])
     initialized    = constructor.initialize(ad_id, *factors)
