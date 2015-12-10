@@ -19,7 +19,7 @@ def create_index(es, name):
     :return: Acknowledged
     :rtype:  dict
     """
-    if not es.indicies.exists(name):
+    if not es.indices.exists(name):
         return es.indices.create(index=name)
     else:
         return {'acknowledged': False}
