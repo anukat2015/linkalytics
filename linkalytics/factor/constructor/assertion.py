@@ -42,7 +42,7 @@ def run(node):
     index_id = state["_id"].split("_")[0] + "_" + str(int(state["_id"].split("_")[1]) + 1)
     # state["index_id"] = index_id
     state.pop("_id")
-    state['previous_source'] = state.pop('_source')
+    state['sourcecontents'] = state.pop('_source')
 
     es = Elasticsearch()
     res = es.index(index="factor_state2016", id=index_id, doc_type="factor_network", body=state)

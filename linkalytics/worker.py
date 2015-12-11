@@ -10,7 +10,7 @@ from . import search
 from . enhance import youtube, twitter, geocoder, instagrammer, phonenumber
 from . environment import cfg
 from . factor import ngrams, lsh, imgmeta, tika
-from . factor.constructor import merge, initialize, available, status, recursor, assertion
+from . factor.constructor import merge, initialize, available, status, assertion
 from . factor_validator import coincidence
 
 # Endpoint: Function Runner
@@ -28,7 +28,6 @@ RUNNERS = {
     'factor/merge'       : merge.run,
     'factor/assertion'   : assertion.run,
     'factor/status'      : status.run,
-    'factor/recursor'    : recursor.run,
     'factor/available'   : available.run,
     'coincidence'        : coincidence.run,
     'metadata'           : tika.run,
