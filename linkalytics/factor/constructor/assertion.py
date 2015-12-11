@@ -40,7 +40,9 @@ def run(node):
                         for k3, v3 in v2.items():  # v3 is factor_type
                             if isinstance(v3, dict):
                                 for k4, v4 in v3.items():  # v4 is factor_value
-                                    if isinstance(v4, dict):
+                                    if k1 == "sourcecontents_1":
+                                        state_identifiers.append(k4)
+                                    elif isinstance(v4, dict):
                                         for k5 in v4.items():
                                             state_identifiers.append(k5)
 
