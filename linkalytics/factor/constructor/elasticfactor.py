@@ -127,7 +127,7 @@ class ElasticFactor(FactorBase):
                     }
                 }
         es2 = Elasticsearch()
-        res = es2.search(index="factor_state2015", body=payload)
+        res = es2.search(index="factor_state2016", body=payload)
         return res['hits']['hits'][0]
 
 
@@ -206,6 +206,42 @@ class ElasticFactor(FactorBase):
             results = self.es.search(body=payload)
 
         return [hit['_id'] for hit in results['hits']['hits']]
+
+    # def special_lookup(self, field, field_value):
+    #     """
+    #     Get ad_id from a specific field and search term
+
+    #     :param field_value: str
+    #         String to be queried
+    #     """
+
+    #     payload = {
+    #             "size": self.size,
+    #             "query": {
+    #                 "match_phrase": {
+    #                     field: field_value
+    #                 }
+    #             }
+    #         }
+    #     results = self.es.search(body=payload)
+
+    #     # If the Elastic Search returns 0 results,
+    #     # then change the search field from `self.field` to all and search again.
+    #     if not results['hits']['total']:
+    #         payload = {
+    #             "size": self.size,
+    #             "query": {
+    #                 "match_phrase": {
+    #                     "_all": field_value
+    #                 }
+    #             }
+    #         }
+    #         results = self.es.search(body=payload)
+    #     new_field_values = set()
+    #     for hit in results['hits']['hits']:
+    #         if hit["_source"][field] != field_value:
+    #             new_field_values.add(hit["_source"][field])
+    #     return new_field_values
 
 
 def combine_two_factors(original: dict, addition: dict) -> dict:

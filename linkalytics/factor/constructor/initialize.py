@@ -28,7 +28,7 @@ def create_index(es, name):
 def run(node):
     es = Elasticsearch()
 
-    create_index(es, 'factor_state2015')
+    create_index(es, 'factor_state2016')
 
     ad_id, factors = node.get('id', '63166071'), node.get('factors', ['phone', 'email', 'text', 'title'])
     constructor = ElasticFactor(cfg["cdr_elastic_search"]["hosts"] + cfg["cdr_elastic_search"]["index"])
@@ -39,7 +39,7 @@ def run(node):
         initialized[ad_id]['lsh'] = {}
         for text in initialized[ad_id]['text']:
             initialized[ad_id]['lsh'][text] = list(lsh(Arguments(text, 1000)))
-    index_id = int(time.time())
+    index_id = ad_id + "_1"
     initialized["_id"] = index_id
-    res = es.index(index="factor_state2015", id=index_id, doc_type="analysis", body=initialized)
+    res = es.index(index="factor_state2016", id=index_id, doc_type="factor_network", body=initialized)
     return initialized
