@@ -237,10 +237,15 @@ class ElasticFactor(FactorBase):
     #             }
     #         }
     #         results = self.es.search(body=payload)
-    #     new_field_values = set()
+    #     a = set()
+    #     result_tuple = {}
     #     for hit in results['hits']['hits']:
     #         if hit["_source"][field] != field_value:
-    #             new_field_values.add(hit["_source"][field])
+    #             result_tuple[(field, hit["_source"][field])] =  hit["_id"]
+    #             a.add(result_tuple)
+    #             result_tuple = {}
+    #     for i in result_tuple:
+    #         if i[2]
     #     return new_field_values
 
 
