@@ -218,7 +218,7 @@ class ElasticFactor(FactorBase):
         : rtype: dict
             returns a dictionary with the intersecting factors, factors present in a not b and vice versa, and the network representation of the factors so analysts can back track the order
         """
-        i = {}
+        factors = {}
         network = {}
         everything = {}
 
@@ -230,11 +230,11 @@ class ElasticFactor(FactorBase):
 
         factors["intersection"] = factors_a.intersection(factors_b)
         factors["workflow_a"] = factors_a.difference(factors_b)
-        factors["workflow_b"] = factors_b.intersection(factors_a)
+        factors["workflow_b"] = factors_b.difference(factors_a)
 
-        network["intersection"] = self.networker(factors["intersection"], data_a)
-        network["workflow_a"] = self.networker(factors["workflow_a"], data_a)
-        network["workflow_b"] = self.networker(factors["workflow_b"], data_b)
+        network["intersection"] = self.check(factors["intersection"], data_a)
+        network["workflow_a"] = self.check(factors["workflow_a"], data_a)
+        network["workflow_b"] = self.check(factors["workflow_b"], data_b)
 
         everything["factors"] = factors
         everything["network"] = network
