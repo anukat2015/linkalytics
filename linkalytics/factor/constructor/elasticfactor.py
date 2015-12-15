@@ -207,6 +207,88 @@ class ElasticFactor(FactorBase):
 
         return [hit['_id'] for hit in results['hits']['hits']]
 
+    def merge(self, a, b):
+        """
+        Get intersection of two factor states
+        : param a: dict
+            dict to merge with another dict
+        : param factor_state_b: dict
+            dict to merge with another dict
+
+        : rtype: dict
+            returns a dictionary with the intersecting factors, factors present in a not b and vice versa, and the network representation of the factors so analysts can back track the order
+        """
+        i = {}
+        network = {}
+        everything = {}
+
+        data_a = self.populater(a)
+        data_b = self.populater(b)
+
+        factors_a = data_a["factors"]
+        factors_b = data_b["factors"]
+
+        factors["intersection"] = factors_a.intersection(factors_b)
+        factors["workflow_a"] = factors_a.difference(factors_b)
+        factors["workflow_b"] = factors_b.intersection(factors_a)
+
+        network["intersection"] = self.networker(factors["intersection"], data_a)
+        network["workflow_a"] = self.networker(factors["workflow_a"], data_a)
+        network["workflow_b"] = self.networker(factors["workflow_b"], data_b)
+
+        everything["factors"] = factors
+        everything["network"] = network
+        return(everything)
+
+    def check(self, factors, data):
+        """
+        Get relationships of relevant factors
+        : param factors: dict
+            dict to merge with another dict
+        : param data: dict
+            dict to merge with another dict
+
+        : rtype: dict
+            returns a dictionary with the the relationships for the specified factors
+        """
+        network = []
+        for k in factors:
+            if k in data["relationships"]:
+                network.list(data["relationships"])
+        return network
+
+    def populater(self, dictionary):
+        """
+        Get intersection of two factor states
+        : param a: dict
+            dict to intersect with another dict
+        : param factor_state_b: dict
+            dict to intersect with another dict
+
+        : rtype: dict
+        Return: set of factor types/values, dictionary containing the network structure of the original dict
+        """
+        data = {}
+        factors = set()
+        relationships = {}
+        for k1, v1 in dictionary.items():
+            if "sourcecontents" in k1:
+                for k2, v2 in v1.items():
+                    if isinstance(v2, dict):
+                        for k3, v3 in v2.items():
+                            if isinstance(v3, dict):
+                                for k4, v4 in v3.items():
+                                    if k1 == "sourcecontents_1":
+                                        factors.add(k3 + "_" + k4)
+                                        relationships[k2] = k3 + "_" + k4
+                                    elif isinstance(v4, dict):
+                                        for k5 in v4.items():
+                                            factors.add(k4 + "_" + k5)
+                                            relationships[k3] = k4 + "_" + k5
+        data["factors"] = factors
+        data["relationships"] = relationships
+        return data
+
     # def special_lookup(self, field, field_value):
     #     """
     #     Get ad_id from a specific field and search term
