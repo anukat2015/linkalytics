@@ -1,12 +1,37 @@
-import sys
+from elasticsearch import Elasticsearch
+from functools import total_ordering, reduce
 
-from collections import Mapping, Container, MutableSet, defaultdict
-from functools import total_ordering
-from abc import abstractmethod, ABCMeta
+import networkx as nx
+
+from ... environment import cfg
+from ... utils import memoize
+
+class MetaConfigInjection(type):
+    """
+    This metaclass implements the Singleton design pattern in order
+    to perform dependency injection of pre-configured
+    elasticsearch instances bound  as attributes to cls.instance
+    """
+    instance = None
+    def __call__(cls, *args, **kwargs):
+
+        hosts = cfg['cdr_elastic_search']['hosts']
+        index = cfg['cdr_elastic_search']['index']
+
+        if not cls.instance:
+            cls.instance = super().__call__(*args, **kwargs)
+            cls.es       = Elasticsearch([hosts + index],
+                                         port=443,
+                                         use_ssl=False,
+                                         verify_certs=False,
+                                         timeout=160,
+            )
+        return cls.instance
 
 class propertycache:
     """
-    Allows decoration
+    Custom property decorator which maintiains
+    intermediate results.
     """
     def __init__(self, func):
         self.func = func
@@ -21,128 +46,195 @@ class propertycache:
         setattr(obj, self.name, value)
 
 @total_ordering
-class BaseFactor(metaclass=ABCMeta):
+class FactorNode:
     """
-    Factor Network Abstract Base Class
-    ==================================
-
-    Concrete implementations of FactorNodes should be easily
+    Concrete implementations should be easily
     hashable, recursive data structures.
+
+    :param url: str
+        Fully qualified url to an elasticsearch instance
     """
     def __init__(self, _id):
         self._id = str(_id)
-
     def __repr__(self):
-        return '[{clsname} {id}]'.format(
+        return '<{clsname}({id})>'.format(
             clsname=self.__class__.__name__,
             id=self.id
         )
-
+    @property
+    def id(self):
+        return self._id
+    @id.setter
+    def id(self, value):
+        try:
+            self._id = int(value)
+        except ValueError as error:
+            raise error
     def __hash__(self):
-        return self.id
-
-    def __iter__(self):
-        pass
-
-    def __len__(self):
-        pass
-
-    def __contains__(self, other):
-        pass
-
+        return int(self.id)
     def __eq__(self, other):
         return self.id == other.id
-
     def __lt__(self, other):
         return self.id < other.id
 
-    @propertycache
-    def data(self):
-        return self.suggest(_id, self.available(_id))
 
-    @property
-    def id(self):
-        try:
-            return int(self._id)
-        except ValueError as e:
-            msg = 'Provided node ID: {} cannot be cast as int'
-            print(msg.format(self.id), file=sys.stderr)
-            raise e
+class Messenger(metaclass=Singleton):
 
-    @abstractmethod
-    def lookup(self, ad_id, field):
-        """ lookup takes an ad_id (as a string) and returns a list of
-            field values for self.field.
+    def __init__(self, size=500):
         """
-        pass
-
-    @abstractmethod
-    def reverse_lookup(self, field_value):
-        """ reverse_lookup takes a field value and returns a list of
-            ad_ids for ads having field_value in self.field.
+        :param url: str
+            Fully qualified url to an elasticsearch instance
+        :param size: int
+            Size limit to set on elasticsearch query
         """
-        pass
+        self.size = size
 
-    @abstractmethod
+    def __repr__(self):
+        return '{clsname}("{url}", size={size})'.format(
+            clsname=self.__class__.__name__,
+            url='<Elasticsearch URL>',
+            size=self.size,
+        )
+    @memoize
     def available(self, ad_id):
         """
-        Discover the set of factors available.
-        """
-        pass
+        Get's the available factors for a particular ad
 
-    def suggest(self, ad_id, field, debug=False):
-        field_values = self.lookup(ad_id, field)
-        suggestions = {
-            ad_id : {
-                field: defaultdict(list)
+        :param ad_id: str
+            Unique ad identifier
+
+        :return: factors
+        :rtype : list
+        """
+        accumulator = lambda x,y: x|y
+        payload = {
+                "size": self.size,
+                "query": {
+                    "match_phrase": {
+                        "_id": ad_id
+                    }
+                }
+            }
+        results = self.es.search(body=payload)
+        keys    = [set(i['_source'].keys()) for i in results['hits']['hits']]
+
+        return list(reduce(accumulator, keys, set()))
+
+    def lookup(self, ad_id, field):
+        """
+        Get data from ad_id
+
+        :param ad_id: str
+            String to be queried
+        """
+        payload = {
+            "size": self.size,
+            "query": {
+                "ids": {
+                    "values": [ad_id]
+                }
             }
         }
-        if not isinstance(field_values, list):
-            raise KeyError(field_values)
+        results = self.es.search(body=payload)
+        return [
+            i['_source'][field] for i in results['hits']['hits']
+                if field in i['_source']
+        ]
+    def reverse_lookup(self, field, field_value):
+        """
+        Get ad_id from a specific field and search term
 
-        for field_value in field_values:
-            ads = set(self.reverse_lookup(field, field_value))
-            try:
+        :param field_value: str
+            String to be queried
+        """
+        payload = {
+            "size": self.size,
+            "query": {
+                "match_phrase": {
+                    field: field_value
+                }
+            }
+        }
+        results = self.es.search(body=payload)
+        if not results['hits']['total']:
+            payload = {
+                "size": self.size,
+                "query": {
+                    "match_phrase": {
+                        "_all": field_value
+                    }
+                }
+            }
+            results = self.es.search(body=payload)
+
+        return [
+            hit['_id'] for hit in results['hits']['hits']
+        ]
+    def suggest(self, ad_id, field):
+        """
+        The suggest function suggests other ad_ids that share this
+        field with the input ad_id.
+        """
+        suggestions = []
+        field_values = self.lookup(ad_id, field)
+
+        for value in field_values:
+            ads = set(self.reverse_lookup(field, value))
+
+            # To prevent cycles
+            if ad_id in ads:
                 ads.remove(ad_id)
-            # Means that the reverse_lookup failed to find the originating ad itself.
-            except KeyError:
-                continue
 
-            for x in ads:
-                suggestions[ad_id][field][field_value].append(x)
-            if debug:
-                for x in ads:
-                    assert field_value == self.lookup(x)
+            for ad in ads:
+                suggestions.append(ad)
 
         return suggestions
 
-class DataNode(Container):
-
-    def __init__(self):
-        self._parent = None
+class EdgeStruct:
+    """
+    Data structure applied to edges in a factor network.
+    """
+    def __init__(self, weight=1, **kwargs):
+        self.__dict__ = kwargs
+        self.weight   = weight
 
     def __repr__(self):
-        return '{parent}<DataNode>'.format(parent=self._parent)
+        return str(self.__dict__)
 
-    def __contains__(self):
-        return None
+class FactorNetwork:
+    """
+    Factor Network Constructor
+    ==========================
+    Manager class for initializing and
+    handling state in a factor network
+    """
+    def __init__(self, factor=FactorNode):
+        """
+        :NOTE: must be hashable
+        :param factor: Node
+            Node Data Primitive
 
-    @property
-    def parent(self):
-        return self._parent
+        :rtype:
+            <FactorNetwork>
+        """
+        self.messenger = Messenger()
+        self.factor    = factor
+        self.G         = nx.DiGraph()
 
-    @parent.setter
-    def parent(self, parent):
-        self._parent = parent
 
-class FactorNode(BaseFactor):
+    def __repr__(self):
+        return '{clsname}()'.format(
+                clsname=self.__class__.__name__
+        )
 
-    def __init__(self, _id):
-        super().__init__(_id)
-        self.data = DataNode()
-        self.data.parent = self
+    def register_node(self, node, factor):
+        """
+        Takes in a node and it's suggestions and builds
+        out the directed edges.
+        """
+        self.G.add_node(node)
+        suggestion = list(map(self.factor, self.messenger.suggest(node.id, factor)))
+        for edge in suggestion:
+            self.G.add_edge(node, edge)
 
-    def __getitem__(self, item):
-        return self.data[item]
 
-    def traverse(self):
