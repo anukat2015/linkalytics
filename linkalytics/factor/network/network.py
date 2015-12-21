@@ -271,19 +271,19 @@ class FactorNetwork:
 
         The index_name should remain constant for an organization. The user_name refers to the specific user and provides the functionality to maintain the user provenance by making it the Elastic document type.
 
-        Specifically, split the state into 3 components (1) lead (the datum with which you started) (2) extension (the data you've confirmed based on factor network suggestions) (3) suggestions (the suggested extensions to your data)
+        Specifically, split the state into 3 components (1) root (the datum with which you started) (2) extension (the data you've confirmed based on factor network suggestions) (3) suggestions (the suggested extensions to your data)
 
-        We index a factor network by taking the lead and appending a _x to it. We loop through get requests on that particular lead to get based on the most recently committed lead_x and we add 1 to x.
+        We index a factor network by taking the root and appending a _x to it. We loop through get requests on that particular lead to get based on the most recently committed root_x and we add 1 to x.
 
         The results of the commit will look as follows in Elastic:
 
         {
             "_index": "Your_Index_Name",
             "_type": "adam",
-            "_id": "leadid_x",
+            "_id": "rootid_x",
             "_score": 1,
             "_source": {
-                "lead": [[0,1],[0,7],...],
+                "root": [[0,1],[0,7],...],
                 "extension": {[[1,2],[2,3],...]},
                 "suggestions": {[[3,4],[...],...]}
             }
@@ -306,13 +306,13 @@ class FactorNetwork:
             return result
 
         state = {}
-        state["lead"] = split(source.difference(target), edges)
+        state["root"] = split(source.difference(target), edges)
         state["extension"] = split(target.intersection(source), edges)
         state["suggestions"] = split(target.difference(source), edges)
 
         while preexisting is True:
             try:
-                index_id = state["lead"][0][0] + "_" + str(i)
+                index_id = state["root"][0][0] + "_" + str(i)
                 es.get(index=index_name, id=index_id, doc_type=user_name)
                 i = i + 1
             except:
@@ -335,6 +335,25 @@ class FactorNetwork:
         G.nx.Graph()
         G.add_edges_from(edges)
         return G
+
+    def merge(self, index_name, user_name_a, index_id_a, user_name_b, index_id_b):
+        """
+        Merge two factor states
+        """
+        state_a = es.get(index=index_name, id=index_id_a, doc_type=user_name_a)
+        state_b = es.get(index=index_name, id=index_id_b, doc_type=user_name_b)
+        G_a = unpack_state_to_graph(state_a).edges()
+        G_b = unpack_state_to_graph(state_b).edges()
+        network = {}
+        network["intersection"] = G_a.intersection(G_b)
+        network["workflow_a"] = G_a.difference(G_b)
+        network["workflow_b"] = G_b.difference(G_a)
+        n_edges = len(network["intersection"]) + len(network["workflow_a"]) + len(network["workflow_b"])
+        network["merge_stats"] = {}
+        network["merge_stats"]["intersection"] = round(len(network["intersection"])/n_edges, 2)
+        network["merge_stats"]["workflow_a"] = round(len(network["workflow_a"])/n_edges, 2)
+        network["merge_stats"]["workflow_b"] = round(len(network["workflow_b"])/n_edges, 2)
+        return(network)
 
 
 def run(node):
