@@ -341,5 +341,5 @@ def run(node):
     _id, factor = node.get('id'), node.get('factor')
     network = FactorNetwork()
     network.register_node(_id, factor)
-    network.commit(_id)
+    network.commit("factor_state2016", "adam")
     return network.to_dict()
