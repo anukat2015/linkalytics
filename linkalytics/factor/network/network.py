@@ -265,10 +265,81 @@ class FactorNetwork:
                          node_size=100,
         )
 
+    def commit(self, index_name, user_name):
+        """
+        Commit the current state of factor network to a local Elastic instance
+
+        The index_name should remain constant for an organization. The user_name refers to the specific user and provides the functionality to maintain the user provenance by making it the Elastic document type.
+
+        Specifically, split the state into 3 components (1) lead (the datum with which you started) (2) extension (the data you've confirmed based on factor network suggestions) (3) suggestions (the suggested extensions to your data)
+
+        We index a factor network by taking the lead and appending a _x to it. We loop through get requests on that particular lead to get based on the most recently committed lead_x and we add 1 to x.
+
+        The results of the commit will look as follows in Elastic:
+
+        {
+            "_index": "Your_Index_Name",
+            "_type": "adam",
+            "_id": "leadid_x",
+            "_score": 1,
+            "_source": {
+                "lead": [[0,1],[0,7],...],
+                "extension": {[[1,2],[2,3],...]},
+                "suggestions": {[[3,4],[...],...]}
+            }
+        }
+        """
+        es = Elasticsearch()
+        source = set()
+        target = set()
+        edges = self.G.edges()
+        for edge in edges:
+            source.add(edge[0])
+            target.add(edge[1])
+
+        def split(intersection, edges):
+            result = []
+            for i in intersection:
+                for edge in edges:
+                    if i in edge:
+                        result.append(edge)
+            return result
+
+        state = {}
+        state["lead"] = split(source.difference(target), edges)
+        state["extension"] = split(target.intersection(source), edges)
+        state["suggestions"] = split(target.difference(source), edges)
+
+        while preexisting is True:
+            try:
+                index_id = state["lead"][0][0] + "_" + str(i)
+                es.get(index=index_name, id=index_id, doc_type=user_name)
+                i = i + 1
+            except:
+                preexisting = False
+
+        res = es.index(index=index_name, id=index_id, doc_type=user_name, body=state)
+        current_state = es.get(index=index_name, id=index_id, doc_type=user_name)
+        return current_state
+
+    def unpack_state_to_graph(self, index_name, user_name, index_id):
+        """
+        Get request to Elastic to return the graph without the lead/extension/suggestions differentiator
+        """
+        es = Elasticsearch()
+        edges = []
+        current_state = es.get(index=index_name, id=index_id, doc_type=user_name)
+        for k, v in current_state["_source"].items():
+            for edge in v:
+                edges.append(edge)
+        G.nx.Graph()
+        G.add_edges_from(edges)
+        return G
+
 
 def run(node):
     _id, factor = node.get('id'), node.get('factor')
     network = FactorNetwork()
     network.register_node(_id, factor)
-
+    network.commit(_id)
     return network.to_dict()
