@@ -4,6 +4,8 @@ tweepy
 python-instagram
 google-api-python-client
 elasticsearch
+elasticsearch-dsl
+networkx
 pymysql
 flask
 flask-cors
