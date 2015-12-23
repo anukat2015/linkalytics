@@ -6,10 +6,20 @@ notifications:
   email: false
   slack:
     secure: PQaNtwtW2OtrDlQU/keqofyjbhOC2vVk/MbQYHeQTjLRk72HWKO/i7PBt/dlR4HNmhPt7JSXPU4dW5M6TRDsW4Y/KIPA5oeM0t/aMvRY1QMPBDH1J7Ozo4I1pLsjhmSrUR57vpGT0PaF4lYCUFapcJr+BFaIa8DjfWZeC2//JVwQxsy65ONEBmkSrkL1dG6OfR9eapHUvwMX/jLJNp5zqRXQMPQZG8TA2fYXODGVHN1PVi79x9T/aHWBJ39JXPbMi+tfTWIqCqlOVLhs2VSla52lgaRDjLHdK/GMTDrWlftH2dQaKXlz+aidB2FYR9HHUt0Gdk5hHwTGKwYhbbWjA3qK2EY4rLcRgKy56b0up4lo6FSpraw2tsFcrN5r6ouwOZWMZy4QvD0Y5s6jP9i0xqWas4s0WTLFUDeftCYuagDUneAqkc4XqtdRpWHhren4NYAM2MPBos2PPSfQ0IsiKuZKhZWdsxE3ztEC7FpvrJ0su5F6WfAB+auWLT2acfKQR5R1tx4VRdndEyKnu7hv4xNC0ChQ1/9JwOcR9vgsgfQDttIJcbPmrGJood6EMOM31INdlWJLL7JJLOCYXjB6r0FI7CZpKjzp3X37LGWTDgy6z1MZvSnd5+l734Z2gMIwGzugvn3Zhti2JS8Yn0mBFXDR1NotU5fvpfSN5/o60GY=
-cache: apt
+cache:
+  ccache: true
+  apt: true
+  pip: true
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.ccache
+    - $HOME/miniconda
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
 services:
 - redis-server
 - elasticsearch
+- disque-server
 addons:
   apt:
     packages:
@@ -22,6 +32,8 @@ addons:
 before_install:
 - export PATH=$HOME/miniconda/bin:$PATH
 - "./scripts/build_conda.sh"
+- git clone https://github.com/antirez/disque.git
+- cd disque && CC="ccache $CC"
 install:
 - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
 - pip install -r requirements.txt
