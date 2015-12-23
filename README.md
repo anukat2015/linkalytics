@@ -85,56 +85,25 @@ See Qadium's [credstmpl github repository](Credstmpl) for installation instructi
 $ credstmpl linkalytics/environment/*.j2
 ```
 
-Run Services (Short Version)
-----------------------------
-
-There is a quick and dirty start script that should run all the necessary services required to run linkalytics.
-
-To run in from the root project directory
+Install Foreman
+---------------
 
 ```sh
-$ ./start.sh
+$ gem install foreman
 ```
 
-If this doesn't work try the longer version and start each service manually
 
+Run Services
+------------
 
-Run Services (Long Version)
----------------------------
-
-Each of these services should run in it's own terminal window
-
-### Run the disque server
-
-```sh
-$ disque-server
+```
+$ foreman run
 ```
 
-### Start Redis Server
 
-```sh
-$ redis-server infrastructure/ansible/redis/templates/redis.conf
-```
 
-### Start Linkalytics API Server
 
-```sh
-$ python3 manage.py runserver
-```
 
-### Start Workers
-
-```sh
-$ python3 -m linkalytics
-```
-
-### _[Optional]_ Start Tika Metadata Extraction Server
-
-* _Requires Java Runtime Environment 7+_
-
-```sh
-$ java -jar $(find . -type f -name 'tika-server.jar')
-```
 
 [Documentation](https://swaggerhub.com/api/jjangsangy/linkalytics)
 ------------------------------------------------------------------
