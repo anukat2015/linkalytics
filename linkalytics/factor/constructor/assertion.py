@@ -23,6 +23,7 @@ def run(node):
     state.pop("_type")
     state_identifiers = []
     level = int(state["_id"].split("_")[1])
+
     if level == 1:
         for k1, v1 in state.items():       # k1 is _source or factor_type/value, v1 is ad_id
             if isinstance(v1, dict):

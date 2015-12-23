@@ -16,6 +16,8 @@ import logging
 import sys
 import pytoml as toml
 
+from elasticsearch_dsl.connections import connections
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('environment')
 
@@ -41,6 +43,15 @@ def load_config(name):
         print("Check out credstmpl at https://github.com/qadium/credstmpl", file=sys.stderr)
         print("you'll need to run `credstmpl filename.extension.j2`", file=sys.stderr)
 
+def es_config(**kwargs):
+    return {
+        **kwargs,
+        'verify_certs': False,
+        'use_ssl':False,
+        'request_timeout':160,
+        'timeout':160,
+    }
+
 def get_config():
     env = os.getenv('PRODUCTION', None)
     cfg = load_config('production') if env else load_config('develop')
@@ -52,3 +63,8 @@ def get_config():
     return cfg
 
 cfg = get_config()
+
+connections.configure(
+        cdr=es_config(**cfg['cdr_elastic_search']),
+        local=es_config(hosts='localhost', index='factor_state2016'),
+)

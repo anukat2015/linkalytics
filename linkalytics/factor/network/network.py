@@ -1,103 +1,39 @@
 import itertools
 import collections
 
+from functools import reduce
 from elasticsearch import Elasticsearch
-from flask import jsonify
+from elasticsearch_dsl.connections import connections
+from elasticsearch_dsl.search import Search
+from elasticsearch_dsl.query import Q, Ids
 
 import networkx as nx
 
 from ... environment import cfg
 from ... utils import memoize
 
-class MetaConfigInjection(type):
+class Messenger:
     """
-    This metaclass implements the Singleton design pattern in order
-    to perform dependency injection of pre-configured
-    elasticsearch instances bound  as attributes to cls.instance
+    Performs transformations on data
+
+        eg. f(x) -> y
+
+    Decoupled from the other factor network code,
+    and can be swapped with other implementations
     """
-    instance = None
-    def __call__(cls, *args, **kwargs):
 
-        hosts = cfg['cdr_elastic_search']['hosts']
-        index = cfg['cdr_elastic_search']['index']
-
-        if not cls.instance:
-            cls.instance = super().__call__(*args, **kwargs)
-            cls.es       = Elasticsearch([hosts + index],
-                                         port=443,
-                                         use_ssl=False,
-                                         verify_certs=False,
-                                         timeout=160,
-            )
-        return cls.instance
-
-class propertycache:
-    """
-    Custom property decorator which maintiains
-    intermediate results.
-    """
-    def __init__(self, func):
-        self.func = func
-        self.name = func.__name__
-
-    def __get__(self, obj, type=None):
-        result = self.func(obj)
-        self.cachevalue(obj, result)
-        return result
-
-    def cachevalue(self, obj, value):
-        setattr(obj, self.name, value)
-
-class Node:
-    """
-    Custom parametric data type.
-
-    Has more consistent hashing behavior than integers
-    and strings when used as keys to dictionaries.
-
-    Example
-    -------
-    >>> hash(Node(500)) == hash(Node('500'))
-    True
-
-    >>> hash(500) == hash('500')
-    False
-    """
-    def __init__(self, _id):
-        self._id = _id
-
-    def __repr__(self):
-        return '<V|{id}|>'.format(
-            clsname=self.__class__.__name__,
-            id=self.id)
-
-    def __hash__(self):
-        return hash(self.id)
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    @property
-    def id(self):
-        return str(self._id)
-
-class Messenger(metaclass=MetaConfigInjection):
-
-    def __init__(self, size=500):
+    def __init__(self, config='cdr', size=2000):
         """
         :param url: str
             Fully qualified url to an elasticsearch instance
-        :param size: int
+        :param size: int|
             Size limit to set on elasticsearch query
         """
-        self.size = size
+        self.conn = connections.get_connection(config)
+        self.elastic = Search('cdr', extra={'size': size})
 
-    def __repr__(self):
-        return '{clsname}("{url}", size={size})'.format(
-            clsname=self.__class__.__name__,
-            url='<Elasticsearch URL>',
-            size=self.size,
-        )
+    def match(self, match_type, **kwargs):
+        return self.elastic.query(match_type, **kwargs).execute()
 
     @memoize
     def available(self, ad_id):
@@ -111,17 +47,11 @@ class Messenger(metaclass=MetaConfigInjection):
         :rtype : list
         """
         accumulator = lambda x,y: x|y
-        payload = {
-                "size": self.size,
-                "query": {
-                    "match_phrase": {
-                        "_id": ad_id
-                    }
-                }
-            }
-        results = self.es.search(body=payload)
-        keys    = [set(i['_source'].keys()) for i in results['hits']['hits']]
-
+        output      = self.match('match_phrase', _id=ad_id)
+        keys        = [
+            set(i['_source'].keys())
+                for i in output.hits.hits
+        ]
         return list(reduce(accumulator, keys, set()))
 
     def lookup(self, ad_id, field):
@@ -131,19 +61,17 @@ class Messenger(metaclass=MetaConfigInjection):
         :param ad_id: str
             String to be queried
         """
-        payload = {
-            "size": self.size,
-            "query": {
-                "ids": {
-                    "values": [ad_id]
-                }
-            }
-        }
-        results = self.es.search(body=payload)
-        return [
-            i['_source'][field] for i in results['hits']['hits']
-                if field in i['_source']
-        ]
+        if not isinstance(ad_id, list):
+            ad_id = [ad_id]
+
+        results = self.elastic.query(Ids(values=ad_id)).execute()
+
+        return set(flatten([
+            hits['_source'][field] for hits in results.hits.hits
+                if field in hits['_source']
+        ]))
+
+
     def reverse_lookup(self, field, field_value):
         """
         Get ad_id from a specific field and search term
@@ -151,29 +79,13 @@ class Messenger(metaclass=MetaConfigInjection):
         :param field_value: str
             String to be queried
         """
-        payload = {
-            "size": self.size,
-            "query": {
-                "match_phrase": {
-                    field: field_value
-                }
-            }
-        }
-        results = self.es.search(body=payload)
-        if not results['hits']['total']:
-            payload = {
-                "size": self.size,
-                "query": {
-                    "match_phrase": {
-                        "_all": field_value
-                    }
-                }
-            }
-            results = self.es.search(body=payload)
+        results = self.match(
+            'match_phrase', **{field:field_value}).hits.hits
 
-        return [
-            hit['_id'] for hit in results['hits']['hits']
-        ]
+        if not results:
+            results = self.match('match', _all=field_value).hits.hits
+
+        return [hit['_id'] for hit in results]
 
     def suggest(self, ad_id, field):
         """
@@ -187,7 +99,10 @@ class Messenger(metaclass=MetaConfigInjection):
             ads = set(self.reverse_lookup(field, value))
 
             # To prevent cycles
-            ads.discard(ad_id)
+            if isinstance(ad_id, list):
+                ads -= set(ad_id)
+            else:
+                ads.discard(ad_id)
             suggestions[value] = list(ads)
 
         return suggestions
@@ -196,8 +111,8 @@ class FactorNetwork:
     """
     Factor Network Constructor
     ==========================
-    Manager class for initializing and
-    handling state in a factor network
+    Maintains an internal representation of the factor network as a
+    graph and provides functionality to manipulate state.
     """
     def __init__(self, Messenger=Messenger, **kwargs):
         """
@@ -209,7 +124,7 @@ class FactorNetwork:
             to initialize local network object
         """
         self.messenger = Messenger()
-        self.G         = nx.Graph(**kwargs)
+        self.G         = nx.DiGraph(**kwargs)
 
     def __repr__(self):
         nodes  = nx.number_of_nodes(self.G)
@@ -232,9 +147,10 @@ class FactorNetwork:
             Keyword arguments fed into constructor
             to initialize local network object
         """
-        G, node = nx.Graph(**kwargs), str(node)
-        G.add_node(node)
+        G, node = nx.DiGraph(**kwargs), str(node)
+        G.add_node(node, {'type': 'doc'})
 
+        self.messenger.lookup(node, factor)
         message = self.messenger.suggest(node, factor)
 
         for value, keys in message.items():
@@ -310,7 +226,9 @@ class FactorNetwork:
         state["extension"] = split(target.intersection(source), edges)
         state["suggestions"] = split(target.difference(source), edges)
 
-        while preexisting is True:
+        i = 1
+        preexisting = True
+        while preexisting:
             try:
                 index_id = state["root"][0][0] + "_" + str(i)
                 es.get(index=index_name, id=index_id, doc_type=user_name)
@@ -332,7 +250,8 @@ class FactorNetwork:
         for k, v in current_state["_source"].items():
             for edge in v:
                 edges.append(edge)
-        G.nx.Graph()
+
+        G = nx.DiGraph()
         G.add_edges_from(edges)
         return G
 
@@ -340,10 +259,10 @@ class FactorNetwork:
         """
         Merge two factor states
         """
-        state_a = es.get(index=index_name, id=index_id_a, doc_type=user_name_a)
-        state_b = es.get(index=index_name, id=index_id_b, doc_type=user_name_b)
-        G_a = unpack_state_to_graph(state_a).edges()
-        G_b = unpack_state_to_graph(state_b).edges()
+        # state_a = es.get(index=index_name, index_id_a, doc_type=user_name_a)
+        # state_b = es.get(index=index_name, index_id_b, doc_type=user_name_b)
+        G_a = set(self.unpack_state_to_graph(index_name, user_name_a, index_id_a).edges())
+        G_b = set(self.unpack_state_to_graph(index_name, user_name_b, index_id_a).edges())
         network = {}
         network["intersection"] = G_a.intersection(G_b)
         network["workflow_a"] = G_a.difference(G_b)
@@ -355,6 +274,12 @@ class FactorNetwork:
         network["merge_stats"]["workflow_b"] = round(len(network["workflow_b"])/n_edges, 2)
         return(network)
 
+def flatten(nested):
+    return (
+        [x for l in nested for x in flatten(l)]
+        if isinstance(nested, list) else
+        [nested]
+    )
 
 def run(node):
     _id, factor = node.get('id'), node.get('factor')
