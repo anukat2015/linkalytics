@@ -1,13 +1,15 @@
 language: python
 python:
-    - '3.4'
-    - '3.5'
+- '3.4'
+- '3.5'
 notifications:
   email: false
+  slack:
+    secure: PQaNtwtW2OtrDlQU/keqofyjbhOC2vVk/MbQYHeQTjLRk72HWKO/i7PBt/dlR4HNmhPt7JSXPU4dW5M6TRDsW4Y/KIPA5oeM0t/aMvRY1QMPBDH1J7Ozo4I1pLsjhmSrUR57vpGT0PaF4lYCUFapcJr+BFaIa8DjfWZeC2//JVwQxsy65ONEBmkSrkL1dG6OfR9eapHUvwMX/jLJNp5zqRXQMPQZG8TA2fYXODGVHN1PVi79x9T/aHWBJ39JXPbMi+tfTWIqCqlOVLhs2VSla52lgaRDjLHdK/GMTDrWlftH2dQaKXlz+aidB2FYR9HHUt0Gdk5hHwTGKwYhbbWjA3qK2EY4rLcRgKy56b0up4lo6FSpraw2tsFcrN5r6ouwOZWMZy4QvD0Y5s6jP9i0xqWas4s0WTLFUDeftCYuagDUneAqkc4XqtdRpWHhren4NYAM2MPBos2PPSfQ0IsiKuZKhZWdsxE3ztEC7FpvrJ0su5F6WfAB+auWLT2acfKQR5R1tx4VRdndEyKnu7hv4xNC0ChQ1/9JwOcR9vgsgfQDttIJcbPmrGJood6EMOM31INdlWJLL7JJLOCYXjB6r0FI7CZpKjzp3X37LGWTDgy6z1MZvSnd5+l734Z2gMIwGzugvn3Zhti2JS8Yn0mBFXDR1NotU5fvpfSN5/o60GY=
 cache: apt
 services:
-  - redis-server
-  - elasticsearch
+- redis-server
+- elasticsearch
 addons:
   apt:
     packages:
@@ -18,16 +20,15 @@ addons:
     - libenchant-dev
     - tcl8.5
 before_install:
-    - export PATH=$HOME/miniconda/bin:$PATH
-    - ./scripts/build_conda.sh
+- export PATH=$HOME/miniconda/bin:$PATH
+- "./scripts/build_conda.sh"
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
-    - pip install -r requirements.txt
-    - python -m nltk.downloader stopwords
-    - pip install git+https://github.com/qadium/credstmpl.git
-    - credstmpl linkalytics/environment/*.j2
+- conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose pandas
+- pip install -r requirements.txt
+- python -m nltk.downloader stopwords
+- pip install git+https://github.com/qadium/credstmpl.git
+- credstmpl linkalytics/environment/*.j2
 script: nosetests --with-coverage --cover-package=linkalytics
 env:
   global:
-    - secure: fdeHssa67O8nIATh6Ik8zjaqY6BvrWgc3eJU9i9dzOCbETx72Ih+v7zTnm2ba/gR2+DVe1yhvxS7uRd4Kwng6GX9Bq4OZijBbLKaSxHXM7IPWB4jFwB5PXx5tKX1Jrg7dKZI6O6p+tJDVgyt0YBKzniMuQQCq7rFSZCNH1soBZCC8btbtV+acKA8hFQwJxh3xq2qYQmdUfOe2EdfpYhnGlwnZ95uLJV8gFleeuB6bHdXGd6QN93jj5aZsWz7MJa9ZAQqIiFWolqZ/uiUtqQs2PKmpSo+X8ShQOOFj+d43FJOUO9N114bHLBq+CPbXqmZIKEd7LTOLXWZ8y7iyWrbzcw59dvIax7TQJOZY4m7Ykpzy1pg4E+o1gaBSs8SXROP9thNN3pu0KZRu+aCceLLP1iFFvF0ypfrRLhJdepkMS9J7iDiMlKAZfL+SYBsfJybQLn5ACJ0bcDNfEGiVYNF44xtp0k9CVngU2Ip1NE9Qk48zJqW8FFejeb0N704C2pHyPhAWHfiTIHO7kAlg3X5JWQSSvwgib/8If3L+hi3xaGfULrp7d0HSQ4LXsi65pOUK0ikt6kfGdhhmiP6TKmZBubMRVi3zfZW0I7/IMkd+LYfnjPzo7jllhkjhpEWYLi+oZH7xfhI1sHEn39Egl2RYmIwl/d9wXTsboilIC57jqE=
-
+  - secure: fdeHssa67O8nIATh6Ik8zjaqY6BvrWgc3eJU9i9dzOCbETx72Ih+v7zTnm2ba/gR2+DVe1yhvxS7uRd4Kwng6GX9Bq4OZijBbLKaSxHXM7IPWB4jFwB5PXx5tKX1Jrg7dKZI6O6p+tJDVgyt0YBKzniMuQQCq7rFSZCNH1soBZCC8btbtV+acKA8hFQwJxh3xq2qYQmdUfOe2EdfpYhnGlwnZ95uLJV8gFleeuB6bHdXGd6QN93jj5aZsWz7MJa9ZAQqIiFWolqZ/uiUtqQs2PKmpSo+X8ShQOOFj+d43FJOUO9N114bHLBq+CPbXqmZIKEd7LTOLXWZ8y7iyWrbzcw59dvIax7TQJOZY4m7Ykpzy1pg4E+o1gaBSs8SXROP9thNN3pu0KZRu+aCceLLP1iFFvF0ypfrRLhJdepkMS9J7iDiMlKAZfL+SYBsfJybQLn5ACJ0bcDNfEGiVYNF44xtp0k9CVngU2Ip1NE9Qk48zJqW8FFejeb0N704C2pHyPhAWHfiTIHO7kAlg3X5JWQSSvwgib/8If3L+hi3xaGfULrp7d0HSQ4LXsi65pOUK0ikt6kfGdhhmiP6TKmZBubMRVi3zfZW0I7/IMkd+LYfnjPzo7jllhkjhpEWYLi+oZH7xfhI1sHEn39Egl2RYmIwl/d9wXTsboilIC57jqE=
