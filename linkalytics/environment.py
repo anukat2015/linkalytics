@@ -44,13 +44,13 @@ def load_config(name):
         print("you'll need to run `credstmpl filename.extension.j2`", file=sys.stderr)
 
 def es_config(**kwargs):
-    return {
-        **kwargs,
-        'verify_certs': False,
-        'use_ssl':False,
-        'request_timeout':160,
-        'timeout':160,
-    }
+    return dict(
+        verify_certs=False,
+        use_ssl=False,
+        request_timeout=160,
+        timeout=160,
+        **kwargs
+    )
 
 def get_config():
     env = os.getenv('PRODUCTION', None)
