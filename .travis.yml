@@ -16,7 +16,7 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.ccache
-    - $HOME/miniconda
+    - $HOME/miniconda/pkgs
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 services:
